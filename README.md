@@ -2,7 +2,7 @@
 
 ### *El mapa vivo de tu cuadra — Directorio hiperlocal + Red de Mandados entre vecinos*
 
-![Status](https://img.shields.io/badge/Estado-Documentación%20%2F%20Pre--MVP-yellow?style=flat-square)
+![Status](https://img.shields.io/badge/Estado-Fase%200%20%E2%80%94%20Setup-yellow?style=flat-square)
 ![Region](https://img.shields.io/badge/Región-Eje%20Cafetero%2C%20Colombia-green?style=flat-square)
 ![License](https://img.shields.io/badge/Licencia-MIT-blue?style=flat-square)
 ![Team](https://img.shields.io/badge/Equipo-3%20Estudiantes%20UTP-orange?style=flat-square)
@@ -29,10 +29,13 @@ El modelo de negocio opera por **micro-comisión por mandado completado**, gener
 
 | Archivo | Tipo | Descripción |
 |---|---|---|
-| [`MiCuadraV1.md`](./micuadrav1.md) | 📋 Concepto Base | Idea original del proyecto: visión, mercado objetivo, funcionalidades, roadmap inicial, arquitectura borrador y modelo de negocio SaaS planteado por el equipo fundador. |
-| [`analisis_micuadrav1.md`](./analisis_micuadrav1.md) | 🔬 Análisis Crítico | Análisis técnico-económico de la propuesta original: viabilidad del stack para un equipo de 3 estudiantes sin capital, evaluación del modelo SaaS vs. psicología del tendero, y matriz de Fortalezas vs. Riesgos. |
-| [`MiCuadraV2.md`](./micuadrav2.md) | 🔄 Propuesta de Pivot | Modelo híbrido: Directorio Hiperlocal + Red de Mandados. Incluye descripción de las dos modalidades de servicio, justificación estratégica del pivot, hoja de ruta técnica por etapas y criterios de validación del MVP antes de activar el motor transaccional. |
-| [`Speech.md`](./speech.md) | 🎤 Elevator Pitch | Guion oficial del pitch (2–3 minutos, ~380 palabras). Estructurado en 6 fases: Problema, Solución, Competencia, Mercado, Ingresos y Equipo. Listo para presentación oral con acotaciones de entonación. |
+| [`MiCuadraV1.md`](docs/micuadrav1.md) | 📋 Concepto Base | Idea original del proyecto: visión, mercado objetivo, funcionalidades, roadmap inicial, arquitectura borrador y modelo de negocio SaaS planteado por el equipo fundador. |
+| [`analisis_micuadrav1.md`](docs/analisis_micuadrav1.md) | 🔬 Análisis Crítico | Análisis técnico-económico de la propuesta original: viabilidad del stack para un equipo de 3 estudiantes sin capital, evaluación del modelo SaaS vs. psicología del tendero, y matriz de Fortalezas vs. Riesgos. |
+| [`MiCuadraV2.md`](docs/micuadrav2.md) | 🔄 Propuesta de Pivot | Modelo híbrido: Directorio Hiperlocal + Red de Mandados. Incluye descripción de las dos modalidades de servicio, justificación estratégica del pivot, hoja de ruta técnica por etapas y criterios de validación del MVP antes de activar el motor transaccional. |
+| [`SPEC.md`](SPEC.md) | 🛠️ Especificación | Instrucción maestra de construcción por fases: alcance, reglas de negocio, modelo de datos, API y criterios de aceptación. |
+| [`docs/decisiones.md`](docs/decisiones.md) | 🧭 Decisiones | Registro de decisiones técnicas (ADR). |
+| [`docs/ambientes.md`](docs/ambientes.md) | ☁️ Ambientes | dev / staging / prod y configuración de Supabase, Render y Vercel. |
+| [`Speech.md`](docs/speech.md) | 🎤 Elevator Pitch | Guion oficial del pitch (2–3 minutos, ~380 palabras). Estructurado en 6 fases: Problema, Solución, Competencia, Mercado, Ingresos y Equipo. Listo para presentación oral con acotaciones de entonación. |
 
 ---
 
@@ -60,6 +63,47 @@ El modelo de negocio opera por **micro-comisión por mandado completado**, gener
 
 ---
 
-## ⚙️ Stack Tecnológico Propuesto
+## ⚙️ Stack
 
-Diseñado para **costo operativo inicial = $0**, usando capas gratuitas de servicios maduros:
+Costo operativo inicial **$0** con capas gratuitas:
+
+| Capa | Herramienta |
+|---|---|
+| Web (PWA) | React 18 + Vite + TypeScript + Tailwind · Vercel |
+| Mapas | Leaflet + OpenStreetMap |
+| API | FastAPI (Python 3.12) · Render |
+| Base de datos | Supabase Postgres + PostGIS |
+| Auth / archivos / tiempo real | Supabase |
+
+```
+apps/web         React + Vite (PWA)
+apps/api         FastAPI
+packages/shared  tipos generados desde el OpenAPI + constantes
+supabase         migraciones SQL, RLS
+docs             documentación del proyecto y decisiones
+```
+
+---
+
+## 🚀 Arranque local
+
+Requisitos: Node ≥ 20.19 con `pnpm`, [`uv`](https://docs.astral.sh/uv/) y Postgres con PostGIS
+([Postgres.app](https://postgresapp.com/) o `brew install postgis`).
+
+```bash
+cp .env.example .env
+make install
+createdb micuadra          # una sola vez
+make db-reset              # migraciones + datos [DEMO]
+make dev                   # API en :8000, web en http://localhost:5173
+```
+
+- Documentación del API: http://localhost:8000/api/v1/docs
+- `make check` corre lint, tipos y pruebas (lo mismo que CI). `make help` lista todo.
+- Guía para quien programa (y para Claude Code): [`CLAUDE.md`](CLAUDE.md).
+
+---
+
+## 👥 Equipo
+
+Kevin Esguerra (producto) · Andrés Felipe Morales (mercado) · Juan Sebastián Sánchez (crecimiento) — estudiantes de la UTP.
