@@ -1,0 +1,27 @@
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+dev-dist/
+*.tsbuildinfo
+.vite/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Sistema / editores
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
