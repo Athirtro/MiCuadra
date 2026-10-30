@@ -1,0 +1,90 @@
+@import 'tailwindcss';
+
+/* Identidad "plano de barrio" (SPEC.md §5), igual que landing/micuadra-landing.html. */
+:root {
+  --bg: #f2f4ee;
+  --surface: #ffffff;
+  --ink: #16261f;
+  --muted: #53625a;
+  --line: #d5dcd2;
+  --block: #e2e8dc;
+  --green: #1e6b4e;
+  --green-ink: #ffffff;
+  --sun: #f4b635;
+  --sun-ink: #1b1a10;
+  --red: #c8462f;
+  --focus: #1e6b4e;
+  --r: 14px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f1a15;
+    --surface: #16241d;
+    --ink: #e7efe9;
+    --muted: #9db0a5;
+    --line: #2a3b33;
+    --block: #1c2d25;
+    --green: #4fb88a;
+    --green-ink: #0b1611;
+    --red: #ee7158;
+    --focus: #f4b635;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0f1a15;
+  --surface: #16241d;
+  --ink: #e7efe9;
+  --muted: #9db0a5;
+  --line: #2a3b33;
+  --block: #1c2d25;
+  --green: #4fb88a;
+  --green-ink: #0b1611;
+  --red: #ee7158;
+  --focus: #f4b635;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-block: var(--block);
+  --color-green: var(--green);
+  --color-green-ink: var(--green-ink);
+  --color-sun: var(--sun);
+  --color-sun-ink: var(--sun-ink);
+  --color-red: var(--red);
+  --radius-r: var(--r);
+  --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-ink font-body antialiased;
+    min-height: 100dvh;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+    font-stretch: 85%;
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+}
+
+@utility tap {
+  /* Objetivo táctil mínimo de 44 px (accesibilidad AA, uso con una mano). */
+  min-height: 44px;
+  min-width: 44px;
+}
