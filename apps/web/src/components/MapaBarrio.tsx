@@ -146,3 +146,50 @@ function PinFijo({ punto, color, emoji }: { punto: Punto; color: string; emoji: 
   }, [mapa, punto, color, emoji])
   return null
 }
+
+/** Pin arrastrable para que el dueño ubique su negocio (también se mueve tocando el mapa). */
+export function SelectorUbicacion({
+  punto,
+  alCambiar,
+  emoji = '📍',
+}: {
+  punto: Punto
+  alCambiar: (p: Punto) => void
+  emoji?: string
+}) {
+  return (
+    <MapContainer center={[punto.lat, punto.lng]} zoom={17} className="h-72 w-full rounded-r" zoomControl>
+      <TileLayer attribution={ATRIBUCION} url={TILES} maxZoom={19} />
+      <AjustarTamano />
+      <Recentrar centro={punto} />
+      <PinArrastrable punto={punto} alCambiar={alCambiar} emoji={emoji} />
+    </MapContainer>
+  )
+}
+
+function PinArrastrable({ punto, alCambiar, emoji }: { punto: Punto; alCambiar: (p: Punto) => void; emoji: string }) {
+  const mapa = useMap()
+  useMapEvents({ click: (e) => alCambiar({ lat: e.latlng.lat, lng: e.latlng.lng }) })
+  useEffect(() => {
+    const m = L.marker([punto.lat, punto.lng], {
+      draggable: true,
+      autoPan: true,
+      title: 'Arrástrame hasta tu negocio',
+      icon: L.divIcon({
+        className: '',
+        html: `<span class="pin pin-destacado" style="--pin:#C8462F" aria-hidden="true"><span>${emoji}</span></span>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+      }),
+    })
+    m.on('dragend', () => {
+      const p = m.getLatLng()
+      alCambiar({ lat: p.lat, lng: p.lng })
+    })
+    m.addTo(mapa)
+    return () => {
+      m.remove()
+    }
+  }, [mapa, punto, alCambiar, emoji])
+  return null
+}

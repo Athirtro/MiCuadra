@@ -19,4 +19,9 @@ vi.mock('../components/MapaBarrio', () => ({
     <div data-testid="mapa">{negocios.length} pines</div>
   ),
   MiniMapa: () => <div data-testid="mini-mapa" />,
+  SelectorUbicacion: ({ alCambiar }: { alCambiar: (p: { lat: number; lng: number }) => void }) => (
+    <button type="button" onClick={() => alCambiar({ lat: 4.7985, lng: -75.7305 })}>
+      Mover pin
+    </button>
+  ),
 }))

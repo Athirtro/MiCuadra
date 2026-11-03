@@ -10,9 +10,11 @@ La especificación completa está en [`SPEC.md`](SPEC.md); las decisiones en
 
 **Fase 1 — Directorio + medición de demanda** (rama `fase-1-directorio`, sale de `fase-0-setup`).
 Hecho: API pública del directorio (`/categorias`, `/barrios`, `/negocios`, `/negocios/{id_o_slug}`,
-`/eventos`), mapa en `/`, perfil en `/n/:slug`, portada en `/conoce`.
-Pendiente: lista de espera (6.1), registro de negocios en 4 pasos (6.4), panel admin y tablero
-del gate (6.5, §9), reportes, metadatos Open Graph, Lighthouse y despliegue con API.
+`/eventos`), mapa en `/`, perfil en `/n/:slug`, portada en `/conoce`. Cuentas con Supabase Auth
+(Google o enlace por correo) en `/entrar`, formulario de bienvenida vecino/empresario en
+`/bienvenida`, registro del negocio por pasos en `/mi-negocio/nuevo` (queda `pendiente`).
+Pendiente: fotos del negocio (Supabase Storage), lista de espera (6.1), panel admin con
+aprobación y tablero del gate (6.5, §9), reportes, metadatos Open Graph y Lighthouse.
 
 Trabajar una fase a la vez (SPEC §12); al cerrar cada fase: lint + tests, verificar criterios
 de aceptación, commit, PR y **detenerse**. No adelantar funcionalidades de fases futuras salvo
@@ -64,7 +66,8 @@ apps/web/        React + Vite (PWA)
   src/styles.css     tokens de marca (claro/oscuro) → utilidades Tailwind (bg-bg, text-ink, bg-green…)
   src/lib/api.ts     cliente fetch + tipos del OpenAPI
   src/lib/eventos.ts eventos anónimos (anon_id en localStorage, respeta No rastrear)
-  src/pages/         Mapa (/), Perfil (/n/:slug), Conoce (/conoce)
+  src/lib/supabase.ts  cliente de Supabase Auth (solo auth-js, PKCE); sesion.tsx: ProveedorSesion, usePerfil
+  src/pages/         Mapa (/), Perfil (/n/:slug), Conoce, Entrar, Cuenta, Bienvenida, RegistrarNegocio, Privacidad
   src/components/MapaBarrio.tsx  Leaflet + markercluster (carga diferida; en pruebas se reemplaza por un falso)
 packages/shared/ tipos generados (src/api.ts) + constantes de dominio (src/index.ts)
 supabase/migrations/  SQL versionado = fuente de verdad del esquema

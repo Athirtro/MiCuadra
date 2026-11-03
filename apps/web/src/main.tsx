@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import { App } from './App'
+import { ProveedorSesion } from './lib/sesion'
 import './styles.css'
 
 const queryClient = new QueryClient({
@@ -15,9 +16,11 @@ if (!raiz) throw new Error('Falta el elemento #root en index.html')
 createRoot(raiz).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <ProveedorSesion>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ProveedorSesion>
     </QueryClientProvider>
   </StrictMode>,
 )

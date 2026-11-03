@@ -9,6 +9,11 @@ export type NegocioResumen = Esquemas['NegocioResumen']
 export type ListaNegocios = Esquemas['ListaNegocios']
 export type NegocioDetalle = Esquemas['NegocioDetalle']
 export type Punto = Esquemas['Punto']
+export type Perfil = Esquemas['Perfil']
+export type PerfilEntrada = Esquemas['PerfilEntrada']
+export type NegocioEntrada = Esquemas['NegocioEntrada']
+export type MiNegocio = Esquemas['MiNegocio']
+export type Horario = Esquemas['Horario']
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api/v1'
 
@@ -22,13 +27,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiGet<T>(ruta: string, init?: RequestInit): Promise<T> {
-  let res: Response
-  try {
-    res = await fetch(`${BASE}${ruta}`, init)
-  } catch {
-    throw new ApiError(0, 'sin_conexion', 'No hay conexión. Revisa tus datos o el wifi.')
-  }
+async function leer<T>(res: Response): Promise<T> {
   const cuerpo: unknown = await res.json().catch(() => null)
   if (!res.ok) {
     const error = (cuerpo as { error?: { codigo?: string; mensaje?: string } } | null)?.error
@@ -39,6 +38,30 @@ export async function apiGet<T>(ruta: string, init?: RequestInit): Promise<T> {
     )
   }
   return cuerpo as T
+}
+
+async function pedir(ruta: string, init: RequestInit = {}, token?: string): Promise<Response> {
+  const headers = new Headers(init.headers)
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  try {
+    return await fetch(`${BASE}${ruta}`, { ...init, headers })
+  } catch {
+    throw new ApiError(0, 'sin_conexion', 'No hay conexión. Revisa tus datos o el wifi.')
+  }
+}
+
+export async function apiGet<T>(ruta: string, init?: RequestInit, token?: string): Promise<T> {
+  return leer<T>(await pedir(ruta, init, token))
+}
+
+/** POST/PUT/PATCH con JSON y sesión. */
+export async function apiEnviar<T>(metodo: 'POST' | 'PUT' | 'PATCH', ruta: string, cuerpo: unknown, token?: string): Promise<T> {
+  const res = await pedir(
+    ruta,
+    { method: metodo, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) },
+    token,
+  )
+  return leer<T>(res)
 }
 
 export interface FiltrosNegocios {

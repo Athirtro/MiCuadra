@@ -13,6 +13,9 @@ importers:
       '@micuadra/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@supabase/auth-js':
+        specifier: ^2.118.0
+        version: 2.118.0
       '@tanstack/react-query':
         specifier: ^5.105.0
         version: 5.105.0(@types/react@18.3.31)(react@18.3.1)
@@ -1086,6 +1089,10 @@ packages:
     resolution: {integrity: sha512-xA+neBh1bqkqaS3b48T2UHZnDsTIpb9B0h+TdBzynjF/ymCpYndhfY10RqW0qSKB1HqqQA83mINVhAdwA+mETg==}
     cpu: [x64]
     os: [win32]
+
+  '@supabase/auth-js@2.118.0':
+    resolution: {integrity: sha512-xWfPXyhS2KDSfAneMtI6p/tBnbdiz/5vaRKXEqUfzfC9WCniKr2Ds5o5G7RIGig0bom4z6wUY9zaV07WDVTfnQ==}
+    engines: {node: '>=22.0.0'}
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
@@ -2702,6 +2709,9 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
+  tslib@2.8.1:
+    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
     engines: {node: '>= 0.8.0'}
@@ -4026,6 +4036,10 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.66.0':
     optional: true
+
+  '@supabase/auth-js@2.118.0':
+    dependencies:
+      tslib: 2.8.1
 
   '@tailwindcss/node@4.3.3':
     dependencies:
@@ -5728,6 +5742,8 @@ snapshots:
   ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
+
+  tslib@2.8.1: {}
 
   type-check@0.4.0:
     dependencies:
