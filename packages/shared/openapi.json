@@ -494,6 +494,710 @@
         }
       }
     },
+    "/api/v1/lista-espera": {
+      "post": {
+        "tags": [
+          "comunidad"
+        ],
+        "summary": "Inscribirse",
+        "description": "Inscribe en la lista de espera. Un mismo WhatsApp con el mismo rol no se duplica.",
+        "operationId": "inscribirse_api_v1_lista_espera_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListaEsperaEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaEsperaRespuesta"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lista-espera/metas": {
+      "get": {
+        "tags": [
+          "comunidad"
+        ],
+        "summary": "Metas",
+        "description": "Barra de metas de la landing: negocios activos, vecinos de la semana, mensajeros.",
+        "operationId": "metas_api_v1_lista_espera_metas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metas"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negocios/{negocio_id}/reportes": {
+      "post": {
+        "tags": [
+          "comunidad"
+        ],
+        "summary": "Reportar",
+        "description": "«Reportar información incorrecta». Va a la cola de moderación del admin.",
+        "operationId": "reportar_api_v1_negocios__negocio_id__reportes_post",
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReporteEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/negocios": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Negocios",
+        "description": "Negocios con filtros. Los pendientes salen primero (cola de aprobación).",
+        "operationId": "negocios_api_v1_admin_negocios_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "borrador",
+                    "pendiente",
+                    "activo",
+                    "rechazado",
+                    "inactivo"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          },
+          {
+            "name": "barrio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Barrio"
+            }
+          },
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Categoria"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NegocioAdmin"
+                  },
+                  "title": "Response Negocios Api V1 Admin Negocios Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/negocios/{negocio_id}/estado": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Cambiar Estado Negocio",
+        "description": "Aprobar (`activo`), rechazar con motivo, desactivar o devolver a `pendiente`.",
+        "operationId": "cambiar_estado_negocio_api_v1_admin_negocios__negocio_id__estado_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoNegocio"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NegocioAdmin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/lista-espera": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Lista Espera",
+        "operationId": "lista_espera_api_v1_admin_lista_espera_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "vecino",
+                    "negocio",
+                    "mensajero"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rol"
+            }
+          },
+          {
+            "name": "contactado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Contactado"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InscritoEspera"
+                  },
+                  "title": "Response Lista Espera Api V1 Admin Lista Espera Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/lista-espera.csv": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Lista Espera Csv",
+        "operationId": "lista_espera_csv_api_v1_admin_lista_espera_csv_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "vecino",
+                    "negocio",
+                    "mensajero"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rol"
+            }
+          },
+          {
+            "name": "contactado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Contactado"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "text/csv": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/lista-espera/{inscrito_id}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Marcar Contactado",
+        "operationId": "marcar_contactado_api_v1_admin_lista_espera__inscrito_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "inscrito_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Inscrito Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioInscrito"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/reportes": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Reportes",
+        "operationId": "reportes_api_v1_admin_reportes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "abierta",
+                    "resuelta",
+                    "descartada"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Reporte"
+                  },
+                  "title": "Response Reportes Api V1 Admin Reportes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/reportes/{reporte_id}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Cambiar Estado Reporte",
+        "operationId": "cambiar_estado_reporte_api_v1_admin_reportes__reporte_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reporte_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Reporte Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioReporte"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/entrevistas": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Entrevistas",
+        "operationId": "entrevistas_api_v1_admin_entrevistas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Entrevista"
+                  },
+                  "type": "array",
+                  "title": "Response Entrevistas Api V1 Admin Entrevistas Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Registrar Entrevista",
+        "description": "Criterio 4 del gate: entrevista hecha en persona por el equipo.",
+        "operationId": "registrar_entrevista_api_v1_admin_entrevistas_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntrevistaEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Entrevista"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/metricas": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Tablero Gate",
+        "description": "Los 6 criterios del gate con valor actual, meta y semáforo (SPEC §9).",
+        "operationId": "tablero_gate_api_v1_admin_metricas_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Gate"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/mandados/cotizar": {
       "post": {
         "tags": [
@@ -677,6 +1381,68 @@
         ],
         "title": "BarrioCorto"
       },
+      "CambioEstadoNegocio": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activo",
+              "rechazado",
+              "inactivo",
+              "pendiente"
+            ],
+            "title": "Estado"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado"
+        ],
+        "title": "CambioEstadoNegocio"
+      },
+      "CambioInscrito": {
+        "properties": {
+          "contactado": {
+            "type": "boolean",
+            "title": "Contactado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contactado"
+        ],
+        "title": "CambioInscrito"
+      },
+      "CambioReporte": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "abierta",
+              "resuelta",
+              "descartada"
+            ],
+            "title": "Estado"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado"
+        ],
+        "title": "CambioReporte"
+      },
       "Categoria": {
         "properties": {
           "id": {
@@ -744,6 +1510,71 @@
         ],
         "title": "CategoriaCorta"
       },
+      "Criterio": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "meta": {
+            "type": "string",
+            "title": "Meta"
+          },
+          "valor": {
+            "type": "string",
+            "title": "Valor"
+          },
+          "progreso": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Progreso"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "verde",
+              "amarillo",
+              "rojo"
+            ],
+            "title": "Estado"
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detalle"
+          },
+          "serie": {
+            "items": {
+              "$ref": "#/components/schemas/PuntoSerie"
+            },
+            "type": "array",
+            "title": "Serie"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "meta",
+          "valor",
+          "progreso",
+          "estado",
+          "detalle",
+          "serie"
+        ],
+        "title": "Criterio"
+      },
       "Disponibilidad": {
         "properties": {
           "disponible": {
@@ -795,6 +1626,152 @@
         ],
         "title": "Disponibilidad",
         "description": "Contrato de `GET /negocios/{id}/mandados-disponibles`. No cambia entre fases."
+      },
+      "DuenoCorto": {
+        "properties": {
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "celular": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Celular"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "email",
+          "celular"
+        ],
+        "title": "DuenoCorto"
+      },
+      "Entrevista": {
+        "properties": {
+          "persona": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Persona",
+            "description": "Alias o primer nombre"
+          },
+          "barrio_texto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio Texto"
+          },
+          "confirma_intencion": {
+            "type": "boolean",
+            "title": "Confirma Intencion"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "persona",
+          "confirma_intencion",
+          "id",
+          "created_at"
+        ],
+        "title": "Entrevista"
+      },
+      "EntrevistaEntrada": {
+        "properties": {
+          "persona": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Persona",
+            "description": "Alias o primer nombre"
+          },
+          "barrio_texto": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio Texto"
+          },
+          "confirma_intencion": {
+            "type": "boolean",
+            "title": "Confirma Intencion"
+          },
+          "notas": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "persona",
+          "confirma_intencion"
+        ],
+        "title": "EntrevistaEntrada"
       },
       "EventoEntrada": {
         "properties": {
@@ -860,6 +1837,39 @@
           "anon_id"
         ],
         "title": "EventoEntrada"
+      },
+      "Gate": {
+        "properties": {
+          "criterios": {
+            "items": {
+              "$ref": "#/components/schemas/Criterio"
+            },
+            "type": "array",
+            "title": "Criterios"
+          },
+          "cumplidos": {
+            "type": "integer",
+            "title": "Cumplidos"
+          },
+          "listo": {
+            "type": "boolean",
+            "title": "Listo",
+            "description": "Se cumplen los 6 criterios a la vez"
+          },
+          "generado_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generado At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "criterios",
+          "cumplidos",
+          "listo",
+          "generado_at"
+        ],
+        "title": "Gate"
       },
       "HTTPValidationError": {
         "properties": {
@@ -985,6 +1995,189 @@
         ],
         "title": "HorarioEntrada"
       },
+      "InscritoEspera": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "rol": {
+            "type": "string",
+            "enum": [
+              "vecino",
+              "negocio",
+              "mensajero"
+            ],
+            "title": "Rol"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "whatsapp": {
+            "type": "string",
+            "title": "Whatsapp"
+          },
+          "barrio_texto": {
+            "type": "string",
+            "title": "Barrio Texto"
+          },
+          "negocio_nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negocio Nombre"
+          },
+          "negocio_tipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negocio Tipo"
+          },
+          "que_pediria": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Que Pediria"
+          },
+          "contactado": {
+            "type": "boolean",
+            "title": "Contactado"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rol",
+          "nombre",
+          "whatsapp",
+          "barrio_texto",
+          "negocio_nombre",
+          "negocio_tipo",
+          "que_pediria",
+          "contactado",
+          "created_at"
+        ],
+        "title": "InscritoEspera"
+      },
+      "ListaEsperaEntrada": {
+        "properties": {
+          "rol": {
+            "type": "string",
+            "enum": [
+              "vecino",
+              "negocio",
+              "mensajero"
+            ],
+            "title": "Rol"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "whatsapp": {
+            "type": "string",
+            "pattern": "^3\\d{9}$",
+            "title": "Whatsapp"
+          },
+          "barrio": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "Barrio",
+            "description": "Slug de un barrio piloto o el nombre de otro"
+          },
+          "negocio_nombre": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negocio Nombre"
+          },
+          "negocio_tipo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negocio Tipo"
+          },
+          "que_pediria": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Que Pediria",
+            "description": "¿Qué le habrías pedido? (botón Pedir mandado)"
+          },
+          "acepta_datos": {
+            "type": "boolean",
+            "const": true,
+            "title": "Acepta Datos",
+            "description": "Autorización de tratamiento de datos (Ley 1581)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rol",
+          "nombre",
+          "whatsapp",
+          "barrio",
+          "acepta_datos"
+        ],
+        "title": "ListaEsperaEntrada"
+      },
+      "ListaEsperaRespuesta": {
+        "properties": {
+          "nuevo": {
+            "type": "boolean",
+            "title": "Nuevo",
+            "description": "false si ese WhatsApp ya estaba inscrito con ese rol"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nuevo"
+        ],
+        "title": "ListaEsperaRespuesta"
+      },
       "ListaNegocios": {
         "properties": {
           "items": {
@@ -1018,6 +2211,44 @@
           "siguiente_cursor"
         ],
         "title": "ListaNegocios"
+      },
+      "Meta": {
+        "properties": {
+          "valor": {
+            "type": "integer",
+            "title": "Valor"
+          },
+          "meta": {
+            "type": "integer",
+            "title": "Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "valor",
+          "meta"
+        ],
+        "title": "Meta"
+      },
+      "Metas": {
+        "properties": {
+          "negocios_activos": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "vecinos_semana": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "mensajeros_listos": {
+            "$ref": "#/components/schemas/Meta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "negocios_activos",
+          "vecinos_semana",
+          "mensajeros_listos"
+        ],
+        "title": "Metas"
       },
       "MiNegocio": {
         "properties": {
@@ -1082,6 +2313,132 @@
           "barrio"
         ],
         "title": "MiNegocio"
+      },
+      "NegocioAdmin": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "borrador",
+              "pendiente",
+              "activo",
+              "rechazado",
+              "inactivo"
+            ],
+            "title": "Estado"
+          },
+          "motivo_rechazo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo Rechazo"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaCorta"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BarrioCorto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp"
+          },
+          "direccion_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion Texto"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "dueno": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DuenoCorto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "creado_por_admin": {
+            "type": "boolean",
+            "title": "Creado Por Admin"
+          },
+          "reportes_abiertos": {
+            "type": "integer",
+            "title": "Reportes Abiertos"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "estado",
+          "motivo_rechazo",
+          "categoria",
+          "barrio",
+          "whatsapp",
+          "direccion_texto",
+          "descripcion",
+          "dueno",
+          "creado_por_admin",
+          "reportes_abiertos",
+          "created_at"
+        ],
+        "title": "NegocioAdmin"
       },
       "NegocioDetalle": {
         "properties": {
@@ -1525,6 +2882,119 @@
           "lng"
         ],
         "title": "Punto"
+      },
+      "PuntoSerie": {
+        "properties": {
+          "etiqueta": {
+            "type": "string",
+            "title": "Etiqueta"
+          },
+          "valor": {
+            "type": "integer",
+            "title": "Valor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "etiqueta",
+          "valor"
+        ],
+        "title": "PuntoSerie"
+      },
+      "Reporte": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "negocio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Negocio Id"
+          },
+          "negocio_slug": {
+            "type": "string",
+            "title": "Negocio Slug"
+          },
+          "negocio_nombre": {
+            "type": "string",
+            "title": "Negocio Nombre"
+          },
+          "motivo": {
+            "type": "string",
+            "title": "Motivo"
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detalle"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "abierta",
+              "resuelta",
+              "descartada"
+            ],
+            "title": "Estado"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "negocio_id",
+          "negocio_slug",
+          "negocio_nombre",
+          "motivo",
+          "detalle",
+          "estado",
+          "created_at"
+        ],
+        "title": "Reporte"
+      },
+      "ReporteEntrada": {
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "enum": [
+              "cerro",
+              "horario",
+              "ubicacion",
+              "contacto",
+              "otro"
+            ],
+            "title": "Motivo"
+          },
+          "detalle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detalle"
+          }
+        },
+        "type": "object",
+        "required": [
+          "motivo"
+        ],
+        "title": "ReporteEntrada"
       },
       "ValidationError": {
         "properties": {

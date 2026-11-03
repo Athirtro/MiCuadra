@@ -181,6 +181,232 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lista-espera": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Inscribirse
+         * @description Inscribe en la lista de espera. Un mismo WhatsApp con el mismo rol no se duplica.
+         */
+        post: operations["inscribirse_api_v1_lista_espera_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/lista-espera/metas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Metas
+         * @description Barra de metas de la landing: negocios activos, vecinos de la semana, mensajeros.
+         */
+        get: operations["metas_api_v1_lista_espera_metas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/negocios/{negocio_id}/reportes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reportar
+         * @description «Reportar información incorrecta». Va a la cola de moderación del admin.
+         */
+        post: operations["reportar_api_v1_negocios__negocio_id__reportes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/negocios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Negocios
+         * @description Negocios con filtros. Los pendientes salen primero (cola de aprobación).
+         */
+        get: operations["negocios_api_v1_admin_negocios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/negocios/{negocio_id}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cambiar Estado Negocio
+         * @description Aprobar (`activo`), rechazar con motivo, desactivar o devolver a `pendiente`.
+         */
+        post: operations["cambiar_estado_negocio_api_v1_admin_negocios__negocio_id__estado_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lista-espera": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista Espera */
+        get: operations["lista_espera_api_v1_admin_lista_espera_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lista-espera.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista Espera Csv */
+        get: operations["lista_espera_csv_api_v1_admin_lista_espera_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lista-espera/{inscrito_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Marcar Contactado */
+        patch: operations["marcar_contactado_api_v1_admin_lista_espera__inscrito_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/reportes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reportes */
+        get: operations["reportes_api_v1_admin_reportes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reportes/{reporte_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Cambiar Estado Reporte */
+        patch: operations["cambiar_estado_reporte_api_v1_admin_reportes__reporte_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/entrevistas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Entrevistas */
+        get: operations["entrevistas_api_v1_admin_entrevistas_get"];
+        put?: never;
+        /**
+         * Registrar Entrevista
+         * @description Criterio 4 del gate: entrevista hecha en persona por el equipo.
+         */
+        post: operations["registrar_entrevista_api_v1_admin_entrevistas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/metricas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tablero Gate
+         * @description Los 6 criterios del gate con valor actual, meta y semáforo (SPEC §9).
+         */
+        get: operations["tablero_gate_api_v1_admin_metricas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/mandados/cotizar": {
         parameters: {
             query?: never;
@@ -276,6 +502,29 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /** CambioEstadoNegocio */
+        CambioEstadoNegocio: {
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "activo" | "rechazado" | "inactivo" | "pendiente";
+            /** Motivo */
+            motivo?: string | null;
+        };
+        /** CambioInscrito */
+        CambioInscrito: {
+            /** Contactado */
+            contactado: boolean;
+        };
+        /** CambioReporte */
+        CambioReporte: {
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "abierta" | "resuelta" | "descartada";
+        };
         /** Categoria */
         Categoria: {
             /**
@@ -305,6 +554,28 @@ export interface components {
             /** Color */
             color: string;
         };
+        /** Criterio */
+        Criterio: {
+            /** Id */
+            id: number;
+            /** Nombre */
+            nombre: string;
+            /** Meta */
+            meta: string;
+            /** Valor */
+            valor: string;
+            /** Progreso */
+            progreso: number;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "verde" | "amarillo" | "rojo";
+            /** Detalle */
+            detalle: string | null;
+            /** Serie */
+            serie: components["schemas"]["PuntoSerie"][];
+        };
         /**
          * Disponibilidad
          * @description Contrato de `GET /negocios/{id}/mandados-disponibles`. No cambia entre fases.
@@ -318,6 +589,53 @@ export interface components {
             mensajeros_activos?: number | null;
             /** Tarifa Desde */
             tarifa_desde?: number | null;
+        };
+        /** DuenoCorto */
+        DuenoCorto: {
+            /** Nombre */
+            nombre: string | null;
+            /** Email */
+            email: string | null;
+            /** Celular */
+            celular: string | null;
+        };
+        /** Entrevista */
+        Entrevista: {
+            /**
+             * Persona
+             * @description Alias o primer nombre
+             */
+            persona: string;
+            /** Barrio Texto */
+            barrio_texto?: string | null;
+            /** Confirma Intencion */
+            confirma_intencion: boolean;
+            /** Notas */
+            notas?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** EntrevistaEntrada */
+        EntrevistaEntrada: {
+            /**
+             * Persona
+             * @description Alias o primer nombre
+             */
+            persona: string;
+            /** Barrio Texto */
+            barrio_texto?: string | null;
+            /** Confirma Intencion */
+            confirma_intencion: boolean;
+            /** Notas */
+            notas?: string | null;
         };
         /** EventoEntrada */
         EventoEntrada: {
@@ -337,6 +655,23 @@ export interface components {
             metadata?: {
                 [key: string]: string | number | boolean | null;
             };
+        };
+        /** Gate */
+        Gate: {
+            /** Criterios */
+            criterios: components["schemas"]["Criterio"][];
+            /** Cumplidos */
+            cumplidos: number;
+            /**
+             * Listo
+             * @description Se cumplen los 6 criterios a la vez
+             */
+            listo: boolean;
+            /**
+             * Generado At
+             * Format: date-time
+             */
+            generado_at: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -398,6 +733,78 @@ export interface components {
              */
             cierra: string;
         };
+        /** InscritoEspera */
+        InscritoEspera: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Rol
+             * @enum {string}
+             */
+            rol: "vecino" | "negocio" | "mensajero";
+            /** Nombre */
+            nombre: string;
+            /** Whatsapp */
+            whatsapp: string;
+            /** Barrio Texto */
+            barrio_texto: string;
+            /** Negocio Nombre */
+            negocio_nombre: string | null;
+            /** Negocio Tipo */
+            negocio_tipo: string | null;
+            /** Que Pediria */
+            que_pediria: string | null;
+            /** Contactado */
+            contactado: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ListaEsperaEntrada */
+        ListaEsperaEntrada: {
+            /**
+             * Rol
+             * @enum {string}
+             */
+            rol: "vecino" | "negocio" | "mensajero";
+            /** Nombre */
+            nombre: string;
+            /** Whatsapp */
+            whatsapp: string;
+            /**
+             * Barrio
+             * @description Slug de un barrio piloto o el nombre de otro
+             */
+            barrio: string;
+            /** Negocio Nombre */
+            negocio_nombre?: string | null;
+            /** Negocio Tipo */
+            negocio_tipo?: string | null;
+            /**
+             * Que Pediria
+             * @description ¿Qué le habrías pedido? (botón Pedir mandado)
+             */
+            que_pediria?: string | null;
+            /**
+             * Acepta Datos
+             * @description Autorización de tratamiento de datos (Ley 1581)
+             * @constant
+             */
+            acepta_datos: true;
+        };
+        /** ListaEsperaRespuesta */
+        ListaEsperaRespuesta: {
+            /**
+             * Nuevo
+             * @description false si ese WhatsApp ya estaba inscrito con ese rol
+             */
+            nuevo: boolean;
+        };
         /** ListaNegocios */
         ListaNegocios: {
             /** Items */
@@ -409,6 +816,19 @@ export interface components {
             total: number;
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
+        };
+        /** Meta */
+        Meta: {
+            /** Valor */
+            valor: number;
+            /** Meta */
+            meta: number;
+        };
+        /** Metas */
+        Metas: {
+            negocios_activos: components["schemas"]["Meta"];
+            vecinos_semana: components["schemas"]["Meta"];
+            mensajeros_listos: components["schemas"]["Meta"];
         };
         /** MiNegocio */
         MiNegocio: {
@@ -431,6 +851,43 @@ export interface components {
             /** Categoria */
             categoria: string;
             barrio: components["schemas"]["BarrioCorto"] | null;
+        };
+        /** NegocioAdmin */
+        NegocioAdmin: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "borrador" | "pendiente" | "activo" | "rechazado" | "inactivo";
+            /** Motivo Rechazo */
+            motivo_rechazo: string | null;
+            categoria: components["schemas"]["CategoriaCorta"];
+            barrio: components["schemas"]["BarrioCorto"] | null;
+            /** Whatsapp */
+            whatsapp: string | null;
+            /** Direccion Texto */
+            direccion_texto: string | null;
+            /** Descripcion */
+            descripcion: string | null;
+            dueno: components["schemas"]["DuenoCorto"] | null;
+            /** Creado Por Admin */
+            creado_por_admin: boolean;
+            /** Reportes Abiertos */
+            reportes_abiertos: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /** NegocioDetalle */
         NegocioDetalle: {
@@ -572,6 +1029,54 @@ export interface components {
             lat: number;
             /** Lng */
             lng: number;
+        };
+        /** PuntoSerie */
+        PuntoSerie: {
+            /** Etiqueta */
+            etiqueta: string;
+            /** Valor */
+            valor: number;
+        };
+        /** Reporte */
+        Reporte: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Negocio Id
+             * Format: uuid
+             */
+            negocio_id: string;
+            /** Negocio Slug */
+            negocio_slug: string;
+            /** Negocio Nombre */
+            negocio_nombre: string;
+            /** Motivo */
+            motivo: string;
+            /** Detalle */
+            detalle: string | null;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "abierta" | "resuelta" | "descartada";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ReporteEntrada */
+        ReporteEntrada: {
+            /**
+             * Motivo
+             * @enum {string}
+             */
+            motivo: "cerro" | "horario" | "ubicacion" | "contacto" | "otro";
+            /** Detalle */
+            detalle?: string | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -897,6 +1402,395 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    inscribirse_api_v1_lista_espera_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListaEsperaEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaEsperaRespuesta"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    metas_api_v1_lista_espera_metas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Metas"];
+                };
+            };
+        };
+    };
+    reportar_api_v1_negocios__negocio_id__reportes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReporteEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    negocios_api_v1_admin_negocios_get: {
+        parameters: {
+            query?: {
+                estado?: ("borrador" | "pendiente" | "activo" | "rechazado" | "inactivo") | null;
+                barrio?: string | null;
+                categoria?: string | null;
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NegocioAdmin"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_negocio_api_v1_admin_negocios__negocio_id__estado_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioEstadoNegocio"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NegocioAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lista_espera_api_v1_admin_lista_espera_get: {
+        parameters: {
+            query?: {
+                rol?: ("vecino" | "negocio" | "mensajero") | null;
+                contactado?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InscritoEspera"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lista_espera_csv_api_v1_admin_lista_espera_csv_get: {
+        parameters: {
+            query?: {
+                rol?: ("vecino" | "negocio" | "mensajero") | null;
+                contactado?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    marcar_contactado_api_v1_admin_lista_espera__inscrito_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inscrito_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioInscrito"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reportes_api_v1_admin_reportes_get: {
+        parameters: {
+            query?: {
+                estado?: ("abierta" | "resuelta" | "descartada") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reporte"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_reporte_api_v1_admin_reportes__reporte_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reporte_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioReporte"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    entrevistas_api_v1_admin_entrevistas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entrevista"][];
+                };
+            };
+        };
+    };
+    registrar_entrevista_api_v1_admin_entrevistas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntrevistaEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entrevista"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    tablero_gate_api_v1_admin_metricas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Gate"];
                 };
             };
         };

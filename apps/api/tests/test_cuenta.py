@@ -144,7 +144,9 @@ def test_horarios_del_negocio_quedan_guardados(
     assert franjas == [(0, "08:00", "13:00"), (6, "16:00", "22:00")]
 
 
-def test_negocio_lejos_de_los_barrios_piloto_queda_sin_barrio(client: TestClient, nuevo: str) -> None:
+def test_negocio_lejos_de_los_barrios_piloto_queda_sin_barrio(
+    client: TestClient, nuevo: str
+) -> None:
     client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
     lejos = {**NEGOCIO, "ubicacion": {"lat": 4.85, "lng": -75.79}}  # Cerritos
     r = client.post(f"{V1}/mis-negocios", json=lejos, headers=_auth(nuevo))

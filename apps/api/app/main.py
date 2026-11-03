@@ -7,7 +7,7 @@ from sqlalchemy.exc import ArgumentError
 
 from app.config import get_settings
 from app.errors import registrar_manejadores
-from app.routers import cuenta, directorio, eventos, mandados, sistema
+from app.routers import admin, comunidad, cuenta, directorio, eventos, mandados, sistema
 
 API_PREFIX = "/api/v1"
 
@@ -49,6 +49,8 @@ def create_app() -> FastAPI:
         cuenta.router,
         directorio.router,
         eventos.router,
+        comunidad.router,
+        admin.router,
         mandados.router,
     ):
         app.include_router(router, prefix=API_PREFIX)
