@@ -12,9 +12,13 @@ La especificación completa está en [`SPEC.md`](SPEC.md); las decisiones en
 Hecho: API pública del directorio (`/categorias`, `/barrios`, `/negocios`, `/negocios/{id_o_slug}`,
 `/eventos`), mapa en `/`, perfil en `/n/:slug`, portada en `/conoce`. Cuentas con Supabase Auth
 (Google o enlace por correo) en `/entrar`, formulario de bienvenida vecino/empresario en
-`/bienvenida`, registro del negocio por pasos en `/mi-negocio/nuevo` (queda `pendiente`).
-Pendiente: fotos del negocio (Supabase Storage), lista de espera (6.1), panel admin con
-aprobación y tablero del gate (6.5, §9), reportes, metadatos Open Graph y Lighthouse.
+`/bienvenida`, registro del negocio por pasos en `/mi-negocio/nuevo` (queda `pendiente`) y sus
+fotos en `/mi-negocio/:id/fotos` (Supabase Storage, bucket `negocio-fotos`). Lista de espera y
+metas en `/conoce`, «Reportar información incorrecta» en el perfil, panel `/admin` (gate con
+los 6 criterios, aprobación de negocios, lista de espera + CSV, reportes, entrevistas) y vista
+previa Open Graph (`/compartir/n/{slug}`, Vercel la sirve solo a robots).
+Pendiente: estadísticas y edición del negocio para el dueño (6.4), carga por CSV del admin,
+Lighthouse en producción y dominio propio.
 
 Trabajar una fase a la vez (SPEC §12); al cerrar cada fase: lint + tests, verificar criterios
 de aceptación, commit, PR y **detenerse**. No adelantar funcionalidades de fases futuras salvo
