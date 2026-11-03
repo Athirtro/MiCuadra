@@ -1,0 +1,14 @@
+{
+  "name": "micuadra",
+  "private": true,
+  "packageManager": "pnpm@11.13.1",
+  "engines": { "node": ">=20.19" },
+  "scripts": {
+    "dev": "pnpm --filter @micuadra/web dev",
+    "build": "pnpm --filter @micuadra/web build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "gen:types": "pnpm --filter @micuadra/shared gen:types"
+  }
+}

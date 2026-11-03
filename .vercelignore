@@ -1,0 +1,10 @@
+# La web solo necesita el workspace de pnpm; el API se despliega en Render.
+apps/api
+supabase
+docs
+landing
+**/node_modules
+**/dist
+**/dev-dist
+.env
+.env.*

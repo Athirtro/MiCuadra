@@ -1,0 +1,442 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MiCuadra API",
+    "description": "El mapa vivo de tu cuadra — directorio hiperlocal y red de mandados.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "sistema"
+        ],
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/yo": {
+      "get": {
+        "tags": [
+          "sistema"
+        ],
+        "summary": "Yo",
+        "description": "Usuario autenticado y sus roles (útil para que la web decida qué mostrar).",
+        "operationId": "yo_api_v1_yo_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsuarioActual"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/negocios/{negocio_id}/mandados-disponibles": {
+      "get": {
+        "tags": [
+          "directorio"
+        ],
+        "summary": "Mandados Disponibles",
+        "operationId": "mandados_disponibles_api_v1_negocios__negocio_id__mandados_disponibles_get",
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Disponibilidad"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mandados/cotizar": {
+      "post": {
+        "tags": [
+          "mandados"
+        ],
+        "summary": "Cotizar",
+        "operationId": "cotizar_api_v1_mandados_cotizar_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "501": {
+            "description": "Mandados aún no activos"
+          }
+        }
+      }
+    },
+    "/api/v1/mandados": {
+      "get": {
+        "tags": [
+          "mandados"
+        ],
+        "summary": "Listar",
+        "operationId": "listar_api_v1_mandados_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "501": {
+            "description": "Mandados aún no activos"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "mandados"
+        ],
+        "summary": "Crear",
+        "operationId": "crear_api_v1_mandados_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "501": {
+            "description": "Mandados aún no activos"
+          }
+        }
+      }
+    },
+    "/api/v1/mandados/disponibles": {
+      "get": {
+        "tags": [
+          "mandados"
+        ],
+        "summary": "Disponibles",
+        "operationId": "disponibles_api_v1_mandados_disponibles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "501": {
+            "description": "Mandados aún no activos"
+          }
+        }
+      }
+    },
+    "/api/v1/mandados/{mandado_id}": {
+      "get": {
+        "tags": [
+          "mandados"
+        ],
+        "summary": "Detalle",
+        "operationId": "detalle_api_v1_mandados__mandado_id__get",
+        "parameters": [
+          {
+            "name": "mandado_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mandado Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "501": {
+            "description": "Mandados aún no activos"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Disponibilidad": {
+        "properties": {
+          "disponible": {
+            "type": "boolean",
+            "title": "Disponible"
+          },
+          "razon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "proximamente",
+                  "sin_mensajeros",
+                  "fuera_de_cobertura"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Razon"
+          },
+          "mensajeros_activos": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mensajeros Activos"
+          },
+          "tarifa_desde": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tarifa Desde"
+          }
+        },
+        "type": "object",
+        "required": [
+          "disponible"
+        ],
+        "title": "Disponibilidad",
+        "description": "Contrato de `GET /negocios/{id}/mandados-disponibles`. No cambia entre fases."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Health": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degradado"
+            ],
+            "title": "Estado"
+          },
+          "entorno": {
+            "type": "string",
+            "title": "Entorno"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "db": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "title": "Db"
+          },
+          "postgis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Postgis"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado",
+          "entorno",
+          "version",
+          "db"
+        ],
+        "title": "Health"
+      },
+      "UsuarioActual": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "roles": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "vecino",
+                "mensajero",
+                "dueno",
+                "admin"
+              ]
+            },
+            "type": "array",
+            "title": "Roles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "roles"
+        ],
+        "title": "UsuarioActual"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

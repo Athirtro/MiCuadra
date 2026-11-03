@@ -1,0 +1,56 @@
+# Render Blueprint (capa gratuita). Dos servicios del mismo código:
+#   micuadra-api-staging ← rama main        micuadra-api ← rama produccion
+# Los secretos (DATABASE_URL, SUPABASE_*, CORS_ORIGINS) se cargan en el dashboard (sync: false).
+services:
+  - type: web
+    name: micuadra-api-staging
+    runtime: python
+    plan: free
+    region: ohio
+    branch: main
+    rootDir: apps/api
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.14"
+      - key: ENTORNO
+        value: staging
+      - key: MANDADOS_ACTIVOS
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+  - type: web
+    name: micuadra-api
+    runtime: python
+    plan: free
+    region: ohio
+    branch: produccion
+    rootDir: apps/api
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run --no-dev uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.14"
+      - key: ENTORNO
+        value: prod
+      - key: MANDADOS_ACTIVOS
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

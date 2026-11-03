@@ -1,0 +1,21 @@
+{
+  "name": "@micuadra/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api.ts"
+  },
+  "scripts": {
+    "gen:types": "cd ../../apps/api && uv run python scripts/openapi.py ../../packages/shared/openapi.json && cd ../../packages/shared && openapi-typescript openapi.json -o src/api.ts",
+    "check:types": "pnpm gen:types && git diff --exit-code -- openapi.json src/api.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "echo 'sin pruebas'"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.3"
+  }
+}
