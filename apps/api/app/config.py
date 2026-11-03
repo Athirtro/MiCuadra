@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def usar_driver_psycopg(cls, v: str) -> str:
+        # Tolera espacios y comillas que se cuelan al pegar la URL en un panel.
+        v = v.strip().strip("'\"").strip()
         # Supabase y Render entregan `postgres://` o `postgresql://`; SQLAlchemy necesita el driver.
         for prefijo in ("postgres://", "postgresql://"):
             if v.startswith(prefijo):
