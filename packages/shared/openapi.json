@@ -64,6 +64,238 @@
         ]
       }
     },
+    "/api/v1/categorias": {
+      "get": {
+        "tags": [
+          "directorio"
+        ],
+        "summary": "Categorias",
+        "operationId": "categorias_api_v1_categorias_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Categoria"
+                  },
+                  "type": "array",
+                  "title": "Response Categorias Api V1 Categorias Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/barrios": {
+      "get": {
+        "tags": [
+          "directorio"
+        ],
+        "summary": "Barrios",
+        "operationId": "barrios_api_v1_barrios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Barrio"
+                  },
+                  "type": "array",
+                  "title": "Response Barrios Api V1 Barrios Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negocios": {
+      "get": {
+        "tags": [
+          "directorio"
+        ],
+        "summary": "Negocios",
+        "operationId": "negocios_api_v1_negocios_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 5.0,
+              "minimum": 4.6,
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": -75.5,
+              "minimum": -76.0,
+              "title": "Lng"
+            }
+          },
+          {
+            "name": "radio_m",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 3000,
+              "minimum": 100,
+              "default": 1000,
+              "title": "Radio M"
+            }
+          },
+          {
+            "name": "categoria",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Categoria"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "abierto_ahora",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Abierto Ahora"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d{1,4}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListaNegocios"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negocios/{id_o_slug}": {
+      "get": {
+        "tags": [
+          "directorio"
+        ],
+        "summary": "Negocio",
+        "operationId": "negocio_api_v1_negocios__id_o_slug__get",
+        "parameters": [
+          {
+            "name": "id_o_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id O Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NegocioDetalle"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/negocios/{negocio_id}/mandados-disponibles": {
       "get": {
         "tags": [
@@ -93,6 +325,40 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/eventos": {
+      "post": {
+        "tags": [
+          "eventos"
+        ],
+        "summary": "Registrar Evento",
+        "operationId": "registrar_evento_api_v1_eventos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventoEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -239,6 +505,124 @@
   },
   "components": {
     "schemas": {
+      "Barrio": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "centroide": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "es_piloto": {
+            "type": "boolean",
+            "title": "Es Piloto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "centroide",
+          "es_piloto"
+        ],
+        "title": "Barrio"
+      },
+      "BarrioCorto": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "nombre"
+        ],
+        "title": "BarrioCorto"
+      },
+      "Categoria": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "icono": {
+            "type": "string",
+            "title": "Icono"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "icono",
+          "color",
+          "orden"
+        ],
+        "title": "Categoria"
+      },
+      "CategoriaCorta": {
+        "properties": {
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "icono": {
+            "type": "string",
+            "title": "Icono"
+          },
+          "color": {
+            "type": "string",
+            "title": "Color"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slug",
+          "nombre",
+          "icono",
+          "color"
+        ],
+        "title": "CategoriaCorta"
+      },
       "Disponibilidad": {
         "properties": {
           "disponible": {
@@ -290,6 +674,71 @@
         ],
         "title": "Disponibilidad",
         "description": "Contrato de `GET /negocios/{id}/mandados-disponibles`. No cambia entre fases."
+      },
+      "EventoEntrada": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "vista_perfil",
+              "click_whatsapp",
+              "click_pedir_mandado",
+              "click_como_llegar",
+              "busqueda",
+              "sesion"
+            ],
+            "title": "Tipo"
+          },
+          "anon_id": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Anon Id",
+            "description": "Id aleatorio guardado en el navegador; sin datos personales"
+          },
+          "negocio_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Negocio Id"
+          },
+          "metadata": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Metadata"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "anon_id"
+        ],
+        "title": "EventoEntrada"
       },
       "HTTPValidationError": {
         "properties": {
@@ -350,6 +799,299 @@
           "db"
         ],
         "title": "Health"
+      },
+      "Horario": {
+        "properties": {
+          "dia_semana": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Dia Semana",
+            "description": "0 = domingo … 6 = sábado"
+          },
+          "abre": {
+            "type": "string",
+            "title": "Abre",
+            "examples": [
+              "09:00"
+            ]
+          },
+          "cierra": {
+            "type": "string",
+            "title": "Cierra",
+            "examples": [
+              "19:30"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "dia_semana",
+          "abre",
+          "cierra"
+        ],
+        "title": "Horario"
+      },
+      "ListaNegocios": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NegocioResumen"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Negocios que cumplen los filtros dentro del radio"
+          },
+          "siguiente_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Siguiente Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "siguiente_cursor"
+        ],
+        "title": "ListaNegocios"
+      },
+      "NegocioDetalle": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaCorta"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BarrioCorto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "direccion_texto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion Texto"
+          },
+          "whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp"
+          },
+          "telefono": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telefono"
+          },
+          "fotos": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fotos"
+          },
+          "horarios": {
+            "items": {
+              "$ref": "#/components/schemas/Horario"
+            },
+            "type": "array",
+            "title": "Horarios"
+          },
+          "abierto_ahora": {
+            "type": "boolean",
+            "title": "Abierto Ahora"
+          },
+          "cerrado_hoy": {
+            "type": "boolean",
+            "title": "Cerrado Hoy"
+          },
+          "destacado": {
+            "type": "boolean",
+            "title": "Destacado"
+          },
+          "mandados": {
+            "$ref": "#/components/schemas/Disponibilidad"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "descripcion",
+          "categoria",
+          "barrio",
+          "ubicacion",
+          "direccion_texto",
+          "whatsapp",
+          "telefono",
+          "fotos",
+          "horarios",
+          "abierto_ahora",
+          "cerrado_hoy",
+          "destacado",
+          "mandados"
+        ],
+        "title": "NegocioDetalle"
+      },
+      "NegocioResumen": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "categoria": {
+            "$ref": "#/components/schemas/CategoriaCorta"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BarrioCorto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "distancia_m": {
+            "type": "integer",
+            "title": "Distancia M",
+            "description": "Distancia en línea recta desde el punto consultado"
+          },
+          "abierto_ahora": {
+            "type": "boolean",
+            "title": "Abierto Ahora"
+          },
+          "destacado": {
+            "type": "boolean",
+            "title": "Destacado"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "descripcion",
+          "categoria",
+          "barrio",
+          "ubicacion",
+          "distancia_m",
+          "abierto_ahora",
+          "destacado",
+          "foto_url"
+        ],
+        "title": "NegocioResumen"
+      },
+      "Punto": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "Punto"
       },
       "UsuarioActual": {
         "properties": {

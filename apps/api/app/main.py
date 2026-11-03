@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.errors import registrar_manejadores
-from app.routers import directorio, mandados, sistema
+from app.routers import directorio, eventos, mandados, sistema
 
 API_PREFIX = "/api/v1"
 
@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
     )
     registrar_manejadores(app)
 
-    for router in (sistema.router, directorio.router, mandados.router):
+    for router in (sistema.router, directorio.router, eventos.router, mandados.router):
         app.include_router(router, prefix=API_PREFIX)
     return app
 

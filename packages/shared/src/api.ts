@@ -41,6 +41,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/categorias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Categorias */
+        get: operations["categorias_api_v1_categorias_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/barrios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Barrios */
+        get: operations["barrios_api_v1_barrios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/negocios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Negocios */
+        get: operations["negocios_api_v1_negocios_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/negocios/{id_o_slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Negocio */
+        get: operations["negocio_api_v1_negocios__id_o_slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/negocios/{negocio_id}/mandados-disponibles": {
         parameters: {
             query?: never;
@@ -52,6 +120,23 @@ export interface paths {
         get: operations["mandados_disponibles_api_v1_negocios__negocio_id__mandados_disponibles_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eventos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registrar Evento */
+        post: operations["registrar_evento_api_v1_eventos_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -131,6 +216,57 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Barrio */
+        Barrio: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            centroide: components["schemas"]["Punto"];
+            /** Es Piloto */
+            es_piloto: boolean;
+        };
+        /** BarrioCorto */
+        BarrioCorto: {
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+        };
+        /** Categoria */
+        Categoria: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /** Icono */
+            icono: string;
+            /** Color */
+            color: string;
+            /** Orden */
+            orden: number;
+        };
+        /** CategoriaCorta */
+        CategoriaCorta: {
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /** Icono */
+            icono: string;
+            /** Color */
+            color: string;
+        };
         /**
          * Disponibilidad
          * @description Contrato de `GET /negocios/{id}/mandados-disponibles`. No cambia entre fases.
@@ -144,6 +280,25 @@ export interface components {
             mensajeros_activos?: number | null;
             /** Tarifa Desde */
             tarifa_desde?: number | null;
+        };
+        /** EventoEntrada */
+        EventoEntrada: {
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "vista_perfil" | "click_whatsapp" | "click_pedir_mandado" | "click_como_llegar" | "busqueda" | "sesion";
+            /**
+             * Anon Id
+             * @description Id aleatorio guardado en el navegador; sin datos personales
+             */
+            anon_id: string;
+            /** Negocio Id */
+            negocio_id?: string | null;
+            /** Metadata */
+            metadata?: {
+                [key: string]: string | number | boolean | null;
+            };
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -168,6 +323,105 @@ export interface components {
             db: "ok" | "error";
             /** Postgis */
             postgis?: string | null;
+        };
+        /** Horario */
+        Horario: {
+            /**
+             * Dia Semana
+             * @description 0 = domingo … 6 = sábado
+             */
+            dia_semana: number;
+            /**
+             * Abre
+             * @example 09:00
+             */
+            abre: string;
+            /**
+             * Cierra
+             * @example 19:30
+             */
+            cierra: string;
+        };
+        /** ListaNegocios */
+        ListaNegocios: {
+            /** Items */
+            items: components["schemas"]["NegocioResumen"][];
+            /**
+             * Total
+             * @description Negocios que cumplen los filtros dentro del radio
+             */
+            total: number;
+            /** Siguiente Cursor */
+            siguiente_cursor: string | null;
+        };
+        /** NegocioDetalle */
+        NegocioDetalle: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            categoria: components["schemas"]["CategoriaCorta"];
+            barrio: components["schemas"]["BarrioCorto"] | null;
+            ubicacion: components["schemas"]["Punto"];
+            /** Direccion Texto */
+            direccion_texto: string | null;
+            /** Whatsapp */
+            whatsapp: string | null;
+            /** Telefono */
+            telefono: string | null;
+            /** Fotos */
+            fotos: string[];
+            /** Horarios */
+            horarios: components["schemas"]["Horario"][];
+            /** Abierto Ahora */
+            abierto_ahora: boolean;
+            /** Cerrado Hoy */
+            cerrado_hoy: boolean;
+            /** Destacado */
+            destacado: boolean;
+            mandados: components["schemas"]["Disponibilidad"];
+        };
+        /** NegocioResumen */
+        NegocioResumen: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            categoria: components["schemas"]["CategoriaCorta"];
+            barrio: components["schemas"]["BarrioCorto"] | null;
+            ubicacion: components["schemas"]["Punto"];
+            /**
+             * Distancia M
+             * @description Distancia en línea recta desde el punto consultado
+             */
+            distancia_m: number;
+            /** Abierto Ahora */
+            abierto_ahora: boolean;
+            /** Destacado */
+            destacado: boolean;
+            /** Foto Url */
+            foto_url: string | null;
+        };
+        /** Punto */
+        Punto: {
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
         };
         /** UsuarioActual */
         UsuarioActual: {
@@ -252,6 +506,115 @@ export interface operations {
             };
         };
     };
+    categorias_api_v1_categorias_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Categoria"][];
+                };
+            };
+        };
+    };
+    barrios_api_v1_barrios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Barrio"][];
+                };
+            };
+        };
+    };
+    negocios_api_v1_negocios_get: {
+        parameters: {
+            query: {
+                lat: number;
+                lng: number;
+                radio_m?: number;
+                categoria?: string | null;
+                q?: string | null;
+                abierto_ahora?: boolean;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListaNegocios"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    negocio_api_v1_negocios__id_o_slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_o_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NegocioDetalle"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     mandados_disponibles_api_v1_negocios__negocio_id__mandados_disponibles_get: {
         parameters: {
             query?: never;
@@ -271,6 +634,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Disponibilidad"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    registrar_evento_api_v1_eventos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventoEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
