@@ -1,7 +1,14 @@
 import type { components } from '@micuadra/shared/api'
 
-export type Health = components['schemas']['Health']
-export type Disponibilidad = components['schemas']['Disponibilidad']
+type Esquemas = components['schemas']
+export type Health = Esquemas['Health']
+export type Disponibilidad = Esquemas['Disponibilidad']
+export type Categoria = Esquemas['Categoria']
+export type Barrio = Esquemas['Barrio']
+export type NegocioResumen = Esquemas['NegocioResumen']
+export type ListaNegocios = Esquemas['ListaNegocios']
+export type NegocioDetalle = Esquemas['NegocioDetalle']
+export type Punto = Esquemas['Punto']
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api/v1'
 
@@ -16,7 +23,12 @@ export class ApiError extends Error {
 }
 
 export async function apiGet<T>(ruta: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${ruta}`, init)
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${ruta}`, init)
+  } catch {
+    throw new ApiError(0, 'sin_conexion', 'No hay conexión. Revisa tus datos o el wifi.')
+  }
   const cuerpo: unknown = await res.json().catch(() => null)
   if (!res.ok) {
     const error = (cuerpo as { error?: { codigo?: string; mensaje?: string } } | null)?.error
@@ -27,4 +39,34 @@ export async function apiGet<T>(ruta: string, init?: RequestInit): Promise<T> {
     )
   }
   return cuerpo as T
+}
+
+export interface FiltrosNegocios {
+  centro: Punto
+  radioM: number
+  categoria?: string | null
+  q?: string
+  abiertoAhora?: boolean
+}
+
+export function rutaNegocios({ centro, radioM, categoria, q, abiertoAhora }: FiltrosNegocios): string {
+  const p = new URLSearchParams({
+    lat: centro.lat.toFixed(6),
+    lng: centro.lng.toFixed(6),
+    radio_m: String(radioM),
+    limit: '100',
+  })
+  if (categoria) p.set('categoria', categoria)
+  if (q?.trim()) p.set('q', q.trim())
+  if (abiertoAhora) p.set('abierto_ahora', 'true')
+  return `/negocios?${p}`
+}
+
+export function apiPost(ruta: string, cuerpo: unknown): Promise<Response> {
+  return fetch(`${BASE}${ruta}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cuerpo),
+    keepalive: true,
+  })
 }

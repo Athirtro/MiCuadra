@@ -8,9 +8,15 @@ La especificación completa está en [`SPEC.md`](SPEC.md); las decisiones en
 
 ## Fase actual
 
-**Fase 0 — Setup** (rama `fase-0-setup`). Trabajar una fase a la vez (SPEC §12); al cerrar
-cada fase: lint + tests, verificar criterios de aceptación, commit, PR y **detenerse**.
-No adelantar funcionalidades de fases futuras salvo los stubs que pide la SPEC.
+**Fase 1 — Directorio + medición de demanda** (rama `fase-1-directorio`, sale de `fase-0-setup`).
+Hecho: API pública del directorio (`/categorias`, `/barrios`, `/negocios`, `/negocios/{id_o_slug}`,
+`/eventos`), mapa en `/`, perfil en `/n/:slug`, portada en `/conoce`.
+Pendiente: lista de espera (6.1), registro de negocios en 4 pasos (6.4), panel admin y tablero
+del gate (6.5, §9), reportes, metadatos Open Graph, Lighthouse y despliegue con API.
+
+Trabajar una fase a la vez (SPEC §12); al cerrar cada fase: lint + tests, verificar criterios
+de aceptación, commit, PR y **detenerse**. No adelantar funcionalidades de fases futuras salvo
+los stubs que pide la SPEC.
 
 ## Stack
 
@@ -49,13 +55,17 @@ apps/api/        FastAPI
   app/auth.py        JWT de Supabase, get_usuario_actual, requiere_rol(...)
   app/errors.py      ApiError y formato { "error": { "codigo", "mensaje" } }
   app/services/      Interfaces + implementaciones; __init__.py elige según flags
-  app/routers/       sistema (health, yo), directorio, mandados (501 mientras flag off)
+  app/routers/       sistema (health, yo), directorio, eventos, mandados (501 mientras flag off)
+  app/services/horarios.py  "abierto ahora" (hora de Bogotá); el reloj se inyecta con `ahora_utc`
   scripts/db.py      migrar | seed | seed-clean | reset
   scripts/seed.py    datos [DEMO] deterministas
   tests/
 apps/web/        React + Vite (PWA)
   src/styles.css     tokens de marca (claro/oscuro) → utilidades Tailwind (bg-bg, text-ink, bg-green…)
   src/lib/api.ts     cliente fetch + tipos del OpenAPI
+  src/lib/eventos.ts eventos anónimos (anon_id en localStorage, respeta No rastrear)
+  src/pages/         Mapa (/), Perfil (/n/:slug), Conoce (/conoce)
+  src/components/MapaBarrio.tsx  Leaflet + markercluster (carga diferida; en pruebas se reemplaza por un falso)
 packages/shared/ tipos generados (src/api.ts) + constantes de dominio (src/index.ts)
 supabase/migrations/  SQL versionado = fuente de verdad del esquema
 supabase/local/       shim para correr las migraciones en Postgres sin Supabase

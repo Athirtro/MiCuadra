@@ -2,12 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { InstalarApp } from '../components/InstalarApp'
 import { apiGet, type Health } from '../lib/api'
 
-/** Portada "Próximamente". En la Fase 1 aquí vive el mapa del barrio. */
-export function Inicio() {
+/** "Conoce MiCuadra": qué es, instalar la app y (pronto) la lista de espera. */
+export function Conoce() {
   return (
-    <section className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
+    <section id="lista" className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
       <div className="rounded-r border border-line bg-surface p-6">
-        <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Muy pronto</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Conoce MiCuadra</p>
         <h1 className="mt-2 text-4xl font-black leading-none">El mapa vivo de tu cuadra</h1>
         <p className="mt-3 text-muted">
           Encuentra en segundos los negocios de tu barrio — y si no puedes salir, un vecino va por
@@ -27,7 +27,7 @@ export function Inicio() {
         </div>
         <p className="mt-5 text-sm">
           Estamos cargando las tiendas, panaderías, barberías y droguerías de Cuba, Álamos, Boston
-          y El Jardín. Instala la app para tenerla a mano cuando tu cuadra esté en el mapa.
+          y El Jardín. Instala la app para tenerla a mano. Muy pronto podrás inscribirte aquí en la lista de espera de mandados.
         </p>
         <div className="mt-5">
           <InstalarApp />
