@@ -1,7 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router'
-import { ApiError, apiGet, type NegocioDetalle } from '../lib/api'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react'
+import { Link, useNavigate, useParams } from 'react-router'
+import { Dialogo } from '../components/Dialogo'
+import { CLAVE_QUE_PEDIRIA } from '../components/ListaEspera'
+import { ApiError, apiEnviar, apiGet, type NegocioDetalle, type ReporteEntrada } from '../lib/api'
 import { registrarEvento } from '../lib/eventos'
 import { emojiCategoria, enlaceComoLlegar, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
 import { EstadoAbierto } from './Mapa'
@@ -47,6 +49,7 @@ export function Perfil() {
 
 function FichaNegocio({ n }: { n: NegocioDetalle }) {
   const [modalMandado, setModalMandado] = useState(false)
+  const [modalReporte, setModalReporte] = useState(false)
   const [copiado, setCopiado] = useState(false)
   const emoji = emojiCategoria(n.categoria.slug)
 
@@ -150,10 +153,14 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               Llamar
             </a>
           )}
+          <button type="button" onClick={() => setModalReporte(true)} className="tap px-2 text-muted underline">
+            Reportar información incorrecta
+          </button>
         </div>
       </div>
 
       {modalMandado && <ModalProximamente nombre={n.nombre} alCerrar={() => setModalMandado(false)} />}
+      {modalReporte && <ModalReportar negocioId={n.id} alCerrar={() => setModalReporte(false)} />}
     </article>
   )
 }
@@ -183,39 +190,127 @@ function Carrusel({ fotos, nombre, emoji, color }: { fotos: string[]; nombre: st
 
 /** Fase 1: el botón mide demanda y lleva a la lista de espera (SPEC §6.3). */
 function ModalProximamente({ nombre, alCerrar }: { nombre: string; alCerrar: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => {
-    // Sin cleanup que llame close(): dispararía onClose y cerraría el modal recién abierto
-    // (StrictMode monta los efectos dos veces). El <dialog> sale del DOM al desmontarse.
-    const dialogo = ref.current
-    if (dialogo && !dialogo.open) dialogo.showModal?.()
-  }, [])
+  const navigate = useNavigate()
+  const [pedido, setPedido] = useState('')
+
+  function irALista() {
+    try {
+      if (pedido.trim()) sessionStorage.setItem(CLAVE_QUE_PEDIRIA, `${pedido.trim()} (en ${nombre})`)
+    } catch {
+      // sin almacenamiento: la lista de espera simplemente sale vacía
+    }
+    navigate('/conoce#lista')
+  }
 
   return (
-    <dialog
-      ref={ref}
-      onClose={alCerrar}
-      aria-labelledby="titulo-mandado"
-      className="m-auto w-[min(92vw,26rem)] rounded-r bg-surface p-6 text-ink backdrop:bg-black/50"
-    >
+    <Dialogo titulo="Los mandados llegan muy pronto" alCerrar={alCerrar}>
       <p className="text-4xl" aria-hidden="true">
         🛵
       </p>
-      <h2 id="titulo-mandado" className="mt-2 text-2xl font-black">
-        Los mandados llegan muy pronto
-      </h2>
+      <h2 className="mt-2 text-2xl font-black">Los mandados llegan muy pronto</h2>
       <p className="mt-2 text-muted">
         Pronto un vecino podrá ir a {nombre} por ti. Inscríbete en la lista de espera y serás de los primeros en
         usarlo.
       </p>
+      <label className="mt-4 flex flex-col gap-1">
+        <span className="font-bold">¿Qué le habrías pedido?</span>
+        <input
+          maxLength={150}
+          value={pedido}
+          onChange={(e) => setPedido(e.target.value)}
+          placeholder="Ej.: 6 panes y una leche"
+          className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+        />
+      </label>
       <div className="mt-5 flex flex-col gap-2">
-        <Link to="/conoce#lista" className="tap flex items-center justify-center rounded-r bg-green px-4 font-bold text-green-ink">
+        <button type="button" onClick={irALista} className="tap rounded-r bg-green px-4 font-bold text-green-ink">
           Quiero estar en la lista
-        </Link>
+        </button>
         <button type="button" onClick={alCerrar} className="tap rounded-r border border-line px-4 font-bold">
           Ahora no
         </button>
       </div>
-    </dialog>
+    </Dialogo>
+  )
+}
+
+const MOTIVOS: { motivo: ReporteEntrada['motivo']; texto: string }[] = [
+  { motivo: 'cerro', texto: 'Ya no existe o cerró' },
+  { motivo: 'horario', texto: 'El horario está mal' },
+  { motivo: 'ubicacion', texto: 'La ubicación o dirección está mal' },
+  { motivo: 'contacto', texto: 'El WhatsApp o el teléfono no sirven' },
+  { motivo: 'otro', texto: 'Otra cosa' },
+]
+
+function ModalReportar({ negocioId, alCerrar }: { negocioId: string; alCerrar: () => void }) {
+  const [motivo, setMotivo] = useState<ReporteEntrada['motivo'] | null>(null)
+  const [detalle, setDetalle] = useState('')
+  const reportar = useMutation({
+    mutationFn: (datos: ReporteEntrada) => apiEnviar<null>('POST', `/negocios/${negocioId}/reportes`, datos),
+  })
+
+  function enviar(e: FormEvent) {
+    e.preventDefault()
+    if (motivo) reportar.mutate({ motivo, detalle: detalle.trim() || null })
+  }
+
+  return (
+    <Dialogo titulo="Reportar información incorrecta" alCerrar={alCerrar}>
+      {reportar.isSuccess ? (
+        <div role="status">
+          <h2 className="text-2xl font-black">¡Gracias por avisar!</h2>
+          <p className="mt-2 text-muted">El equipo de MiCuadra lo revisa y corrige el mapa.</p>
+          <button type="button" onClick={alCerrar} className="tap mt-5 w-full rounded-r bg-green px-4 font-bold text-green-ink">
+            Listo
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={enviar}>
+          <h2 className="text-2xl font-black">¿Qué está mal?</h2>
+          <fieldset className="mt-3 flex flex-col gap-1">
+            <legend className="sr-only">Motivo</legend>
+            {MOTIVOS.map((m) => (
+              <label key={m.motivo} className="tap flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="motivo"
+                  checked={motivo === m.motivo}
+                  onChange={() => setMotivo(m.motivo)}
+                  className="size-5 accent-[var(--green)]"
+                />
+                {m.texto}
+              </label>
+            ))}
+          </fieldset>
+          <label className="mt-3 flex flex-col gap-1">
+            <span className="font-bold">Cuéntanos más (opcional)</span>
+            <textarea
+              maxLength={500}
+              rows={3}
+              value={detalle}
+              onChange={(e) => setDetalle(e.target.value)}
+              className="w-full rounded-r border border-line bg-bg px-4 py-2 text-base"
+            />
+          </label>
+          {reportar.isError && (
+            <p role="alert" className="mt-2 text-sm font-bold text-red">
+              {reportar.error.message}
+            </p>
+          )}
+          <div className="mt-5 flex flex-col gap-2">
+            <button
+              type="submit"
+              disabled={!motivo || reportar.isPending}
+              className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+            >
+              {reportar.isPending ? 'Enviando…' : 'Enviar reporte'}
+            </button>
+            <button type="button" onClick={alCerrar} className="tap rounded-r border border-line px-4 font-bold">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+    </Dialogo>
   )
 }

@@ -3,15 +3,18 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
-import type { Perfil } from './lib/api'
+import type { Gate, NegocioAdmin, Perfil } from './lib/api'
 import { ProveedorSesion } from './lib/sesion'
 import { apiFalsa, BARRIOS, CATEGORIAS } from './test/fixtures'
 
 // Sesión de Supabase simulada: `conSesion` decide si hay alguien adentro.
-const estado = vi.hoisted(() => ({ conSesion: true, google: vi.fn(), correo: vi.fn() }))
+const estado = vi.hoisted(() => ({ conSesion: true, google: vi.fn(), correo: vi.fn(), subir: vi.fn() }))
+vi.mock('./lib/imagen', () => ({ comprimirFoto: async () => new Blob(['x'], { type: 'image/webp' }) }))
 vi.mock('./lib/supabase', () => ({
   authDisponible: true,
   urlRegreso: () => 'http://localhost/cuenta',
+  subirFoto: estado.subir,
+  borrarArchivoFoto: vi.fn(),
   auth: {
     onAuthStateChange: (cb: (evento: string, sesion: unknown) => void) => {
       const sesion = estado.conSesion ? { access_token: 'token-123', user: { id: 'u1', email: 'vale@gmail.com' } } : null
@@ -199,5 +202,94 @@ describe('Registro del negocio', () => {
     apiFalsa({ '/yo': { ...NUEVO, celular: '3104567890', perfil_completo: true } })
     renderEn('/mi-negocio/nuevo')
     expect(await screen.findByRole('button', { name: 'Sí, quiero registrar mi negocio' })).toBeInTheDocument()
+  })
+})
+
+describe('Panel de administración', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['admin'] }
+  const PENDIENTE: NegocioAdmin = {
+    id: 'n9',
+    slug: 'arepas-cuba',
+    nombre: 'Arepas La Esquina',
+    estado: 'pendiente',
+    motivo_rechazo: null,
+    categoria: { slug: 'panaderia', nombre: 'Panadería', icono: 'croissant', color: '#B7791F' },
+    barrio: { slug: 'cuba', nombre: 'Cuba' },
+    whatsapp: '3104567890',
+    direccion_texto: 'Calle 72 # 25-10',
+    descripcion: null,
+    dueno: { nombre: 'Valeria Ospina', email: 'vale@gmail.com', celular: '3104567890' },
+    creado_por_admin: false,
+    reportes_abiertos: 1,
+    created_at: '2026-11-03T15:00:00Z',
+  }
+  const GATE: Gate = {
+    cumplidos: 1,
+    listo: false,
+    generado_at: '2026-11-03T15:00:00Z',
+    criterios: [
+      {
+        id: 3,
+        nombre: 'Demanda de mandados',
+        meta: '≥ 40 clics en «Pedir mandado» en 14 días',
+        valor: '25 clics',
+        progreso: 0.625,
+        estado: 'amarillo',
+        detalle: 'Últimos 14 días.',
+        serie: [],
+      },
+    ],
+  }
+
+  it('un vecino no entra al panel', async () => {
+    apiFalsa({ '/yo': { ...NUEVO, perfil_completo: true } })
+    renderEn('/admin')
+    expect(await screen.findByRole('heading', { name: 'Esta parte es solo para el equipo' })).toBeInTheDocument()
+  })
+
+  it('muestra el gate con semáforo', async () => {
+    apiFalsa({ '/yo': ADMIN, '/admin/metricas': GATE, '/admin/entrevistas': [] })
+    renderEn('/admin')
+    expect(await screen.findByText('1 de 6 criterios cumplidos. Los mandados siguen apagados.')).toBeInTheDocument()
+    expect(screen.getByText('25 clics')).toBeInTheDocument()
+    expect(screen.getByText('Va en camino')).toBeInTheDocument()
+  })
+
+  it('rechazar un negocio pide el motivo y lo envía', async () => {
+    const { posts, fetchFalso } = apiFalsa({ '/yo': ADMIN, '/admin/negocios': [PENDIENTE] })
+    renderEn('/admin/negocios')
+
+    expect(await screen.findByRole('heading', { name: 'Arepas La Esquina' })).toBeInTheDocument()
+    expect(screen.getByText('1 reporte abierto')).toBeInTheDocument()
+    const pedido = fetchFalso.mock.calls.find(([url]) => String(url).includes('/admin/negocios'))
+    expect(String(pedido?.[0])).toContain('estado=pendiente')
+    expect(new Headers(pedido?.[1]?.headers).get('Authorization')).toBe('Bearer token-123')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rechazar' }))
+    fireEvent.change(screen.getByLabelText(/Motivo del rechazo/), { target: { value: 'Falta la dirección' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Rechazar' }))
+    await waitFor(() =>
+      expect(posts).toContainEqual({ ruta: '/admin/negocios/n9/estado', cuerpo: { estado: 'rechazado', motivo: 'Falta la dirección' } }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }))
+    await waitFor(() => expect(posts).toContainEqual({ ruta: '/admin/negocios/n9/estado', cuerpo: { estado: 'activo' } }))
+  })
+})
+
+describe('Fotos del negocio', () => {
+  it('sube la foto a Storage y la registra en el API', async () => {
+    const DUENO: Perfil = { ...NUEVO, perfil_completo: true, roles: ['dueno', 'vecino'] }
+    const URL_FOTO = 'https://x.supabase.co/storage/v1/object/public/negocio-fotos/n9/a.webp'
+    estado.subir.mockResolvedValue(URL_FOTO)
+    const { posts } = apiFalsa({ '/yo': DUENO, '/mis-negocios/n9/fotos': [], '/mis-negocios': [] })
+    renderEn('/mi-negocio/n9/fotos')
+
+    expect(await screen.findByText(/Todavía no hay fotos/)).toBeInTheDocument()
+    const archivo = new File(['foto'], 'fachada.jpg', { type: 'image/jpeg' })
+    fireEvent.change(screen.getByLabelText('Elegir fotos'), { target: { files: [archivo] } })
+
+    await waitFor(() => expect(posts).toContainEqual({ ruta: '/mis-negocios/n9/fotos', cuerpo: { url: URL_FOTO } }))
+    expect(estado.subir).toHaveBeenCalledWith('n9', expect.any(Blob), 'token-123')
   })
 })

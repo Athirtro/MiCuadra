@@ -1,11 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
+import { useEffect } from 'react'
+import { useLocation } from 'react-router'
 import { InstalarApp } from '../components/InstalarApp'
+import { BarraMetas, ListaEspera } from '../components/ListaEspera'
 import { apiGet, type Health } from '../lib/api'
 
-/** "Conoce MiCuadra": qué es, instalar la app y (pronto) la lista de espera. */
+/** "Conoce MiCuadra": qué es, instalar la app, metas y lista de espera (SPEC §6.1). */
 export function Conoce() {
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash === '#lista') document.getElementById('lista')?.scrollIntoView?.({ block: 'start' })
+  }, [hash])
+
   return (
-    <section id="lista" className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
+    <section className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
       <div className="rounded-r border border-line bg-surface p-6">
         <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Conoce MiCuadra</p>
         <h1 className="mt-2 text-4xl font-black leading-none">El mapa vivo de tu cuadra</h1>
@@ -27,11 +35,17 @@ export function Conoce() {
         </div>
         <p className="mt-5 text-sm">
           Estamos cargando las tiendas, panaderías, barberías y droguerías de Cuba, Álamos, Boston
-          y El Jardín. Instala la app para tenerla a mano. Muy pronto podrás inscribirte aquí en la lista de espera de mandados.
+          y El Jardín. Instala la app para tenerla a mano y entra a la lista de espera de los mandados.
         </p>
         <div className="mt-5">
           <InstalarApp />
         </div>
+      </div>
+
+      <BarraMetas />
+
+      <div id="lista" className="scroll-mt-20">
+        <ListaEspera />
       </div>
 
       {import.meta.env.DEV && <EstadoApi />}

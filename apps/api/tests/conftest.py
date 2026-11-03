@@ -13,6 +13,7 @@ os.environ["DATABASE_URL"] = os.environ.get(
 )
 os.environ["SUPABASE_JWT_SECRET"] = "secreto-de-pruebas-con-al-menos-32-caracteres"
 os.environ["MANDADOS_ACTIVOS"] = "false"
+os.environ["SUPABASE_URL"] = "https://demo.supabase.co"
 
 import psycopg
 from fastapi.testclient import TestClient

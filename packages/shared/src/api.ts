@@ -79,6 +79,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mis-negocios/{negocio_id}/fotos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Fotos */
+        get: operations["fotos_api_v1_mis_negocios__negocio_id__fotos_get"];
+        put?: never;
+        /**
+         * Agregar Foto
+         * @description Registra una foto que la web ya subió a Supabase Storage (`negocio-fotos/{id}/…`).
+         */
+        post: operations["agregar_foto_api_v1_mis_negocios__negocio_id__fotos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/fotos/{orden}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Borrar Foto */
+        delete: operations["borrar_foto_api_v1_mis_negocios__negocio_id__fotos__orden__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categorias": {
         parameters: {
             query?: never;
@@ -656,6 +694,21 @@ export interface components {
                 [key: string]: string | number | boolean | null;
             };
         };
+        /** Foto */
+        Foto: {
+            /** Orden */
+            orden: number;
+            /** Url */
+            url: string;
+        };
+        /** FotoEntrada */
+        FotoEntrada: {
+            /**
+             * Url
+             * @description URL pública del archivo ya subido a Supabase Storage
+             */
+            url: string;
+        };
         /** Gate */
         Gate: {
             /** Criterios */
@@ -1223,6 +1276,102 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MiNegocio"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    fotos_api_v1_mis_negocios__negocio_id__fotos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Foto"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    agregar_foto_api_v1_mis_negocios__negocio_id__fotos_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FotoEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Foto"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    borrar_foto_api_v1_mis_negocios__negocio_id__fotos__orden__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                orden: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

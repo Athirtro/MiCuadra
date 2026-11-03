@@ -161,9 +161,18 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
           <strong>{enviar.data.nombre}</strong> queda en revisión. El equipo de MiCuadra lo revisa y te avisamos por
           WhatsApp cuando aparezca en el mapa.
         </p>
-        <Link to="/cuenta" className="tap mt-6 inline-flex items-center rounded-r bg-green px-5 font-bold text-green-ink">
-          Ir a mi cuenta
-        </Link>
+        <p className="mt-4">Mientras tanto, sube fotos de tu negocio: así los vecinos lo reconocen.</p>
+        <div className="mt-6 flex flex-col gap-2">
+          <Link
+            to={`/mi-negocio/${enviar.data.id}/fotos`}
+            className="tap inline-flex items-center justify-center rounded-r bg-green px-5 font-bold text-green-ink"
+          >
+            📷 Subir fotos
+          </Link>
+          <Link to="/cuenta" className="tap inline-flex items-center justify-center rounded-r border border-line px-5 font-bold">
+            Más tarde
+          </Link>
+        </div>
       </section>
     )
   }

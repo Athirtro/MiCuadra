@@ -14,6 +14,19 @@ export type PerfilEntrada = Esquemas['PerfilEntrada']
 export type NegocioEntrada = Esquemas['NegocioEntrada']
 export type MiNegocio = Esquemas['MiNegocio']
 export type Horario = Esquemas['Horario']
+export type Foto = Esquemas['Foto']
+export type ListaEsperaEntrada = Esquemas['ListaEsperaEntrada']
+export type ListaEsperaRespuesta = Esquemas['ListaEsperaRespuesta']
+export type Metas = Esquemas['Metas']
+export type ReporteEntrada = Esquemas['ReporteEntrada']
+export type NegocioAdmin = Esquemas['NegocioAdmin']
+export type CambioEstadoNegocio = Esquemas['CambioEstadoNegocio']
+export type InscritoEspera = Esquemas['InscritoEspera']
+export type Reporte = Esquemas['Reporte']
+export type Entrevista = Esquemas['Entrevista']
+export type EntrevistaEntrada = Esquemas['EntrevistaEntrada']
+export type Gate = Esquemas['Gate']
+export type Criterio = Esquemas['Criterio']
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api/v1'
 
@@ -54,14 +67,29 @@ export async function apiGet<T>(ruta: string, init?: RequestInit, token?: string
   return leer<T>(await pedir(ruta, init, token))
 }
 
-/** POST/PUT/PATCH con JSON y sesión. */
-export async function apiEnviar<T>(metodo: 'POST' | 'PUT' | 'PATCH', ruta: string, cuerpo: unknown, token?: string): Promise<T> {
+/** POST/PUT/PATCH/DELETE con JSON y sesión. */
+export async function apiEnviar<T>(
+  metodo: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  ruta: string,
+  cuerpo: unknown,
+  token?: string,
+): Promise<T> {
   const res = await pedir(
     ruta,
     { method: metodo, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) },
     token,
   )
   return leer<T>(res)
+}
+
+/** Descarga un archivo que pide sesión (ej. el CSV de la lista de espera). */
+export async function apiDescargar(ruta: string, nombre: string, token?: string): Promise<void> {
+  const res = await pedir(ruta, {}, token)
+  if (!res.ok) await leer(res)
+  const url = URL.createObjectURL(await res.blob())
+  const a = Object.assign(document.createElement('a'), { href: url, download: nombre })
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export interface FiltrosNegocios {

@@ -171,3 +171,50 @@ def test_negocio_invalido(
     client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
     r = client.post(f"{V1}/mis-negocios", json={**NEGOCIO, **cambios}, headers=_auth(nuevo))
     assert r.status_code == 422 and r.json()["error"]["codigo"] == codigo
+
+
+def test_fotos_del_negocio(client: TestClient, nuevo: str) -> None:
+    client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
+    nid = client.post(f"{V1}/mis-negocios", json=NEGOCIO, headers=_auth(nuevo)).json()["id"]
+    ruta = f"{V1}/mis-negocios/{nid}/fotos"
+    base = f"https://demo.supabase.co/storage/v1/object/public/negocio-fotos/{nid}/"
+
+    for i in range(5):
+        r = client.post(ruta, json={"url": f"{base}{i}.webp"}, headers=_auth(nuevo))
+        assert r.status_code == 201 and r.json()["orden"] == i
+    r = client.post(ruta, json={"url": f"{base}6.webp"}, headers=_auth(nuevo))
+    assert r.status_code == 422 and r.json()["error"]["codigo"] == "limite_fotos"
+
+    # Al borrar una, su lugar queda libre para la siguiente
+    assert client.delete(f"{ruta}/2", headers=_auth(nuevo)).status_code == 204
+    r = client.post(ruta, json={"url": f"{base}nueva.webp"}, headers=_auth(nuevo))
+    assert r.json() == {"orden": 2, "url": f"{base}nueva.webp"}
+    fotos = client.get(ruta, headers=_auth(nuevo)).json()
+    assert [f["orden"] for f in fotos] == [0, 1, 2, 3, 4]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://otro-sitio.com/foto.webp",
+        "https://demo.supabase.co/storage/v1/object/public/negocio-fotos/OTRO/foto.webp",
+        "https://demo.supabase.co/storage/v1/object/public/negocio-fotos/{nid}/sub/foto.webp",
+        "https://demo.supabase.co/storage/v1/object/public/negocio-fotos/{nid}/../x.webp",
+    ],
+)
+def test_fotos_solo_del_bucket_y_carpeta_del_negocio(
+    client: TestClient, nuevo: str, url: str
+) -> None:
+    client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
+    nid = client.post(f"{V1}/mis-negocios", json=NEGOCIO, headers=_auth(nuevo)).json()["id"]
+    r = client.post(
+        f"{V1}/mis-negocios/{nid}/fotos", json={"url": url.format(nid=nid)}, headers=_auth(nuevo)
+    )
+    assert r.status_code == 422
+
+
+def test_fotos_de_negocio_ajeno(client: TestClient, nuevo: str) -> None:
+    client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
+    nid = client.post(f"{V1}/mis-negocios", json=NEGOCIO, headers=_auth(nuevo)).json()["id"]
+    assert client.get(f"{V1}/mis-negocios/{nid}/fotos", headers=_auth("dueno2")).status_code == 404
+    assert client.get(f"{V1}/mis-negocios/{nid}/fotos", headers=_auth("admin")).status_code == 200

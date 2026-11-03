@@ -185,6 +185,167 @@
         ]
       }
     },
+    "/api/v1/mis-negocios/{negocio_id}/fotos": {
+      "get": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Fotos",
+        "operationId": "fotos_api_v1_mis_negocios__negocio_id__fotos_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Foto"
+                  },
+                  "title": "Response Fotos Api V1 Mis Negocios  Negocio Id  Fotos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Agregar Foto",
+        "description": "Registra una foto que la web ya subió a Supabase Storage (`negocio-fotos/{id}/…`).",
+        "operationId": "agregar_foto_api_v1_mis_negocios__negocio_id__fotos_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FotoEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Foto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/fotos/{orden}": {
+      "delete": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Borrar Foto",
+        "operationId": "borrar_foto_api_v1_mis_negocios__negocio_id__fotos__orden__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "orden",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 4,
+              "minimum": 0,
+              "title": "Orden"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/categorias": {
       "get": {
         "tags": [
@@ -1837,6 +1998,41 @@
           "anon_id"
         ],
         "title": "EventoEntrada"
+      },
+      "Foto": {
+        "properties": {
+          "orden": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Orden"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "orden",
+          "url"
+        ],
+        "title": "Foto"
+      },
+      "FotoEntrada": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Url",
+            "description": "URL pública del archivo ya subido a Supabase Storage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "title": "FotoEntrada"
       },
       "Gate": {
         "properties": {

@@ -106,12 +106,33 @@ describe('Perfil del negocio (/n/:slug)', () => {
 
     const modal = await screen.findByRole('dialog')
     expect(within(modal).getByText('Los mandados llegan muy pronto')).toBeInTheDocument()
-    expect(within(modal).getByRole('link', { name: 'Quiero estar en la lista' })).toHaveAttribute('href', '/conoce#lista')
     await waitFor(() =>
       expect(posts).toContainEqual(
         expect.objectContaining({ cuerpo: expect.objectContaining({ tipo: 'click_pedir_mandado', negocio_id: 'n1' }) }),
       ),
     )
+
+    // "¿Qué le habrías pedido?" llega prellenado a la lista de espera
+    fireEvent.change(within(modal).getByLabelText('¿Qué le habrías pedido?'), { target: { value: '6 panes' } })
+    fireEvent.click(within(modal).getByRole('button', { name: 'Quiero estar en la lista' }))
+    expect(await screen.findByLabelText('¿Qué mandado pedirías? (opcional)')).toHaveValue('6 panes (en Panadería El Trigal)')
+    expect(screen.getByRole('button', { name: /Soy vecino/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('reportar información incorrecta', async () => {
+    const { posts } = apiFalsa({ '/negocios/panaderia-el-trigal': DETALLE })
+    renderEn('/n/panaderia-el-trigal')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Reportar información incorrecta' }))
+    const modal = await screen.findByRole('dialog')
+    const enviar = within(modal).getByRole('button', { name: 'Enviar reporte' })
+    expect(enviar).toBeDisabled()
+    fireEvent.click(within(modal).getByLabelText('El horario está mal'))
+    fireEvent.change(within(modal).getByLabelText(/Cuéntanos más/), { target: { value: 'Abre a las 5' } })
+    fireEvent.click(enviar)
+
+    expect(await within(modal).findByText('¡Gracias por avisar!')).toBeInTheDocument()
+    expect(posts).toContainEqual({ ruta: '/negocios/n1/reportes', cuerpo: { motivo: 'horario', detalle: 'Abre a las 5' } })
   })
 
   it('respeta "No rastrear"', async () => {
@@ -135,6 +156,43 @@ describe('Otras rutas', () => {
     apiFalsa({})
     renderEn('/conoce')
     expect(screen.getByRole('heading', { name: 'El mapa vivo de tu cuadra' })).toBeInTheDocument()
+  })
+
+  it('/conoce: metas y lista de espera sin duplicar datos', async () => {
+    const metas = {
+      negocios_activos: { valor: 12, meta: 40 },
+      vecinos_semana: { valor: 80, meta: 200 },
+      mensajeros_listos: { valor: 3, meta: 15 },
+    }
+    const { posts } = apiFalsa({ '/lista-espera/metas': metas, '/barrios': BARRIOS })
+    renderEn('/conoce')
+
+    expect(await screen.findByRole('progressbar', { name: 'Negocios en el mapa' })).toHaveAttribute('aria-valuenow', '12')
+    expect(screen.getByText('3 / 15')).toBeInTheDocument()
+
+    const inscribirme = screen.getByRole('button', { name: 'Inscribirme' })
+    fireEvent.click(screen.getByRole('button', { name: /Tengo un negocio/ }))
+    fireEvent.change(screen.getByLabelText('Tu nombre'), { target: { value: 'Arcesio' } })
+    fireEvent.change(screen.getByLabelText(/Tu WhatsApp/), { target: { value: '311 222 3344' } })
+    fireEvent.change(screen.getByLabelText('Tu barrio'), { target: { value: 'otro' } })
+    fireEvent.change(screen.getByLabelText('¿Cuál barrio?'), { target: { value: 'Villa Santana' } })
+    fireEvent.change(screen.getByLabelText('Nombre del negocio'), { target: { value: 'Fruver Don Arcesio' } })
+    expect(inscribirme).toBeDisabled() // falta el tipo y la autorización
+    fireEvent.change(screen.getByLabelText(/tipo de negocio/), { target: { value: 'Fruver' } })
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(inscribirme)
+
+    expect(await screen.findByText('¡Quedaste en la lista!')).toBeInTheDocument()
+    expect(posts.find((p) => p.ruta === '/lista-espera')?.cuerpo).toEqual({
+      rol: 'negocio',
+      nombre: 'Arcesio',
+      whatsapp: '3112223344',
+      barrio: 'Villa Santana',
+      negocio_nombre: 'Fruver Don Arcesio',
+      negocio_tipo: 'Fruver',
+      que_pediria: null,
+      acepta_datos: true,
+    })
   })
 
   it('tiene página 404 en español', () => {

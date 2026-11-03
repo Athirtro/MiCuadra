@@ -8,12 +8,14 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.errors import ApiError
-from app.schemas.cuenta import MiNegocio, NegocioEntrada, Perfil, PerfilEntrada
+from app.schemas.cuenta import Foto, MiNegocio, NegocioEntrada, Perfil, PerfilEntrada
 from app.schemas.directorio import BarrioCorto
 
 # Un negocio nuevo queda en el barrio piloto más cercano si está a menos de esta distancia.
 RADIO_BARRIO_M = 2000
 MAX_NEGOCIOS_POR_DUENO = 5
+MAX_FOTOS = 5
+BUCKET_FOTOS = "negocio-fotos"
 
 
 def slugificar(texto: str) -> str:
@@ -206,3 +208,61 @@ def listar_mis_negocios(db: Session, dueno_id: UUID) -> list[MiNegocio]:
         )
         for f in filas
     ]
+
+
+def _verificar_dueno(db: Session, negocio_id: UUID, usuario_id: UUID, es_admin: bool) -> None:
+    dueno = db.execute(
+        text("select dueno_id from negocios where id = :id and deleted_at is null"),
+        {"id": negocio_id},
+    ).first()
+    if dueno is None or (dueno[0] != usuario_id and not es_admin):
+        raise ApiError(404, "negocio_no_encontrado", "No encontramos ese negocio entre los tuyos.")
+
+
+def prefijo_fotos(supabase_url: str, negocio_id: UUID) -> str:
+    return f"{supabase_url.rstrip('/')}/storage/v1/object/public/{BUCKET_FOTOS}/{negocio_id}/"
+
+
+def listar_fotos(db: Session, negocio_id: UUID, usuario_id: UUID, es_admin: bool) -> list[Foto]:
+    _verificar_dueno(db, negocio_id, usuario_id, es_admin)
+    filas = db.execute(
+        text("select orden, url from negocio_fotos where negocio_id = :id order by orden"),
+        {"id": negocio_id},
+    ).mappings()
+    return [Foto.model_validate(dict(f)) for f in filas]
+
+
+def agregar_foto(
+    db: Session, negocio_id: UUID, usuario_id: UUID, es_admin: bool, url: str, prefijo: str
+) -> Foto:
+    _verificar_dueno(db, negocio_id, usuario_id, es_admin)
+    # Solo URLs del bucket de MiCuadra y de la carpeta de este negocio.
+    if not url.startswith(prefijo) or "/" in url[len(prefijo) :] or ".." in url:
+        raise ApiError(422, "foto_invalida", "Sube la foto desde MiCuadra.")
+    ocupados = set(
+        db.execute(
+            text("select orden from negocio_fotos where negocio_id = :id"), {"id": negocio_id}
+        ).scalars()
+    )
+    libres = [o for o in range(MAX_FOTOS) if o not in ocupados]
+    if not libres:
+        raise ApiError(422, "limite_fotos", f"Puedes tener hasta {MAX_FOTOS} fotos.")
+    db.execute(
+        text("insert into negocio_fotos (negocio_id, url, orden) values (:id, :url, :orden)"),
+        {"id": negocio_id, "url": url, "orden": libres[0]},
+    )
+    db.commit()
+    return Foto(orden=libres[0], url=url)
+
+
+def borrar_foto(
+    db: Session, negocio_id: UUID, usuario_id: UUID, es_admin: bool, orden: int
+) -> None:
+    _verificar_dueno(db, negocio_id, usuario_id, es_admin)
+    borrada = db.execute(
+        text("delete from negocio_fotos where negocio_id = :id and orden = :orden returning id"),
+        {"id": negocio_id, "orden": orden},
+    ).first()
+    if borrada is None:
+        raise ApiError(404, "no_encontrado", "Esa foto ya no existe.")
+    db.commit()

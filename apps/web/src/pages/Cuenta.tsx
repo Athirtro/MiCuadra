@@ -80,11 +80,16 @@ export function Cuenta() {
                 {n.estado === 'rechazado' && n.motivo_rechazo && (
                   <p className="mt-2 text-sm">Motivo: {n.motivo_rechazo}</p>
                 )}
-                {n.estado === 'activo' && (
-                  <Link to={`/n/${n.slug}`} className="mt-2 inline-block text-sm font-bold text-green underline">
-                    Ver mi perfil público
+                <div className="mt-2 flex flex-wrap gap-x-4 text-sm font-bold text-green">
+                  <Link to={`/mi-negocio/${n.id}/fotos`} className="underline">
+                    Fotos
                   </Link>
-                )}
+                  {n.estado === 'activo' && (
+                    <Link to={`/n/${n.slug}`} className="underline">
+                      Ver mi perfil público
+                    </Link>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -103,6 +108,12 @@ export function Cuenta() {
             Registrar mi negocio
           </Link>
         </div>
+      )}
+
+      {p.roles.includes('admin') && (
+        <Link to="/admin" className="tap flex items-center justify-center rounded-r bg-ink px-4 font-bold text-bg">
+          Panel de administración
+        </Link>
       )}
 
       <div className="flex flex-wrap gap-2">

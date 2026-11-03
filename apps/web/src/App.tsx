@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Link, NavLink, Route, Routes } from 'react-router'
+import { lazy, Suspense, useEffect } from 'react'
+import { Link, Navigate, NavLink, Route, Routes } from 'react-router'
 import { registrarSesion } from './lib/eventos'
 import { usePerfil } from './lib/sesion'
 import { authDisponible } from './lib/supabase'
@@ -7,10 +7,18 @@ import { Bienvenida } from './pages/Bienvenida'
 import { Conoce } from './pages/Conoce'
 import { Cuenta } from './pages/Cuenta'
 import { Entrar } from './pages/Entrar'
+import { FotosNegocio } from './pages/FotosNegocio'
 import { Mapa } from './pages/Mapa'
 import { Perfil } from './pages/Perfil'
 import { Privacidad } from './pages/Privacidad'
 import { RegistrarNegocio } from './pages/RegistrarNegocio'
+
+// El panel de administración va en su propio paquete: los vecinos nunca lo descargan.
+const Admin = lazy(() => import('./pages/admin/Admin').then((m) => ({ default: m.Admin })))
+const Metricas = lazy(() => import('./pages/admin/Metricas').then((m) => ({ default: m.Metricas })))
+const NegociosAdmin = lazy(() => import('./pages/admin/Negocios').then((m) => ({ default: m.Negocios })))
+const ListaEsperaAdmin = lazy(() => import('./pages/admin/ListaEspera').then((m) => ({ default: m.ListaEsperaAdmin })))
+const Reportes = lazy(() => import('./pages/admin/Reportes').then((m) => ({ default: m.Reportes })))
 
 export function App() {
   useEffect(registrarSesion, [])
@@ -35,6 +43,7 @@ export function App() {
         </nav>
       </header>
       <main className="flex-1">
+        <Suspense fallback={<p className="p-4 text-muted">Cargando…</p>}>
         <Routes>
           <Route path="/" element={<Mapa />} />
           <Route path="/n/:slug" element={<Perfil />} />
@@ -43,9 +52,18 @@ export function App() {
           <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/bienvenida" element={<Bienvenida />} />
           <Route path="/mi-negocio/nuevo" element={<RegistrarNegocio />} />
+            <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
           <Route path="/privacidad" element={<Privacidad />} />
+          <Route path="/admin" element={<Admin />}>
+            <Route index element={<Navigate to="metricas" replace />} />
+            <Route path="metricas" element={<Metricas />} />
+            <Route path="negocios" element={<NegociosAdmin />} />
+            <Route path="lista-espera" element={<ListaEsperaAdmin />} />
+            <Route path="reportes" element={<Reportes />} />
+          </Route>
           <Route path="*" element={<NoEncontrado />} />
         </Routes>
+        </Suspense>
       </main>
     </div>
   )

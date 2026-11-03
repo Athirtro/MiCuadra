@@ -82,3 +82,14 @@ class MiNegocio(BaseModel):
     motivo_rechazo: str | None
     categoria: str
     barrio: BarrioCorto | None
+
+
+class Foto(BaseModel):
+    orden: int = Field(ge=0, le=4)
+    url: str
+
+
+class FotoEntrada(BaseModel):
+    url: str = Field(
+        max_length=300, description="URL pública del archivo ya subido a Supabase Storage"
+    )

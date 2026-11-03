@@ -281,3 +281,21 @@ def test_eventos_tienen_limite_por_ip(base_de_datos: None) -> None:
     # Otra IP no se ve afectada
     otra = c.post(f"{V1}/eventos", json=cuerpo, headers={"X-Forwarded-For": "203.0.113.8"})
     assert otra.status_code == 204
+
+
+def test_vista_previa_al_compartir(api: TestClient, conn: psycopg.Connection) -> None:
+    fila = conn.execute(
+        "select n.slug, n.nombre from negocios n"
+        " where n.estado = 'activo' and exists (select 1 from negocio_fotos f where f.negocio_id = n.id)"
+        " order by n.slug limit 1"
+    ).fetchone()
+    assert fila
+    slug, nombre = fila
+    r = api.get(f"{V1}/compartir/n/{slug}")
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/html")
+    assert f'<meta property="og:title" content="{nombre}' in r.text
+    assert 'property="og:image" content="https://placehold.co/' in r.text
+    assert f'content="http://localhost:5173/n/{slug}"' in r.text
+
+    r = api.get(f"{V1}/compartir/n/no-existe")
+    assert r.status_code == 404 and "icono-512.png" in r.text
