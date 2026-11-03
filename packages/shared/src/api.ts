@@ -30,11 +30,49 @@ export interface paths {
         };
         /**
          * Yo
-         * @description Usuario autenticado y sus roles (útil para que la web decida qué mostrar).
+         * @description Perfil del usuario autenticado. `perfil_completo=false` → mostrar el formulario de bienvenida.
          */
         get: operations["yo_api_v1_yo_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/yo/perfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Guardar Perfil */
+        put: operations["guardar_perfil_api_v1_yo_perfil_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mis Negocios */
+        get: operations["mis_negocios_api_v1_mis_negocios_get"];
+        put?: never;
+        /**
+         * Registrar Negocio
+         * @description Registra un negocio en estado `pendiente` hasta que un admin lo apruebe.
+         */
+        post: operations["registrar_negocio_api_v1_mis_negocios_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -342,6 +380,24 @@ export interface components {
              */
             cierra: string;
         };
+        /** HorarioEntrada */
+        HorarioEntrada: {
+            /**
+             * Dia Semana
+             * @description 0 = domingo … 6 = sábado
+             */
+            dia_semana: number;
+            /**
+             * Abre
+             * @example 09:00
+             */
+            abre: string;
+            /**
+             * Cierra
+             * @example 19:30
+             */
+            cierra: string;
+        };
         /** ListaNegocios */
         ListaNegocios: {
             /** Items */
@@ -353,6 +409,28 @@ export interface components {
             total: number;
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
+        };
+        /** MiNegocio */
+        MiNegocio: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "borrador" | "pendiente" | "activo" | "rechazado" | "inactivo";
+            /** Motivo Rechazo */
+            motivo_rechazo: string | null;
+            /** Categoria */
+            categoria: string;
+            barrio: components["schemas"]["BarrioCorto"] | null;
         };
         /** NegocioDetalle */
         NegocioDetalle: {
@@ -388,6 +466,27 @@ export interface components {
             destacado: boolean;
             mandados: components["schemas"]["Disponibilidad"];
         };
+        /** NegocioEntrada */
+        NegocioEntrada: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Categoria
+             * @description Slug de la categoría
+             */
+            categoria: string;
+            /** Whatsapp */
+            whatsapp: string;
+            /** Telefono */
+            telefono?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Direccion Texto */
+            direccion_texto: string;
+            ubicacion: components["schemas"]["Punto"];
+            /** Horarios */
+            horarios?: components["schemas"]["HorarioEntrada"][];
+        };
         /** NegocioResumen */
         NegocioResumen: {
             /**
@@ -416,15 +515,8 @@ export interface components {
             /** Foto Url */
             foto_url: string | null;
         };
-        /** Punto */
-        Punto: {
-            /** Lat */
-            lat: number;
-            /** Lng */
-            lng: number;
-        };
-        /** UsuarioActual */
-        UsuarioActual: {
+        /** Perfil */
+        Perfil: {
             /**
              * Id
              * Format: uuid
@@ -432,8 +524,54 @@ export interface components {
             id: string;
             /** Email */
             email: string | null;
+            /** Nombre */
+            nombre: string | null;
+            /** Celular */
+            celular: string | null;
+            /** Foto Url */
+            foto_url: string | null;
+            barrio: components["schemas"]["BarrioCorto"] | null;
             /** Roles */
             roles: ("vecino" | "mensajero" | "dueno" | "admin")[];
+            /**
+             * Perfil Completo
+             * @description Ya pasó por el formulario de bienvenida
+             */
+            perfil_completo: boolean;
+        };
+        /** PerfilEntrada */
+        PerfilEntrada: {
+            /**
+             * Tipo
+             * @description vecino = consumidor; dueno = empresario
+             * @enum {string}
+             */
+            tipo: "vecino" | "dueno";
+            /** Nombre */
+            nombre: string;
+            /**
+             * Celular
+             * @description Celular colombiano de 10 dígitos (WhatsApp)
+             */
+            celular: string;
+            /**
+             * Barrio
+             * @description Slug del barrio; null = otro
+             */
+            barrio?: string | null;
+            /**
+             * Acepta Datos
+             * @description Autorización de tratamiento de datos (Ley 1581)
+             * @constant
+             */
+            acepta_datos: true;
+        };
+        /** Punto */
+        Punto: {
+            /** Lat */
+            lat: number;
+            /** Lng */
+            lng: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -501,7 +639,93 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UsuarioActual"];
+                    "application/json": components["schemas"]["Perfil"];
+                };
+            };
+        };
+    };
+    guardar_perfil_api_v1_yo_perfil_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PerfilEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Perfil"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mis_negocios_api_v1_mis_negocios_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MiNegocio"][];
+                };
+            };
+        };
+    };
+    registrar_negocio_api_v1_mis_negocios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NegocioEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MiNegocio"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

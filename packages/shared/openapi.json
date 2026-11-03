@@ -40,10 +40,10 @@
     "/api/v1/yo": {
       "get": {
         "tags": [
-          "sistema"
+          "cuenta"
         ],
         "summary": "Yo",
-        "description": "Usuario autenticado y sus roles (útil para que la web decida qué mostrar).",
+        "description": "Perfil del usuario autenticado. `perfil_completo=false` → mostrar el formulario de bienvenida.",
         "operationId": "yo_api_v1_yo_get",
         "responses": {
           "200": {
@@ -51,7 +51,128 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UsuarioActual"
+                  "$ref": "#/components/schemas/Perfil"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/yo/perfil": {
+      "put": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Guardar Perfil",
+        "operationId": "guardar_perfil_api_v1_yo_perfil_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerfilEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Perfil"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/mis-negocios": {
+      "get": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Mis Negocios",
+        "operationId": "mis_negocios_api_v1_mis_negocios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MiNegocio"
+                  },
+                  "type": "array",
+                  "title": "Response Mis Negocios Api V1 Mis Negocios Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Registrar Negocio",
+        "description": "Registra un negocio en estado `pendiente` hasta que un admin lo apruebe.",
+        "operationId": "registrar_negocio_api_v1_mis_negocios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegocioEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MiNegocio"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -832,6 +953,38 @@
         ],
         "title": "Horario"
       },
+      "HorarioEntrada": {
+        "properties": {
+          "dia_semana": {
+            "type": "integer",
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Dia Semana",
+            "description": "0 = domingo … 6 = sábado"
+          },
+          "abre": {
+            "type": "string",
+            "title": "Abre",
+            "examples": [
+              "09:00"
+            ]
+          },
+          "cierra": {
+            "type": "string",
+            "title": "Cierra",
+            "examples": [
+              "19:30"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "dia_semana",
+          "abre",
+          "cierra"
+        ],
+        "title": "HorarioEntrada"
+      },
       "ListaNegocios": {
         "properties": {
           "items": {
@@ -865,6 +1018,70 @@
           "siguiente_cursor"
         ],
         "title": "ListaNegocios"
+      },
+      "MiNegocio": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "borrador",
+              "pendiente",
+              "activo",
+              "rechazado",
+              "inactivo"
+            ],
+            "title": "Estado"
+          },
+          "motivo_rechazo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo Rechazo"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BarrioCorto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "estado",
+          "motivo_rechazo",
+          "categoria",
+          "barrio"
+        ],
+        "title": "MiNegocio"
       },
       "NegocioDetalle": {
         "properties": {
@@ -992,6 +1209,77 @@
         ],
         "title": "NegocioDetalle"
       },
+      "NegocioEntrada": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "categoria": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Categoria",
+            "description": "Slug de la categoría"
+          },
+          "whatsapp": {
+            "type": "string",
+            "pattern": "^3\\d{9}$",
+            "title": "Whatsapp"
+          },
+          "telefono": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telefono"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "direccion_texto": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Direccion Texto"
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "horarios": {
+            "items": {
+              "$ref": "#/components/schemas/HorarioEntrada"
+            },
+            "type": "array",
+            "maxItems": 21,
+            "title": "Horarios"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "categoria",
+          "whatsapp",
+          "direccion_texto",
+          "ubicacion"
+        ],
+        "title": "NegocioEntrada"
+      },
       "NegocioResumen": {
         "properties": {
           "id": {
@@ -1075,25 +1363,7 @@
         ],
         "title": "NegocioResumen"
       },
-      "Punto": {
-        "properties": {
-          "lat": {
-            "type": "number",
-            "title": "Lat"
-          },
-          "lng": {
-            "type": "number",
-            "title": "Lng"
-          }
-        },
-        "type": "object",
-        "required": [
-          "lat",
-          "lng"
-        ],
-        "title": "Punto"
-      },
-      "UsuarioActual": {
+      "Perfil": {
         "properties": {
           "id": {
             "type": "string",
@@ -1111,6 +1381,49 @@
             ],
             "title": "Email"
           },
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          },
+          "celular": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Celular"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BarrioCorto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "roles": {
             "items": {
               "type": "string",
@@ -1123,15 +1436,95 @@
             },
             "type": "array",
             "title": "Roles"
+          },
+          "perfil_completo": {
+            "type": "boolean",
+            "title": "Perfil Completo",
+            "description": "Ya pasó por el formulario de bienvenida"
           }
         },
         "type": "object",
         "required": [
           "id",
           "email",
-          "roles"
+          "nombre",
+          "celular",
+          "foto_url",
+          "barrio",
+          "roles",
+          "perfil_completo"
         ],
-        "title": "UsuarioActual"
+        "title": "Perfil"
+      },
+      "PerfilEntrada": {
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "vecino",
+              "dueno"
+            ],
+            "title": "Tipo",
+            "description": "vecino = consumidor; dueno = empresario"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "celular": {
+            "type": "string",
+            "pattern": "^3\\d{9}$",
+            "title": "Celular",
+            "description": "Celular colombiano de 10 dígitos (WhatsApp)"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio",
+            "description": "Slug del barrio; null = otro"
+          },
+          "acepta_datos": {
+            "type": "boolean",
+            "const": true,
+            "title": "Acepta Datos",
+            "description": "Autorización de tratamiento de datos (Ley 1581)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tipo",
+          "nombre",
+          "celular",
+          "acepta_datos"
+        ],
+        "title": "PerfilEntrada"
+      },
+      "Punto": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "title": "Lat"
+          },
+          "lng": {
+            "type": "number",
+            "title": "Lng"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lng"
+        ],
+        "title": "Punto"
       },
       "ValidationError": {
         "properties": {
