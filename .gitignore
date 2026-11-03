@@ -25,3 +25,6 @@ htmlcov/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Vercel CLI
+.vercel/
