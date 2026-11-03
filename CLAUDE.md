@@ -20,7 +20,7 @@ No adelantar funcionalidades de fases futuras salvo los stubs que pide la SPEC.
 | API | FastAPI (Python 3.12, `uv`), SQLAlchemy 2 (SQL con `text()` por ahora), Pydantic v2, PyJWT |
 | BD | Postgres + PostGIS (Supabase en la nube; Postgres de Homebrew en local) |
 | Auth | Supabase Auth; el API valida el JWT (HS256 con secreto o JWKS) y lee roles de `usuario_roles` |
-| Deploy | Web en Vercel (`apps/web/vercel.json`), API en Render (`render.yaml`) |
+| Deploy | Web en Vercel (`vercel.json` en la raíz), API en Render (`render.yaml`) |
 | CI | GitHub Actions (`.github/workflows/ci.yml`) |
 
 ## Comandos

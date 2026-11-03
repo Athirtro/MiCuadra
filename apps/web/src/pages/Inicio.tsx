@@ -1,18 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
+import { InstalarApp } from '../components/InstalarApp'
 import { apiGet, type Health } from '../lib/api'
 
-/** Pantalla provisional de la Fase 0. En la Fase 1 aquí vive el mapa del barrio. */
+/** Portada "Próximamente". En la Fase 1 aquí vive el mapa del barrio. */
 export function Inicio() {
-  const health = useQuery({
-    queryKey: ['health'],
-    queryFn: () => apiGet<Health>('/health'),
-    retry: false,
-  })
-
   return (
     <section className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
       <div className="rounded-r border border-line bg-surface p-6">
-        <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Fase 0</p>
+        <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Muy pronto</p>
         <h1 className="mt-2 text-4xl font-black leading-none">El mapa vivo de tu cuadra</h1>
         <p className="mt-3 text-muted">
           Encuentra en segundos los negocios de tu barrio — y si no puedes salir, un vecino va por
@@ -30,18 +25,38 @@ export function Inicio() {
             </div>
           ))}
         </div>
+        <p className="mt-5 text-sm">
+          Estamos cargando las tiendas, panaderías, barberías y droguerías de Cuba, Álamos, Boston
+          y El Jardín. Instala la app para tenerla a mano cuando tu cuadra esté en el mapa.
+        </p>
+        <div className="mt-5">
+          <InstalarApp />
+        </div>
       </div>
 
-      <p role="status" className="flex items-center gap-2 text-sm text-muted">
-        <span
-          className={`inline-block size-2.5 rounded-full ${
-            health.isSuccess ? 'bg-green' : health.isError ? 'bg-red' : 'bg-line'
-          }`}
-        />
-        {health.isPending && 'Conectando con el API…'}
-        {health.isSuccess && `API conectado (${health.data.entorno}, PostGIS ${health.data.postgis})`}
-        {health.isError && 'El API no responde todavía.'}
-      </p>
+      {import.meta.env.DEV && <EstadoApi />}
     </section>
+  )
+}
+
+/** Solo en desarrollo: confirma que la web llega al API y a PostGIS. */
+function EstadoApi() {
+  const health = useQuery({
+    queryKey: ['health'],
+    queryFn: () => apiGet<Health>('/health'),
+    retry: false,
+  })
+
+  return (
+    <p role="status" className="flex items-center gap-2 text-sm text-muted">
+      <span
+        className={`inline-block size-2.5 rounded-full ${
+          health.isSuccess ? 'bg-green' : health.isError ? 'bg-red' : 'bg-line'
+        }`}
+      />
+      {health.isPending && 'Conectando con el API…'}
+      {health.isSuccess && `API conectado (${health.data.entorno}, PostGIS ${health.data.postgis})`}
+      {health.isError && 'El API no responde todavía.'}
+    </p>
   )
 }

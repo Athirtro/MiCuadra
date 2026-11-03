@@ -35,7 +35,8 @@ Necesita las cuentas del equipo; nada de esto se puede automatizar desde el repo
 3. Verificar: `curl https://<servicio>.onrender.com/api/v1/health` → `{"estado":"ok", …}`.
 
 ### 3. Vercel (web)
-1. Importar el repo con **Root Directory = `apps/web`** (usa `apps/web/vercel.json`).
+1. Importar el repo dejando **Root Directory en la raíz** (usa `vercel.json` y `.vercelignore` de la raíz,
+   que instalan el workspace de pnpm y construyen `apps/web`).
 2. Production Branch = `produccion`. Asignar un dominio de staging a la rama `main`.
 3. Variable `VITE_API_URL` = `https://<servicio-render>.onrender.com/api/v1` por ambiente.
 
