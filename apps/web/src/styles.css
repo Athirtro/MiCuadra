@@ -15,6 +15,11 @@
   --red: #c8462f;
   --focus: #1e6b4e;
   --r: 14px;
+  /* Curvas de movimiento (criterios de Emil Kowalski): entrar/salir con ease-out fuerte,
+     mover en pantalla con ease-in-out. Nunca ease-in en la interfaz. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-rebote: cubic-bezier(0.34, 1.4, 0.64, 1);
   color-scheme: light;
 }
 
@@ -80,6 +85,132 @@
   :focus-visible {
     outline: 3px solid var(--focus);
     outline-offset: 2px;
+  }
+}
+
+@layer base {
+  /* Respuesta al presionar: todo lo que se toca se hunde un poco (160 ms, nunca menos de 0.97). */
+  button,
+  a.tap,
+  summary {
+    transition:
+      transform 160ms var(--ease-out),
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease,
+      opacity 150ms ease;
+  }
+  button:not(:disabled):active,
+  a.tap:active,
+  summary:active {
+    transform: scale(0.97);
+  }
+
+  /* Modales: entran desde 0.96 con opacidad (nunca desde scale(0)), origen al centro. */
+  dialog {
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 200ms var(--ease-out);
+  }
+  dialog::backdrop {
+    transition: opacity 200ms ease;
+  }
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+    }
+    dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /* Barras de progreso: se llenan una vez al aparecer (explican la meta, pueden ir más lento). */
+  [role='progressbar'] > div {
+    transform-origin: left;
+    transition: transform 700ms var(--ease-out);
+  }
+  @starting-style {
+    [role='progressbar'] > div {
+      transform: scaleX(0);
+    }
+  }
+
+  /* Lista que se está actualizando: se atenúa en vez de desaparecer. */
+  [aria-busy='true'] > * {
+    opacity: 0.6;
+    transition: opacity 150ms ease;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes celebrar {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-12deg);
+  }
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Contenido que aparece de forma ocasional (pantallas de éxito, avisos). */
+@utility entra {
+  animation: aparecer 260ms var(--ease-out) both;
+}
+/* Momentos raros que merecen deleite: el 🎉 al terminar un registro. */
+@utility celebra {
+  display: inline-block;
+  animation: celebrar 520ms var(--ease-rebote) 80ms both;
+}
+/* Hijos que entran escalonados 50 ms; decorativo, nunca bloquea el uso. */
+@utility escalonado {
+  & > * {
+    animation: aparecer 320ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 50ms);
+  }
+}
+/* Esqueleto de carga: movimiento constante, por eso lineal. */
+@utility esqueleto {
+  background: linear-gradient(90deg, var(--block) 0%, var(--line) 50%, var(--block) 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.4s linear infinite;
+}
+
+/* Movimiento reducido: sin desplazamientos ni escalas; se conservan opacidad y color. */
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  a.tap:active,
+  summary:active {
+    transform: none;
+  }
+  @starting-style {
+    dialog[open] {
+      transform: none;
+    }
+    [role='progressbar'] > div {
+      transform: none;
+    }
+  }
+  .entra,
+  .celebra,
+  .escalonado > * {
+    animation-name: aparecer-suave;
+  }
+  .esqueleto {
+    animation: none;
+  }
+}
+@keyframes aparecer-suave {
+  from {
+    opacity: 0;
   }
 }
 

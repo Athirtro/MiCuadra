@@ -68,7 +68,7 @@ export function Entrar() {
       </div>
 
       {estado === 'enviado' ? (
-        <div role="status" className="rounded-r bg-block p-4">
+        <div role="status" className="entra rounded-r bg-block p-4">
           <p className="font-bold">📬 Revisa tu correo</p>
           <p className="mt-1 text-sm">
             Te enviamos un enlace a <strong>{email}</strong>. Ábrelo desde este mismo celular para entrar. Si no

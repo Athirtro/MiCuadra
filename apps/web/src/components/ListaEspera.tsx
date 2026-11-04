@@ -72,9 +72,9 @@ export function ListaEspera() {
   if (inscribir.isSuccess) {
     const yaEstaba = inscribir.data?.nuevo === false
     return (
-      <div role="status" className="rounded-r border border-line bg-surface p-6 text-center">
+      <div role="status" className="entra rounded-r border border-line bg-surface p-6 text-center">
         <p className="text-4xl" aria-hidden="true">
-          🎉
+          <span className="celebra">🎉</span>
         </p>
         <p className="mt-2 text-xl font-black">{yaEstaba ? 'Ya estabas en la lista' : '¡Quedaste en la lista!'}</p>
         <p className="mt-1 text-muted">

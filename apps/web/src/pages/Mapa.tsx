@@ -156,7 +156,7 @@ export function Mapa() {
           <button
             type="button"
             onClick={() => origen && setBusquedaEn({ origen, punto: lejosDelCentro })}
-            className="tap absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-green px-4 text-sm font-bold text-green-ink shadow-lg"
+            className="entra tap absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-green px-4 text-sm font-bold text-green-ink shadow-lg"
           >
             Buscar en esta zona
           </button>
@@ -184,7 +184,24 @@ function Resultados({
   radioM: number
   alAbrir: (slug: string) => void
 }) {
-  if (consulta.isPending) return <p className="p-4 text-muted">Cargando negocios…</p>
+  if (consulta.isPending) {
+    return (
+      <div role="status">
+        <span className="sr-only">Cargando negocios…</span>
+        <ul className="divide-y divide-line" aria-hidden="true">
+          {[0, 1, 2, 3].map((i) => (
+            <li key={i} className="flex items-center gap-3 px-4 py-3">
+              <span className="esqueleto size-14 shrink-0 rounded-r" />
+              <span className="flex flex-1 flex-col gap-2">
+                <span className="esqueleto h-4 w-2/3 rounded" />
+                <span className="esqueleto h-3 w-1/3 rounded" />
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
   if (consulta.isError) {
     return (
       <div className="p-4">
@@ -304,13 +321,14 @@ function ElegirBarrio({
           </button>
         </p>
       )}
-      <div className="mt-6 grid grid-cols-2 gap-2">
+      <div className="escalonado mt-6 grid grid-cols-2 gap-2">
         {barrios
           ?.filter((b) => b.es_piloto)
-          .map((b) => (
+          .map((b, i) => (
             <button
               key={b.slug}
               type="button"
+              style={{ '--i': i } as React.CSSProperties}
               onClick={() => alElegir(b.slug, b.centroide)}
               className="tap flex aspect-[4/3] items-end rounded-r bg-block p-3 text-left font-display text-lg font-black hover:bg-sun hover:text-sun-ink"
             >
@@ -324,7 +342,7 @@ function ElegirBarrio({
 
 function Aviso({ titulo, texto }: { titulo: string; texto: string }) {
   return (
-    <section className="mx-auto max-w-md px-4 py-16 text-center" role="status">
+    <section className="entra mx-auto max-w-md px-4 py-16 text-center" role="status">
       <p className="text-4xl" aria-hidden="true">
         📍
       </p>

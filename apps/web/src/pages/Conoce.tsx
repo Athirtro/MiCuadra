@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 import { useLocation } from 'react-router'
 import { InstalarApp } from '../components/InstalarApp'
 import { BarraMetas, ListaEspera } from '../components/ListaEspera'
@@ -13,7 +13,7 @@ export function Conoce() {
   }, [hash])
 
   return (
-    <section className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
+    <section className="escalonado mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
       <div className="rounded-r border border-line bg-surface p-6">
         <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Conoce MiCuadra</p>
         <h1 className="mt-2 text-4xl font-black leading-none">El mapa vivo de tu cuadra</h1>
@@ -42,9 +42,11 @@ export function Conoce() {
         </div>
       </div>
 
-      <BarraMetas />
+      <div className="empty:hidden" style={{ '--i': 1 } as CSSProperties}>
+        <BarraMetas />
+      </div>
 
-      <div id="lista" className="scroll-mt-20">
+      <div id="lista" className="scroll-mt-20" style={{ '--i': 2 } as CSSProperties}>
         <ListaEspera />
       </div>
 

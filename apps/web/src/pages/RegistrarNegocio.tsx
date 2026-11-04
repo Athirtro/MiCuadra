@@ -152,9 +152,9 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
 
   if (enviar.isSuccess) {
     return (
-      <section className="mx-auto max-w-md px-4 py-12 text-center">
+      <section className="entra mx-auto max-w-md px-4 py-12 text-center">
         <p className="text-5xl" aria-hidden="true">
-          🎉
+          <span className="celebra">🎉</span>
         </p>
         <h1 className="mt-3 text-3xl font-black">¡Recibimos tu negocio!</h1>
         <p className="mt-2 text-muted">

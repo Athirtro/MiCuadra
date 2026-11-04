@@ -257,7 +257,7 @@ function ModalReportar({ negocioId, alCerrar }: { negocioId: string; alCerrar: (
   return (
     <Dialogo titulo="Reportar información incorrecta" alCerrar={alCerrar}>
       {reportar.isSuccess ? (
-        <div role="status">
+        <div role="status" className="entra">
           <h2 className="text-2xl font-black">¡Gracias por avisar!</h2>
           <p className="mt-2 text-muted">El equipo de MiCuadra lo revisa y corrige el mapa.</p>
           <button type="button" onClick={alCerrar} className="tap mt-5 w-full rounded-r bg-green px-4 font-bold text-green-ink">
