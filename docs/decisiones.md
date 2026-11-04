@@ -89,3 +89,17 @@ Formato: contexto → decisión → consecuencias. Las marcadas *(default SPEC)*
 - **Consecuencias:** un barrio nuevo aparece en el mapa apenas el admin aprueba su primer
   negocio, no antes (evita barrios basura). `es_piloto` se conserva para el gate y las métricas.
   Los errores de escritura crean barrios duplicados; se corrigen a mano desde la base por ahora.
+
+### ADR‑013 · Catálogo con inventario y apartados *(cambia SPEC §2.2)*
+- **Decisión del equipo (Andrés, 2026‑11‑04):** se adelanta al MVP el catálogo por negocio, que
+  la SPEC dejaba fuera. Secciones libres, productos y servicios, foto y precio opcionales,
+  stock opcional (los servicios no llevan). El carrito crea un **apartado** y abre WhatsApp con el
+  pedido escrito; se paga en la tienda (sin pasarela).
+- **Estados:** `pendiente → confirmado → listo → entregado`, y `cancelado` desde cualquiera sin
+  entregar (el vecino o el negocio). El stock se descuenta al **confirmar**, con bloqueo de filas;
+  si se cancela después, vuelve. Apartar solo valida que alcance. Máximo 3 apartados abiertos por
+  vecino y negocio.
+- **Consecuencias:** apartar exige cuenta (el negocio necesita saber a quién entregar). Nombre y
+  precio se copian al apartado, así que editar el catálogo no cambia pedidos viejos. Va en su
+  propia rama (`fase-1-catalogo`) y PR. No reemplaza los mandados de la Fase 2: un apartado es
+  para recoger en la tienda.

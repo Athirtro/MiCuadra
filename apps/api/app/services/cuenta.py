@@ -207,7 +207,9 @@ def listar_mis_negocios(db: Session, dueno_id: UUID) -> list[MiNegocio]:
         db.execute(
             text(
                 "select n.id, n.slug, n.nombre, n.estado, n.motivo_rechazo, c.slug as categoria,"
-                " b.slug as barrio_slug, b.nombre as barrio_nombre"
+                " b.slug as barrio_slug, b.nombre as barrio_nombre,"
+                " (select count(*) from apartados a"
+                "  where a.negocio_id = n.id and a.estado = 'pendiente') as apartados_pendientes"
                 " from negocios n join categorias c on c.id = n.categoria_id"
                 " left join barrios b on b.id = n.barrio_id"
                 " where n.dueno_id = :id and n.deleted_at is null order by n.created_at desc"
@@ -228,6 +230,7 @@ def listar_mis_negocios(db: Session, dueno_id: UUID) -> list[MiNegocio]:
             barrio=BarrioCorto(slug=f["barrio_slug"], nombre=f["barrio_nombre"])
             if f["barrio_slug"]
             else None,
+            apartados_pendientes=f["apartados_pendientes"],
         )
         for f in filas
     ]

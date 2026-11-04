@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import type { Gate, NegocioAdmin, Perfil } from './lib/api'
 import { ProveedorSesion } from './lib/sesion'
-import { apiFalsa, BARRIOS, CATEGORIAS } from './test/fixtures'
+import { APARTADO, apiFalsa, BARRIOS, CATALOGO, CATEGORIAS, DETALLE } from './test/fixtures'
 
 // Sesión de Supabase simulada: `conSesion` decide si hay alguien adentro.
 const estado = vi.hoisted(() => ({ conSesion: true, google: vi.fn(), correo: vi.fn(), subir: vi.fn() }))
@@ -294,5 +294,110 @@ describe('Fotos del negocio', () => {
 
     await waitFor(() => expect(posts).toContainEqual({ ruta: '/mis-negocios/n9/fotos', cuerpo: { url: URL_FOTO } }))
     expect(estado.subir).toHaveBeenCalledWith('n9', expect.any(Blob), 'token-123')
+  })
+})
+
+describe('Catálogo y apartados', () => {
+  const VECINO: Perfil = { ...NUEVO, perfil_completo: true, celular: '3001112233' }
+  const DUENO: Perfil = { ...VECINO, roles: ['dueno'] }
+  const MI_NEGOCIO = {
+    id: 'n1',
+    slug: 'panaderia-el-trigal',
+    nombre: 'Panadería El Trigal',
+    estado: 'activo',
+    motivo_rechazo: null,
+    categoria: 'panaderia',
+    barrio: null,
+    apartados_pendientes: 1,
+  }
+
+  it('el vecino arma su carrito, aparta y avisa por WhatsApp con el código', async () => {
+    const { posts } = apiFalsa({
+      '/yo': VECINO,
+      '/negocios/panaderia-el-trigal/catalogo': CATALOGO,
+      '/negocios/': DETALLE,
+      'POST /negocios/n1/apartados': APARTADO,
+    })
+    renderEn('/n/panaderia-el-trigal')
+
+    expect(await screen.findByRole('heading', { name: 'Catálogo' })).toBeInTheDocument()
+    expect(screen.getByText('Agotado')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar Croissant' })).toBeDisabled()
+    expect(screen.getByText('Pregunta el precio')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar Pan de bono' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar otro de Pan de bono' }))
+    expect(screen.getByRole('group', { name: 'Cantidad de Pan de bono' })).toHaveTextContent('2')
+    expect(JSON.parse(localStorage.getItem('micuadra.carrito.n1') ?? '{}')).toEqual({ i1: 2 })
+
+    fireEvent.click(screen.getByRole('button', { name: /Apartar \(2\)/ }))
+    fireEvent.change(await screen.findByLabelText(/Nota para el negocio/), { target: { value: 'Paso a las 5' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Apartar' }))
+
+    expect(await screen.findByRole('heading', { name: '¡Apartado!' })).toBeInTheDocument()
+    expect(posts).toContainEqual({
+      ruta: '/negocios/n1/apartados',
+      cuerpo: { items: [{ item_id: 'i1', cantidad: 2 }], nota: 'Paso a las 5' },
+    })
+    const wa = screen.getByRole('link', { name: /Avisar por WhatsApp/ }).getAttribute('href') ?? ''
+    expect(decodeURIComponent(wa)).toContain('Código: *K7P2*')
+    expect(decodeURIComponent(wa)).toContain('• 2 × Pan de bono — $3.000')
+    expect(localStorage.getItem('micuadra.carrito.n1')).toBeNull()
+  })
+
+  it('sin cuenta, el carrito pide entrar y recuerda volver al negocio', async () => {
+    estado.conSesion = false
+    localStorage.setItem('micuadra.carrito.n1', JSON.stringify({ i1: 1 }))
+    apiFalsa({ '/negocios/panaderia-el-trigal/catalogo': CATALOGO, '/negocios/': DETALLE })
+    renderEn('/n/panaderia-el-trigal')
+
+    fireEvent.click(await screen.findByRole('button', { name: /Apartar \(1\)/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar para apartar' }))
+    expect(await screen.findByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument()
+    expect(sessionStorage.getItem('micuadra.volver')).toBe('/n/panaderia-el-trigal')
+  })
+
+  it('el dueño agrega un producto con precio e inventario', async () => {
+    const { posts } = apiFalsa({
+      '/yo': DUENO,
+      '/mis-negocios/n1/catalogo': CATALOGO,
+      '/mis-negocios': [MI_NEGOCIO],
+      'POST /mis-negocios/n1/catalogo/items': CATALOGO.items[0],
+    })
+    renderEn('/mi-negocio/n1/catalogo')
+
+    expect(await screen.findByRole('heading', { name: 'Catálogo de Panadería El Trigal' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /1 por confirmar/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Agregar producto o servicio/ }))
+    fireEvent.change(await screen.findByLabelText('Nombre'), { target: { value: 'Pandebono' } })
+    fireEvent.change(screen.getByPlaceholderText(/Pregunta el precio/), { target: { value: '1.800' } })
+    fireEvent.click(screen.getByLabelText('Llevar inventario'))
+    fireEvent.change(screen.getByLabelText(/Unidades disponibles/), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText('Sección'), { target: { value: 's1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() =>
+      expect(posts).toContainEqual({
+        ruta: '/mis-negocios/n1/catalogo/items',
+        cuerpo: expect.objectContaining({ nombre: 'Pandebono', precio: 1800, stock: 12, seccion_id: 's1', tipo: 'producto' }),
+      }),
+    )
+  })
+
+  it('el dueño confirma un apartado pendiente', async () => {
+    const { posts } = apiFalsa({
+      '/yo': DUENO,
+      '/mis-negocios/n1/apartados': [APARTADO],
+      '/mis-negocios': [MI_NEGOCIO],
+      'POST /mis-negocios/n1/apartados/a1/estado': { ...APARTADO, estado: 'confirmado' },
+    })
+    renderEn('/mi-negocio/n1/apartados')
+
+    expect(await screen.findByText('K7P2')).toBeInTheDocument()
+    expect(screen.getByText('«Paso a las 5»')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    await waitFor(() =>
+      expect(posts).toContainEqual({ ruta: '/mis-negocios/n1/apartados/a1/estado', cuerpo: { estado: 'confirmado' } }),
+    )
   })
 })

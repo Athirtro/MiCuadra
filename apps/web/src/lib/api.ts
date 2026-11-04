@@ -27,6 +27,14 @@ export type Entrevista = Esquemas['Entrevista']
 export type EntrevistaEntrada = Esquemas['EntrevistaEntrada']
 export type Gate = Esquemas['Gate']
 export type Criterio = Esquemas['Criterio']
+export type Catalogo = Esquemas['Catalogo']
+export type Item = Esquemas['Item']
+export type Seccion = Esquemas['Seccion']
+export type ItemEntrada = Esquemas['ItemEntrada']
+export type SeccionEntrada = Esquemas['SeccionEntrada']
+export type Apartado = Esquemas['Apartado']
+export type ApartadoEntrada = Esquemas['ApartadoEntrada']
+export type CambioEstadoApartado = Esquemas['CambioEstadoApartado']
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api/v1'
 

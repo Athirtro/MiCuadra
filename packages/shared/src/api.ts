@@ -202,6 +202,233 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/negocios/{id_o_slug}/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogo Publico
+         * @description Productos y servicios visibles de un negocio activo.
+         */
+        get: operations["catalogo_publico_api_v1_negocios__id_o_slug__catalogo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mi Catalogo
+         * @description Todo el catálogo, incluidos los ítems ocultos.
+         */
+        get: operations["mi_catalogo_api_v1_mis_negocios__negocio_id__catalogo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/secciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Crear Seccion */
+        post: operations["crear_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/secciones/{seccion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Editar Seccion */
+        put: operations["editar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__put"];
+        post?: never;
+        /** Borrar Seccion */
+        delete: operations["borrar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear Item
+         * @description Producto o servicio nuevo. La foto (opcional) la sube la web a `negocio-fotos/{id}/catalogo/`.
+         */
+        post: operations["crear_item_api_v1_mis_negocios__negocio_id__catalogo_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Editar Item */
+        put: operations["editar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__put"];
+        post?: never;
+        /** Borrar Item */
+        delete: operations["borrar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items/{item_id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ajustar Stock
+         * @description Suma o resta unidades sin abrir el formulario (llegó mercancía, se vendió en la tienda).
+         */
+        post: operations["ajustar_stock_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__stock_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/apartados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Apartados Del Negocio
+         * @description Apartados que recibió el negocio; `abiertos` = pendientes, confirmados y listos.
+         */
+        get: operations["apartados_del_negocio_api_v1_mis_negocios__negocio_id__apartados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/apartados/{apartado_id}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cambiar Estado Apartado
+         * @description Confirmar descuenta el stock; cancelar un apartado confirmado lo devuelve.
+         */
+        post: operations["cambiar_estado_apartado_api_v1_mis_negocios__negocio_id__apartados__apartado_id__estado_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/negocios/{negocio_id}/apartados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apartar
+         * @description El vecino aparta lo de su carrito. Se paga en la tienda al recoger.
+         */
+        post: operations["apartar_api_v1_negocios__negocio_id__apartados_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-apartados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mis Apartados */
+        get: operations["mis_apartados_api_v1_mis_apartados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-apartados/{apartado_id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancelar Apartado */
+        post: operations["cancelar_apartado_api_v1_mis_apartados__apartado_id__cancelar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/eventos": {
         parameters: {
             query?: never;
@@ -518,6 +745,80 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Apartado */
+        Apartado: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Codigo
+             * @description Código corto para decirlo por WhatsApp
+             */
+            codigo: string;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "pendiente" | "confirmado" | "listo" | "entregado" | "cancelado";
+            negocio: components["schemas"]["NegocioDelApartado"];
+            /** @description Solo lo ve el negocio, para saber a quién entregarle */
+            vecino?: components["schemas"]["VecinoDelApartado"] | null;
+            /** Items */
+            items: components["schemas"]["ApartadoItem"][];
+            /** Nota */
+            nota: string | null;
+            /**
+             * Total
+             * @description Suma de los ítems con precio, en pesos COP
+             */
+            total: number;
+            /** Hay Sin Precio */
+            hay_sin_precio: boolean;
+            /** Motivo Cancelacion */
+            motivo_cancelacion: string | null;
+            /** Cancelado Por */
+            cancelado_por: ("vecino" | "negocio") | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ApartadoEntrada */
+        ApartadoEntrada: {
+            /** Items */
+            items: components["schemas"]["ApartadoItemEntrada"][];
+            /** Nota */
+            nota?: string | null;
+        };
+        /** ApartadoItem */
+        ApartadoItem: {
+            /** Item Id */
+            item_id: string | null;
+            /** Nombre */
+            nombre: string;
+            /** Precio */
+            precio: number | null;
+            /** Cantidad */
+            cantidad: number;
+        };
+        /** ApartadoItemEntrada */
+        ApartadoItemEntrada: {
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Cantidad */
+            cantidad: number;
+        };
         /** Barrio */
         Barrio: {
             /**
@@ -546,6 +847,16 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /** CambioEstadoApartado */
+        CambioEstadoApartado: {
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "confirmado" | "listo" | "entregado" | "cancelado";
+            /** Motivo */
+            motivo?: string | null;
+        };
         /** CambioEstadoNegocio */
         CambioEstadoNegocio: {
             /**
@@ -568,6 +879,29 @@ export interface components {
              * @enum {string}
              */
             estado: "abierta" | "resuelta" | "descartada";
+        };
+        /**
+         * CambioStock
+         * @description Ajuste rápido desde el panel: suma o resta unidades (no baja de 0).
+         */
+        CambioStock: {
+            /** Delta */
+            delta: number;
+        };
+        /** Cancelacion */
+        Cancelacion: {
+            /** Motivo */
+            motivo?: string | null;
+        };
+        /** Catalogo */
+        Catalogo: {
+            /** Secciones */
+            secciones: components["schemas"]["Seccion"][];
+            /**
+             * Items
+             * @description Ordenados por sección y orden
+             */
+            items: components["schemas"]["Item"][];
         };
         /** Categoria */
         Categoria: {
@@ -707,6 +1041,14 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** FotoBorrada */
+        FotoBorrada: {
+            /**
+             * Foto Url
+             * @description Foto que la web debe quitar del almacenamiento
+             */
+            foto_url: string | null;
+        };
         /** FotoEntrada */
         FotoEntrada: {
             /**
@@ -824,6 +1166,72 @@ export interface components {
              */
             created_at: string;
         };
+        /** Item */
+        Item: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Seccion Id */
+            seccion_id: string | null;
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "producto" | "servicio";
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            /**
+             * Precio
+             * @description Pesos COP; null = preguntar el precio
+             */
+            precio: number | null;
+            /** Foto Url */
+            foto_url: string | null;
+            /**
+             * Stock
+             * @description Unidades disponibles; null = no se controla
+             */
+            stock: number | null;
+            /** Visible */
+            visible: boolean;
+            /** Orden */
+            orden: number;
+        };
+        /** ItemEntrada */
+        ItemEntrada: {
+            /** Seccion Id */
+            seccion_id?: string | null;
+            /**
+             * Tipo
+             * @default producto
+             * @enum {string}
+             */
+            tipo: "producto" | "servicio";
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Precio */
+            precio?: number | null;
+            /** Foto Url */
+            foto_url?: string | null;
+            /** Stock */
+            stock?: number | null;
+            /**
+             * Visible
+             * @default true
+             */
+            visible: boolean;
+            /**
+             * Orden
+             * @default 0
+             */
+            orden: number;
+        };
         /** ListaEsperaEntrada */
         ListaEsperaEntrada: {
             /**
@@ -910,6 +1318,12 @@ export interface components {
             /** Categoria */
             categoria: string;
             barrio: components["schemas"]["BarrioCorto"] | null;
+            /**
+             * Apartados Pendientes
+             * @description Apartados por confirmar
+             * @default 0
+             */
+            apartados_pendientes: number;
         };
         /** NegocioAdmin */
         NegocioAdmin: {
@@ -947,6 +1361,20 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** NegocioDelApartado */
+        NegocioDelApartado: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /** Whatsapp */
+            whatsapp: string | null;
         };
         /** NegocioDetalle */
         NegocioDetalle: {
@@ -1142,6 +1570,28 @@ export interface components {
             /** Detalle */
             detalle?: string | null;
         };
+        /** Seccion */
+        Seccion: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Orden */
+            orden: number;
+        };
+        /** SeccionEntrada */
+        SeccionEntrada: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Orden
+             * @default 0
+             */
+            orden: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1154,6 +1604,13 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VecinoDelApartado */
+        VecinoDelApartado: {
+            /** Nombre */
+            nombre: string | null;
+            /** Celular */
+            celular: string | null;
         };
     };
     responses: never;
@@ -1522,6 +1979,467 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Disponibilidad"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalogo_publico_api_v1_negocios__id_o_slug__catalogo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_o_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalogo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mi_catalogo_api_v1_mis_negocios__negocio_id__catalogo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalogo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeccionEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seccion"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    editar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                seccion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeccionEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seccion"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    borrar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                seccion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_item_api_v1_mis_negocios__negocio_id__catalogo_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    editar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    borrar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FotoBorrada"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ajustar_stock_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__stock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioStock"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apartados_del_negocio_api_v1_mis_negocios__negocio_id__apartados_get: {
+        parameters: {
+            query?: {
+                estado?: ("abiertos" | "pendiente" | "confirmado" | "listo" | "entregado" | "cancelado") | null;
+            };
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_apartado_api_v1_mis_negocios__negocio_id__apartados__apartado_id__estado_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                apartado_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioEstadoApartado"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apartar_api_v1_negocios__negocio_id__apartados_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApartadoEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mis_apartados_api_v1_mis_apartados_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"][];
+                };
+            };
+        };
+    };
+    cancelar_apartado_api_v1_mis_apartados__apartado_id__cancelar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                apartado_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Cancelacion"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"];
                 };
             };
             /** @description Validation Error */

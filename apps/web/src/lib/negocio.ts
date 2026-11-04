@@ -19,7 +19,10 @@ export function emojiCategoria(slug: string): string {
 
 /** `3001234567` → enlace de WhatsApp con el saludo de MiCuadra. */
 export function enlaceWhatsapp(celular: string, nombreNegocio: string): string {
-  const texto = `Hola, ${nombreNegocio}. Te encontré en MiCuadra 👋`
+  return enlaceWhatsappTexto(celular, `Hola, ${nombreNegocio}. Te encontré en MiCuadra 👋`)
+}
+
+export function enlaceWhatsappTexto(celular: string, texto: string): string {
   return `https://wa.me/57${celular}?text=${encodeURIComponent(texto)}`
 }
 

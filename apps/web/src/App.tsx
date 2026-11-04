@@ -19,6 +19,10 @@ const Metricas = lazy(() => import('./pages/admin/Metricas').then((m) => ({ defa
 const NegociosAdmin = lazy(() => import('./pages/admin/Negocios').then((m) => ({ default: m.Negocios })))
 const ListaEsperaAdmin = lazy(() => import('./pages/admin/ListaEspera').then((m) => ({ default: m.ListaEsperaAdmin })))
 const Reportes = lazy(() => import('./pages/admin/Reportes').then((m) => ({ default: m.Reportes })))
+// Paneles del dueño y del vecino: solo los descarga quien los usa.
+const CatalogoDueno = lazy(() => import('./pages/CatalogoDueno').then((m) => ({ default: m.CatalogoDueno })))
+const ApartadosDueno = lazy(() => import('./pages/ApartadosDueno').then((m) => ({ default: m.ApartadosDueno })))
+const MisApartados = lazy(() => import('./pages/MisApartados').then((m) => ({ default: m.MisApartados })))
 
 export function App() {
   useEffect(registrarSesion, [])
@@ -52,7 +56,10 @@ export function App() {
           <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/bienvenida" element={<Bienvenida />} />
           <Route path="/mi-negocio/nuevo" element={<RegistrarNegocio />} />
-            <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
+          <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
+          <Route path="/mi-negocio/:id/catalogo" element={<CatalogoDueno />} />
+          <Route path="/mi-negocio/:id/apartados" element={<ApartadosDueno />} />
+          <Route path="/mis-apartados" element={<MisApartados />} />
           <Route path="/privacidad" element={<Privacidad />} />
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Navigate to="metricas" replace />} />
