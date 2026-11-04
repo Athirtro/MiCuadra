@@ -5,7 +5,7 @@ import { Dialogo } from '../components/Dialogo'
 import { CLAVE_QUE_PEDIRIA } from '../components/ListaEspera'
 import { ApiError, apiEnviar, apiGet, type NegocioDetalle, type ReporteEntrada } from '../lib/api'
 import { registrarEvento } from '../lib/eventos'
-import { emojiCategoria, enlaceComoLlegar, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
+import { DIAS, diaHoy, emojiCategoria, enlaceComoLlegar, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
 import { EstadoAbierto } from './Mapa'
 
 const MiniMapa = lazy(() => import('../components/MapaBarrio').then((m) => ({ default: m.MiniMapa })))
@@ -30,7 +30,20 @@ export function Perfil() {
     }
   }, [negocio.data])
 
-  if (negocio.isPending) return <p className="mx-auto max-w-xl p-4 text-muted">Cargando…</p>
+  if (negocio.isPending) {
+    return (
+      <div className="mx-auto max-w-xl" role="status">
+        <span className="sr-only">Cargando…</span>
+        <div className="esqueleto aspect-[16/9]" />
+        <div className="flex flex-col gap-3 px-4 pt-5" aria-hidden="true">
+          <div className="esqueleto h-4 w-1/3 rounded" />
+          <div className="esqueleto h-8 w-3/4 rounded" />
+          <div className="esqueleto h-4 w-1/4 rounded" />
+          <div className="esqueleto mt-4 h-48 rounded-r" />
+        </div>
+      </div>
+    )
+  }
   if (negocio.isError) {
     const noExiste = negocio.error instanceof ApiError && negocio.error.status === 404
     return (
@@ -68,74 +81,85 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
     }
   }
 
+  const hoy = DIAS[diaHoy()]
+
   return (
-    <article className="mx-auto max-w-xl pb-28">
+    <article className="mx-auto max-w-xl pb-32">
       <Carrusel fotos={n.fotos} nombre={n.nombre} emoji={emoji} color={n.categoria.color} />
 
-      <div className="px-4 pt-4">
-        <p className="text-sm font-bold" style={{ color: n.categoria.color }}>
-          {emoji} {n.categoria.nombre}
-          {n.barrio && <span className="font-normal text-muted"> · {n.barrio.nombre}</span>}
+      {/* Encabezado como hoja que sube sobre la foto */}
+      <div className="relative -mt-5 rounded-t-[22px] bg-bg px-4 pt-5">
+        <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: n.categoria.color }}>
+          <span
+            className="grid size-7 place-items-center rounded-full text-base"
+            style={{ background: `${n.categoria.color}22` }}
+            aria-hidden="true"
+          >
+            {emoji}
+          </span>
+          {n.categoria.nombre}
+          {n.barrio && <span className="font-normal text-muted">· {n.barrio.nombre}</span>}
         </p>
-        <h1 className="mt-1 text-3xl leading-tight font-black">{n.nombre}</h1>
-        <div className="mt-1 flex items-center gap-2">
+        <h1 className="mt-2 text-[2rem] leading-[1.05] font-black text-balance">{n.nombre}</h1>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           <EstadoAbierto abierto={n.abierto_ahora} />
-          {n.cerrado_hoy && <span className="text-sm text-muted">· Hoy no abre</span>}
-          {n.destacado && <span className="rounded bg-sun px-1.5 text-xs font-bold text-sun-ink">Destacado</span>}
+          {n.cerrado_hoy && <span className="text-sm text-muted">Hoy no abre</span>}
+          {n.destacado && <span className="rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-sun-ink">★ Destacado</span>}
         </div>
-        {n.descripcion && <p className="mt-3">{n.descripcion}</p>}
+        {n.descripcion && <p className="mt-3 text-pretty">{n.descripcion}</p>}
 
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          {n.whatsapp && (
-            <a
-              href={enlaceWhatsapp(n.whatsapp, n.nombre)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => registrarEvento('click_whatsapp', n.id)}
-              className="tap col-span-2 flex items-center justify-center gap-2 rounded-r bg-green px-4 font-bold text-green-ink"
-            >
-              Escribir por WhatsApp
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={compartir} className="tap inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-bold shadow-1">
+            <span aria-hidden="true">↗</span>
+            {copiado ? 'Enlace copiado ✓' : 'Compartir'}
+          </button>
+          {n.telefono && (
+            <a href={`tel:${n.telefono}`} className="tap inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-bold shadow-1">
+              <span aria-hidden="true">☎</span>
+              Llamar
             </a>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              registrarEvento('click_pedir_mandado', n.id)
-              setModalMandado(true)
-            }}
-            className="tap flex items-center justify-center gap-2 rounded-r bg-sun px-4 font-bold text-sun-ink"
-          >
-            🛵 Pedir mandado
-          </button>
-          <a
-            href={enlaceComoLlegar(n.ubicacion)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => registrarEvento('click_como_llegar', n.id)}
-            className="tap flex items-center justify-center rounded-r border border-line bg-surface px-4 font-bold"
-          >
-            Cómo llegar
-          </a>
         </div>
 
-        <section className="mt-6">
-          <h2 className="text-lg font-black">Dónde queda</h2>
-          {n.direccion_texto && <p className="mt-1">{n.direccion_texto}</p>}
-          <div className="mt-2">
-            <Suspense fallback={<div className="h-40 rounded-r bg-block" />}>
-              <MiniMapa punto={n.ubicacion} color={n.categoria.color} emoji={emoji} />
-            </Suspense>
+        <section className="tarjeta mt-5 overflow-hidden" aria-labelledby="titulo-donde">
+          <div className="flex items-start justify-between gap-3 p-4">
+            <div className="min-w-0">
+              <h2 id="titulo-donde" className="text-lg font-black">
+                Dónde queda
+              </h2>
+              {n.direccion_texto && <p className="mt-0.5 text-sm text-muted">{n.direccion_texto}</p>}
+            </div>
+            <a
+              href={enlaceComoLlegar(n.ubicacion)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => registrarEvento('click_como_llegar', n.id)}
+              className="tap inline-flex shrink-0 items-center rounded-full bg-block px-4 text-sm font-bold"
+            >
+              Cómo llegar
+            </a>
           </div>
+          <Suspense fallback={<div className="esqueleto h-40" />}>
+            <MiniMapa punto={n.ubicacion} color={n.categoria.color} emoji={emoji} />
+          </Suspense>
         </section>
 
-        <section className="mt-6">
-          <h2 className="text-lg font-black">Horario</h2>
+        <section className="tarjeta mt-3 p-4" aria-labelledby="titulo-horario">
+          <h2 id="titulo-horario" className="text-lg font-black">
+            Horario
+          </h2>
           {n.horarios.length ? (
-            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <dl className="mt-2 grid grid-cols-[auto_1fr] text-sm">
               {horariosPorDia(n.horarios).map(([dia, franjas]) => (
-                <div key={dia} className="contents">
-                  <dt className="font-bold">{dia}</dt>
-                  <dd className={franjas === 'Cerrado' ? 'text-muted' : ''}>{franjas}</dd>
+                <div
+                  key={dia}
+                  className={`col-span-2 grid grid-cols-subgrid gap-x-4 rounded-lg px-2 py-1.5 ${dia === hoy ? 'bg-green/10' : ''}`}
+                >
+                  <dt className={dia === hoy ? 'font-black text-green' : 'font-bold'}>
+                    {dia}
+                    {dia === hoy && <span className="sr-only"> (hoy)</span>}
+                  </dt>
+                  <dd className={`font-mono text-[13px] ${franjas === 'Cerrado' ? 'text-muted' : ''}`}>{franjas}</dd>
                 </div>
               ))}
             </dl>
@@ -144,17 +168,37 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
           )}
         </section>
 
-        <div className="mt-8 flex flex-wrap gap-2 text-sm">
-          <button type="button" onClick={compartir} className="tap rounded-r border border-line px-4 font-bold">
-            {copiado ? 'Enlace copiado ✓' : 'Compartir'}
+        <p className="mt-6 text-center">
+          <button type="button" onClick={() => setModalReporte(true)} className="tap px-2 text-sm text-muted underline">
+            Reportar información incorrecta
           </button>
-          {n.telefono && (
-            <a href={`tel:${n.telefono}`} className="tap inline-flex items-center rounded-r border border-line px-4 font-bold">
-              Llamar
+        </p>
+      </div>
+
+      {/* Acciones principales siempre a mano del pulgar */}
+      <div className="barra-inferior fixed inset-x-0 bottom-0 z-[1050] border-t border-line bg-surface/90 px-4 pt-3 backdrop-blur-md">
+        <div className="mx-auto flex max-w-xl gap-2">
+          {n.whatsapp && (
+            <a
+              href={enlaceWhatsapp(n.whatsapp, n.nombre)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => registrarEvento('click_whatsapp', n.id)}
+              aria-label="Escribir por WhatsApp"
+              className="tap flex flex-1 items-center justify-center gap-2 rounded-r bg-green px-3 font-bold whitespace-nowrap text-green-ink shadow-1"
+            >
+              <span aria-hidden="true">💬</span> WhatsApp
             </a>
           )}
-          <button type="button" onClick={() => setModalReporte(true)} className="tap px-2 text-muted underline">
-            Reportar información incorrecta
+          <button
+            type="button"
+            onClick={() => {
+              registrarEvento('click_pedir_mandado', n.id)
+              setModalMandado(true)
+            }}
+            className="tap flex flex-1 items-center justify-center gap-2 rounded-r bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
+          >
+            🛵 Pedir mandado
           </button>
         </div>
       </div>
@@ -166,24 +210,49 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
 }
 
 function Carrusel({ fotos, nombre, emoji, color }: { fotos: string[]; nombre: string; emoji: string; color: string }) {
-  if (!fotos.length) {
+  const [rotas, setRotas] = useState<string[]>([])
+  const [actual, setActual] = useState(0)
+  const validas = fotos.filter((f) => !rotas.includes(f))
+
+  if (!validas.length) {
     return (
-      <div className="grid aspect-[16/9] place-items-center text-6xl" style={{ background: `${color}22` }} aria-hidden="true">
-        {emoji}
+      <div
+        className="grid aspect-[16/9] place-items-center text-7xl"
+        style={{ background: `radial-gradient(circle at 50% 40%, ${color}33, ${color}11 70%)` }}
+        aria-hidden="true"
+      >
+        <span className="drop-shadow-sm">{emoji}</span>
       </div>
     )
   }
   return (
-    <div className="flex aspect-[4/3] snap-x snap-mandatory overflow-x-auto" aria-label={`Fotos de ${nombre}`}>
-      {fotos.map((url, i) => (
-        <img
-          key={url}
-          src={url}
-          alt={`${nombre}, foto ${i + 1} de ${fotos.length}`}
-          className="h-full w-full shrink-0 snap-center object-cover"
-          loading={i === 0 ? 'eager' : 'lazy'}
-        />
-      ))}
+    <div className="relative">
+      <div
+        className="flex aspect-[4/3] snap-x snap-mandatory overflow-x-auto [scrollbar-width:none]"
+        aria-label={`Fotos de ${nombre}`}
+        onScroll={(e) => setActual(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
+      >
+        {validas.map((url, i) => (
+          <img
+            key={url}
+            src={url}
+            alt={`${nombre}, foto ${i + 1} de ${validas.length}`}
+            className="h-full w-full shrink-0 snap-center bg-block object-cover"
+            loading={i === 0 ? 'eager' : 'lazy'}
+            onError={() => setRotas((r) => [...r, url])}
+          />
+        ))}
+      </div>
+      {validas.length > 1 && (
+        <div className="absolute inset-x-0 bottom-8 flex justify-center gap-1.5" aria-hidden="true">
+          {validas.map((url, i) => (
+            <span
+              key={url}
+              className={`h-1.5 rounded-full bg-white shadow transition-[width,opacity] duration-200 ${i === actual ? 'w-4 opacity-100' : 'w-1.5 opacity-60'}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

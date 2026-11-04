@@ -399,7 +399,7 @@ function PasoHorario({ horarios, alCambiar }: { horarios: Horario[]; alCambiar: 
           </button>
         ))}
       </div>
-      <ul className="flex flex-col divide-y divide-line rounded-r border border-line bg-surface">
+      <ul className="flex flex-col divide-y divide-line tarjeta">
         {ORDEN_DIAS.map((dia) => {
           const franjas = delDia(dia)
           const abierto = franjas.length > 0
@@ -489,7 +489,7 @@ function PasoRevisar({ b, categorias, irA }: { b: Borrador; categorias?: Categor
 
 function Resumen({ titulo, alEditar, children }: { titulo: string; alEditar: () => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-r border border-line bg-surface p-4">
+    <div className="tarjeta p-4">
       <div className="flex items-center justify-between">
         <p className="text-xs font-bold tracking-wide text-muted uppercase">{titulo}</p>
         <button type="button" onClick={alEditar} className="text-sm font-bold text-green underline">

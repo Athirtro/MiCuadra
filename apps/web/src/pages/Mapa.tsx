@@ -78,7 +78,7 @@ export function Mapa() {
   return (
     <div className="grid h-[calc(100dvh-57px)] grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
       {/* Filtros */}
-      <div className="z-10 flex flex-col gap-2 border-b border-line bg-surface px-4 py-3 md:col-span-2">
+      <div className="relative z-[1001] flex flex-col gap-2 border-b border-line bg-surface px-4 py-3 shadow-1 md:col-span-2">
         <div className="flex gap-2">
           <label className="flex-1">
             <span className="sr-only">Buscar negocios</span>
@@ -141,7 +141,7 @@ export function Mapa() {
       </div>
 
       {/* Mapa */}
-      <div className="relative md:col-start-2 md:row-start-2">
+      <div className="mapa-con-hoja relative md:col-start-2 md:row-start-2">
         <Suspense fallback={<div className="h-full w-full bg-block" />}>
           <MapaBarrio
             centro={centro}
@@ -167,8 +167,9 @@ export function Mapa() {
       <section
         aria-label="Resultados"
         aria-busy={negocios.isFetching}
-        className="overflow-y-auto border-t border-line bg-surface md:col-start-1 md:row-start-2 md:border-t-0 md:border-r"
+        className="relative z-[1001] -mt-4 overflow-y-auto rounded-t-[22px] bg-surface shadow-2 md:col-start-1 md:row-start-2 md:mt-0 md:rounded-none md:border-r md:border-line md:shadow-none"
       >
+        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line md:hidden" aria-hidden="true" />
         <Resultados consulta={negocios} radioM={radioM} alAbrir={abrir} />
       </section>
     </div>
@@ -232,8 +233,8 @@ function Resultados({
   }
   return (
     <>
-      <p className="px-4 pt-3 text-xs text-muted">
-        {total} {total === 1 ? 'negocio' : 'negocios'} a menos de {radioM / 100} cuadras
+      <p className="px-4 pt-3 pb-1 font-mono text-[11px] tracking-wider text-muted uppercase">
+        {total} {total === 1 ? 'negocio' : 'negocios'} · a menos de {radioM / 100} cuadras
       </p>
       <ul className="divide-y divide-line">
         {items.map((n) => (
@@ -241,10 +242,10 @@ function Resultados({
             <button
               type="button"
               onClick={() => alAbrir(n.slug)}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg focus-visible:bg-bg"
+              className="group flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg focus-visible:bg-bg"
             >
               <span
-                className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-r text-2xl"
+                className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-r text-2xl ring-1 ring-black/5"
                 style={{ background: `${n.categoria.color}22` }}
                 aria-hidden="true"
               >
@@ -266,6 +267,9 @@ function Resultados({
                 </span>
                 <EstadoAbierto abierto={n.abierto_ahora} />
               </span>
+              <span className="shrink-0 text-xl text-muted transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true">
+                ›
+              </span>
             </button>
           </li>
         ))}
@@ -276,7 +280,8 @@ function Resultados({
 
 export function EstadoAbierto({ abierto }: { abierto: boolean }) {
   return (
-    <span className={`text-sm font-bold ${abierto ? 'text-green' : 'text-red'}`}>
+    <span className={`inline-flex items-center gap-1.5 text-sm font-bold ${abierto ? 'text-green' : 'text-red'}`}>
+      <span className={`size-2 rounded-full ${abierto ? 'bg-green shadow-[0_0_0_3px_color-mix(in_srgb,var(--green)_20%,transparent)]' : 'bg-red'}`} aria-hidden="true" />
       {abierto ? 'Abierto ahora' : 'Cerrado'}
     </span>
   )
@@ -289,7 +294,7 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
       aria-pressed={activo}
       onClick={onClick}
       className={`tap shrink-0 rounded-full border px-4 text-sm font-bold whitespace-nowrap ${
-        activo ? 'border-green bg-green text-green-ink' : 'border-line bg-bg text-ink'
+        activo ? 'border-green bg-green text-green-ink shadow-1' : 'border-line bg-surface text-ink'
       }`}
     >
       {children}

@@ -25,7 +25,7 @@ export function App() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="sticky top-0 z-[1100] border-b border-line bg-surface">
+      <header className="sticky top-0 z-[1100] border-b border-line bg-surface/90 backdrop-blur-md">
         <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <Link to="/" className="tap flex items-center gap-2 font-display text-xl font-black">
             <img src="/icono.svg" alt="" width={28} height={28} />

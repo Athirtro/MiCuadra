@@ -63,7 +63,7 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
   const cambiar = useAdminMutation<CambioEstadoNegocio>('POST', () => `/negocios/${n.id}/estado`, (v) => v)
 
   return (
-    <li className="rounded-r border border-line bg-surface p-4">
+    <li className="tarjeta p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-sm font-bold" style={{ color: n.categoria.color }}>

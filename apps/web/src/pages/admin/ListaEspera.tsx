@@ -62,7 +62,7 @@ export function ListaEsperaAdmin() {
       <Estado cargando={lista.isPending} error={lista.error} vacio={lista.data?.length === 0}>
         <ul className="flex flex-col gap-2">
           {lista.data?.map((i) => (
-            <li key={i.id} className="flex flex-col gap-1 rounded-r border border-line bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+            <li key={i.id} className="flex flex-col gap-1 tarjeta p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 text-sm">
                 <p>
                   <span className="text-base font-bold">{i.nombre}</span>

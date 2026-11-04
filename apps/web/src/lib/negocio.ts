@@ -44,3 +44,9 @@ function hora(hhmm: string): string {
   const [h = '0', m = '00'] = hhmm.split(':')
   return `${Number(h)}:${m}`
 }
+
+/** Día de la semana en Pereira (0 = domingo), sin importar la zona del celular. */
+export function diaHoy(ahora = new Date()): number {
+  const nombre = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'America/Bogota' }).format(ahora)
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(nombre)
+}

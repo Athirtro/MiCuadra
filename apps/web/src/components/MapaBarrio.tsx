@@ -114,7 +114,7 @@ export function MiniMapa({ punto, color, emoji }: { punto: Punto; color: string;
     <MapContainer
       center={[punto.lat, punto.lng]}
       zoom={17}
-      className="h-40 w-full rounded-r"
+      className="h-44 w-full"
       dragging={false}
       scrollWheelZoom={false}
       doubleClickZoom={false}

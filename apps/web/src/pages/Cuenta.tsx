@@ -66,7 +66,7 @@ export function Cuenta() {
           {negocios.data?.length === 0 && <p className="text-muted">Todavía no has registrado tu negocio.</p>}
           <ul className="flex flex-col gap-2">
             {negocios.data?.map((n) => (
-              <li key={n.id} className="rounded-r border border-line bg-surface p-4">
+              <li key={n.id} className="tarjeta p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-bold">{n.nombre}</p>
                   <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold ${ESTADOS[n.estado].clase}`}>
@@ -101,7 +101,7 @@ export function Cuenta() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-r border border-line bg-surface p-4">
+        <div className="tarjeta p-4">
           <p className="font-bold">¿Tienes un negocio en el barrio?</p>
           <p className="mt-1 text-sm text-muted">Aparecer en el mapa es gratis, siempre.</p>
           <Link to="/mi-negocio/nuevo" className="mt-3 inline-block font-bold text-green underline">

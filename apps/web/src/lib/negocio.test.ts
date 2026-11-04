@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { emojiCategoria, enlaceComoLlegar, enlaceWhatsapp, horariosPorDia } from './negocio'
+import { diaHoy, emojiCategoria, enlaceComoLlegar, enlaceWhatsapp, horariosPorDia } from './negocio'
 
 describe('negocio', () => {
   it('arma el enlace de WhatsApp con indicativo de Colombia y saludo', () => {
@@ -28,5 +28,13 @@ describe('negocio', () => {
   it('tiene emoji por categoría y uno genérico', () => {
     expect(emojiCategoria('panaderia')).toBe('🥖')
     expect(emojiCategoria('otra')).toBe('📍')
+  })
+})
+
+describe('diaHoy', () => {
+  it('usa la hora de Pereira, no la del celular', () => {
+    // 3 a. m. UTC del lunes 2 de noviembre = 10 p. m. del domingo en Bogotá
+    expect(diaHoy(new Date('2026-11-02T03:00:00Z'))).toBe(0)
+    expect(diaHoy(new Date('2026-11-02T15:00:00Z'))).toBe(1)
   })
 })

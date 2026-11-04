@@ -15,6 +15,9 @@
   --red: #c8462f;
   --focus: #1e6b4e;
   --r: 14px;
+  /* Sombras en dos capas (contacto + ambiente), teñidas del verde de la marca. */
+  --sombra-1: 0 1px 2px rgb(22 38 31 / 0.06), 0 2px 8px rgb(22 38 31 / 0.05);
+  --sombra-2: 0 2px 4px rgb(22 38 31 / 0.06), 0 12px 32px rgb(22 38 31 / 0.12);
   /* Curvas de movimiento (criterios de Emil Kowalski): entrar/salir con ease-out fuerte,
      mover en pantalla con ease-in-out. Nunca ease-in en la interfaz. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -35,6 +38,8 @@
     --green-ink: #0b1611;
     --red: #ee7158;
     --focus: #f4b635;
+    --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+    --sombra-2: 0 4px 8px rgb(0 0 0 / 0.4), 0 16px 40px rgb(0 0 0 / 0.5);
     color-scheme: dark;
   }
 }
@@ -50,6 +55,8 @@
   --green-ink: #0b1611;
   --red: #ee7158;
   --focus: #f4b635;
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+  --sombra-2: 0 4px 8px rgb(0 0 0 / 0.4), 0 16px 40px rgb(0 0 0 / 0.5);
   color-scheme: dark;
 }
 
@@ -66,6 +73,8 @@
   --color-sun-ink: var(--sun-ink);
   --color-red: var(--red);
   --radius-r: var(--r);
+  --shadow-1: var(--sombra-1);
+  --shadow-2: var(--sombra-2);
   --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
   --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -214,6 +223,19 @@
   }
 }
 
+/* Tarjeta: la superficie básica de la app. */
+@utility tarjeta {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--sombra-1);
+}
+
+/* Barra de acciones fija abajo en el celular, respetando la zona segura del iPhone. */
+@utility barra-inferior {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
 @utility tap {
   /* Objetivo táctil mínimo de 44 px (accesibilidad AA, uso con una mano). */
   min-height: 44px;
@@ -261,4 +283,10 @@
 }
 .leaflet-control-attribution {
   font-size: 11px;
+}
+/* En el celular la hoja de resultados monta 16 px sobre el mapa: la atribución sube para seguir visible. */
+@media (width < 48rem) {
+  .mapa-con-hoja .leaflet-bottom {
+    margin-bottom: 16px;
+  }
 }

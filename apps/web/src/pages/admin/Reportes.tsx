@@ -33,7 +33,7 @@ export function Reportes() {
       <Estado cargando={reportes.isPending} error={reportes.error} vacio={reportes.data?.length === 0}>
         <ul className="flex flex-col gap-2">
           {reportes.data?.map((r) => (
-            <li key={r.id} className="rounded-r border border-line bg-surface p-4">
+            <li key={r.id} className="tarjeta p-4">
               <p className="text-sm text-muted">{fecha(r.created_at)}</p>
               <p className="font-bold">
                 <Link to={`/n/${r.negocio_slug}`} className="underline">

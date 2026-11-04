@@ -42,7 +42,7 @@ function TarjetaCriterio({ c }: { c: Criterio }) {
   const s = SEMAFORO[c.estado]
   const maximo = Math.max(1, ...c.serie.map((p) => p.valor))
   return (
-    <li className="flex flex-col gap-2 rounded-r border border-line bg-surface p-4">
+    <li className="flex flex-col gap-2 tarjeta p-4">
       <div className="flex items-start justify-between gap-2">
         <h2 className="font-black">
           {c.id}. {c.nombre}
@@ -106,7 +106,7 @@ function Entrevistas() {
   }
 
   return (
-    <section className="rounded-r border border-line bg-surface p-4" aria-labelledby="titulo-entrevistas">
+    <section className="tarjeta p-4" aria-labelledby="titulo-entrevistas">
       <h2 id="titulo-entrevistas" className="text-lg font-black">
         Entrevistas
       </h2>

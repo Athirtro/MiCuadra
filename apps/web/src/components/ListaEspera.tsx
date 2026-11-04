@@ -72,7 +72,7 @@ export function ListaEspera() {
   if (inscribir.isSuccess) {
     const yaEstaba = inscribir.data?.nuevo === false
     return (
-      <div role="status" className="entra rounded-r border border-line bg-surface p-6 text-center">
+      <div role="status" className="entra tarjeta p-6 text-center">
         <p className="text-4xl" aria-hidden="true">
           <span className="celebra">🎉</span>
         </p>
@@ -85,7 +85,7 @@ export function ListaEspera() {
   }
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-5 rounded-r border border-line bg-surface p-6" aria-labelledby="titulo-lista">
+    <form onSubmit={enviar} className="flex flex-col gap-5 tarjeta p-6" aria-labelledby="titulo-lista">
       <div>
         <h2 id="titulo-lista" className="text-2xl font-black">
           Inscríbete en la lista de espera
@@ -251,7 +251,7 @@ export function BarraMetas() {
     { etiqueta: 'Mensajeros listos', ...metas.data.mensajeros_listos },
   ]
   return (
-    <section aria-labelledby="titulo-metas" className="rounded-r border border-line bg-surface p-6">
+    <section aria-labelledby="titulo-metas" className="tarjeta p-6">
       <h2 id="titulo-metas" className="text-lg font-black">
         Lo que falta para arrancar los mandados
       </h2>

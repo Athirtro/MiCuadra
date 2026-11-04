@@ -14,7 +14,7 @@ export function Conoce() {
 
   return (
     <section className="escalonado mx-auto flex max-w-xl flex-col gap-6 px-4 py-10">
-      <div className="rounded-r border border-line bg-surface p-6">
+      <div className="tarjeta p-6">
         <p className="font-mono text-xs uppercase tracking-widest text-muted">Pereira · Conoce MiCuadra</p>
         <h1 className="mt-2 text-4xl font-black leading-none">El mapa vivo de tu cuadra</h1>
         <p className="mt-3 text-muted">
