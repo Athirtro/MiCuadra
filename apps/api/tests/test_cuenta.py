@@ -88,7 +88,8 @@ def test_bienvenida_como_empresario_agrega_rol_dueno(client: TestClient, nuevo: 
 
 def test_barrio_escrito_por_el_dueno_se_crea_o_se_reutiliza(client: TestClient, nuevo: str) -> None:
     client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
-    lejos = {**NEGOCIO, "ubicacion": {"lat": 4.85, "lng": -75.79}}
+    # Lejos de todo lo demás (vía a Armenia), para no volverse el barrio de otras pruebas.
+    lejos = {**NEGOCIO, "ubicacion": {"lat": 4.87, "lng": -75.62}}
     r = client.post(
         f"{V1}/mis-negocios", json={**lejos, "barrio": "  Villa  Verde "}, headers=_auth(nuevo)
     )
