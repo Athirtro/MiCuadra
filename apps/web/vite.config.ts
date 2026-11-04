@@ -27,6 +27,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/api\//],
         // Offline básico (SPEC §13): el último mapa consultado se ve sin conexión.
         runtimeCaching: [

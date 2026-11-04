@@ -1,10 +1,11 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { apiGet, rutaNegocios, type Barrio, type Categoria, type ListaNegocios, type Punto } from '../lib/api'
+import { apiGet, rutaNegocios, type Barrio, type Categoria, type ListaNegocios, type NegocioResumen, type Punto } from '../lib/api'
 import { registrarEvento } from '../lib/eventos'
 import { formatoDistancia } from '../lib/formato'
 import { emojiCategoria } from '../lib/negocio'
+import { rutaAPie, type Ruta } from '../lib/ruta'
 import { barrioGuardado, useUbicacion } from '../lib/useUbicacion'
 
 // Leaflet pesa ~40 KB: se carga aparte para que el resto de la pantalla aparezca de una.
@@ -17,7 +18,7 @@ const RADIOS = [
 
 export function Mapa() {
   const navigate = useNavigate()
-  const { ubicacion, yo, pedirGps, elegirBarrio } = useUbicacion()
+  const { ubicacion, yo, pedirGps, centrarme, elegirBarrio } = useUbicacion()
   const [categoria, setCategoria] = useState<string | null>(null)
   const [texto, setTexto] = useState('')
   const q = useDeferredValue(texto)
@@ -57,6 +58,34 @@ export function Mapa() {
   }, [q])
 
   const abrir = useCallback((slug: string) => navigate(`/n/${slug}`), [navigate])
+  const [expandida, setExpandida] = useState(false)
+  const [elegido, setElegido] = useState<NegocioResumen | null>(null)
+  // En el mapa, tocar un pin elige el negocio y muestra el camino; la ficha se abre desde la tarjeta.
+  const elegirEnMapa = useCallback(
+    (slug: string) => {
+      const n = negocios.data?.items.find((x) => x.slug === slug)
+      if (n) {
+        setElegido(n)
+        registrarEvento('click_como_llegar', n.id, { en: 'mapa' })
+      }
+    },
+    [negocios.data],
+  )
+  const irA = useCallback((n: NegocioResumen) => {
+    setElegido(n)
+    setExpandida(false)
+    registrarEvento('click_como_llegar', n.id, { en: 'lista' })
+  }, [])
+  // El camino sale de dónde estás; se recalcula si te mueves más de 25 m.
+  const desde = yo ? redondearPunto(yo.punto) : null
+  const camino = useQuery({
+    queryKey: ['camino', desde, elegido?.id],
+    queryFn: ({ signal }) => rutaAPie(desde as Punto, (elegido as NegocioResumen).ubicacion, signal),
+    enabled: Boolean(desde && elegido),
+    staleTime: Infinity,
+    retry: 1,
+    placeholderData: keepPreviousData,
+  })
   const lejosDelCentro =
     centro && centroMapa && distanciaAprox(centro, centroMapa) > Math.min(300, radioM / 2) ? centroMapa : null
   const items = useMemo(() => negocios.data?.items ?? [], [negocios.data])
@@ -77,23 +106,21 @@ export function Mapa() {
   }
 
   return (
-    <div className="grid h-[calc(100dvh-57px)] grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
+    <div className="flex h-[calc(100dvh-57px)] flex-col md:grid md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
       {/* Filtros */}
-      <div className="relative z-[1001] flex flex-col gap-2 border-b border-line bg-surface px-4 py-3 shadow-1 md:col-span-2">
-        <div className="flex gap-2">
-          <label className="flex-1">
-            <span className="sr-only">Buscar negocios</span>
-            <input
-              type="search"
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              placeholder="Pan, droguería, barbería…"
-              className="tap w-full rounded-caja border border-line bg-bg px-4 text-base text-ink placeholder:text-muted"
-              enterKeyHint="search"
-            />
-          </label>
-        </div>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Categorías">
+      <div className="relative z-[1002] flex flex-col gap-2 border-b border-line bg-surface px-4 py-3 shadow-1 md:col-span-2">
+        <label>
+          <span className="sr-only">Buscar negocios</span>
+          <input
+            type="search"
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder="Pan, droguería, barbería…"
+            className="tap w-full rounded-caja border border-line bg-bg px-4 text-base text-ink placeholder:text-muted"
+            enterKeyHint="search"
+          />
+        </label>
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="group" aria-label="Categorías">
           <Chip activo={categoria === null} onClick={() => setCategoria(null)}>
             Todo
           </Chip>
@@ -103,7 +130,7 @@ export function Mapa() {
             </Chip>
           ))}
         </div>
-        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 text-sm">
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 text-sm [scrollbar-width:none]">
           <Chip activo={abiertoAhora} onClick={() => setAbiertoAhora(!abiertoAhora)}>
             🟢 Abierto ahora
           </Chip>
@@ -132,40 +159,185 @@ export function Mapa() {
         </div>
       </div>
 
-      {/* Mapa */}
-      <div className="mapa-con-hoja relative md:col-start-2 md:row-start-2">
-        <Suspense fallback={<div className="h-full w-full bg-block" />}>
-          <MapaBarrio
-            centro={centro}
-            radioM={radioM}
-            negocios={items}
-            alElegir={abrir}
-            alMover={setCentroMapa}
-            yo={yo}
-            alPedirUbicacion={pedirGps}
-            className="h-full w-full"
-          />
-        </Suspense>
-        {lejosDelCentro && (
-          <button
-            type="button"
-            onClick={() => origen && setBusquedaEn({ origen, punto: lejosDelCentro })}
-            className="entra tap absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-green px-4 text-sm font-bold text-green-ink shadow-lg"
-          >
-            Buscar en esta zona
+      {/* En el celular, mapa y hoja comparten esta zona; en pantallas grandes, cada uno su columna. */}
+      <div className="relative flex-1 overflow-clip md:contents">
+        {/* Mapa: en el celular termina donde empieza la hoja (16 px debajo, por las esquinas redondas). */}
+        <div className="mapa-con-hoja absolute inset-x-0 top-0 bottom-[calc(45%-16px)] md:relative md:col-start-2 md:row-start-2 md:inset-auto">
+          <Suspense fallback={<div className="h-full w-full bg-block" />}>
+            <MapaBarrio
+              centro={centro}
+              radioM={radioM}
+              negocios={items}
+              alElegir={elegirEnMapa}
+              alMover={setCentroMapa}
+              yo={yo}
+              camino={elegido && camino.data ? camino.data.trazado : null}
+              alPedirUbicacion={centrarme}
+              className="h-full w-full"
+            />
+          </Suspense>
+          {elegido ? (
+            <TarjetaCamino
+              n={elegido}
+              camino={camino}
+              hayUbicacion={Boolean(yo)}
+              alPedirUbicacion={centrarme}
+              alAbrir={() => abrir(elegido.slug)}
+              alCerrar={() => setElegido(null)}
+            />
+          ) : (
+            lejosDelCentro && (
+              <button
+                type="button"
+                onClick={() => origen && setBusquedaEn({ origen, punto: lejosDelCentro })}
+                className="entra tap absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-green px-4 text-sm font-bold text-green-ink shadow-lg"
+              >
+                Buscar en esta zona
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Resultados: hoja que sube y tapa el mapa al desplazarse; baja con la manija o tirando hacia abajo. */}
+        <HojaResultados expandida={expandida} alCambiar={setExpandida} ocupada={negocios.isFetching}>
+          <Resultados consulta={negocios} radioM={radioM} alAbrir={abrir} alIr={irA} />
+        </HojaResultados>
+      </div>
+    </div>
+  )
+}
+
+/** Redondea a ~25 m para no recalcular el camino a cada paso del GPS. */
+function redondearPunto(p: Punto): Punto {
+  return { lat: Math.round(p.lat * 4000) / 4000, lng: Math.round(p.lng * 4000) / 4000 }
+}
+
+function HojaResultados({
+  expandida,
+  alCambiar,
+  ocupada,
+  children,
+}: {
+  expandida: boolean
+  alCambiar: (v: boolean) => void
+  ocupada: boolean
+  children: React.ReactNode
+}) {
+  const lista = useRef<HTMLDivElement>(null)
+  const toque = useRef<{ y: number; arriba: boolean } | null>(null)
+
+  // Al bajar la hoja, la lista vuelve al principio para que lo primero que se vea sea el inicio.
+  useEffect(() => {
+    if (!expandida && lista.current) lista.current.scrollTop = 0
+  }, [expandida])
+
+  return (
+    <section
+      aria-label="Resultados"
+      aria-busy={ocupada}
+      data-expandida={expandida}
+      className="hoja absolute inset-x-0 top-0 bottom-0 z-[1001] flex flex-col rounded-t-[22px] bg-surface shadow-2 md:static md:col-start-1 md:row-start-2 md:rounded-none md:border-r md:border-line md:shadow-none"
+    >
+      <button
+        type="button"
+        onClick={() => alCambiar(!expandida)}
+        aria-expanded={expandida}
+        aria-label={expandida ? 'Bajar la lista y ver el mapa' : 'Subir la lista'}
+        className="flex h-6 w-full shrink-0 items-center justify-center md:hidden"
+        onTouchStart={(e) => (toque.current = { y: e.touches[0]?.clientY ?? 0, arriba: true })}
+        onTouchEnd={(e) => {
+          const dy = (e.changedTouches[0]?.clientY ?? 0) - (toque.current?.y ?? 0)
+          if (dy > 30) alCambiar(false)
+          else if (dy < -30) alCambiar(true)
+          toque.current = null
+        }}
+      >
+        <span className="h-1 w-10 rounded-full bg-line" />
+      </button>
+      <div
+        ref={lista}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        onScroll={(e) => {
+          if (!expandida && e.currentTarget.scrollTop > 8) alCambiar(true)
+        }}
+        onTouchStart={(e) =>
+          (toque.current = { y: e.touches[0]?.clientY ?? 0, arriba: e.currentTarget.scrollTop <= 0 })
+        }
+        onTouchMove={(e) => {
+          const t = toque.current
+          if (!t) return
+          const dy = (e.touches[0]?.clientY ?? 0) - t.y
+          // Hoja abajo: arrastrar hacia arriba la sube. Hoja arriba y lista al inicio: tirar hacia abajo la baja.
+          if (!expandida && dy < -24) {
+            alCambiar(true)
+            toque.current = null
+          } else if (expandida && t.arriba && dy > 48) {
+            alCambiar(false)
+            toque.current = null
+          }
+        }}
+        onTouchEnd={() => (toque.current = null)}
+      >
+        {children}
+      </div>
+    </section>
+  )
+}
+
+function TarjetaCamino({
+  n,
+  camino,
+  hayUbicacion,
+  alPedirUbicacion,
+  alAbrir,
+  alCerrar,
+}: {
+  n: NegocioResumen
+  camino: ReturnType<typeof useQuery<Ruta>>
+  hayUbicacion: boolean
+  alPedirUbicacion: () => void
+  alAbrir: () => void
+  alCerrar: () => void
+}) {
+  return (
+    <div className="entra absolute inset-x-3 top-3 z-[1000] rounded-caja bg-surface p-3 shadow-2" role="status">
+      <div className="flex items-start gap-3">
+        <span
+          className="grid size-11 shrink-0 place-items-center rounded-full text-xl"
+          style={{ background: `${n.categoria.color}22` }}
+          aria-hidden="true"
+        >
+          {emojiCategoria(n.categoria.slug)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-bold">{n.nombre}</p>
+          {!hayUbicacion ? (
+            <p className="text-sm text-muted">Activa tu ubicación para ver el camino.</p>
+          ) : camino.isPending ? (
+            <p className="text-sm text-muted">Buscando el camino…</p>
+          ) : camino.isError ? (
+            <p className="text-sm text-red">{camino.error.message}</p>
+          ) : (
+            <p className="text-sm">
+              <span className="font-bold">🚶 {camino.data.minutos} min</span>
+              <span className="text-muted"> · {formatoDistancia(camino.data.metros)} a pie</span>
+            </p>
+          )}
+        </div>
+        <button type="button" onClick={alCerrar} aria-label="Quitar el camino" className="tap -m-2 grid place-items-center text-xl text-muted">
+          ×
+        </button>
+      </div>
+      <div className="mt-3 flex gap-2">
+        {!hayUbicacion && (
+          <button type="button" onClick={alPedirUbicacion} className="tap flex-1 rounded-caja bg-green px-3 text-sm font-bold text-green-ink">
+            Usar mi ubicación
           </button>
         )}
+        <button type="button" onClick={alAbrir} className="tap flex-1 rounded-caja border border-line px-3 text-sm font-bold">
+          Ver negocio
+        </button>
       </div>
-
-      {/* Resultados */}
-      <section
-        aria-label="Resultados"
-        aria-busy={negocios.isFetching}
-        className="relative z-[1001] -mt-4 overflow-y-auto rounded-t-[22px] bg-surface shadow-2 md:col-start-1 md:row-start-2 md:mt-0 md:rounded-none md:border-r md:border-line md:shadow-none"
-      >
-        <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-line md:hidden" aria-hidden="true" />
-        <Resultados consulta={negocios} radioM={radioM} alAbrir={abrir} />
-      </section>
     </div>
   )
 }
@@ -174,10 +346,12 @@ function Resultados({
   consulta,
   radioM,
   alAbrir,
+  alIr,
 }: {
   consulta: ReturnType<typeof useQuery<ListaNegocios>>
   radioM: number
   alAbrir: (slug: string) => void
+  alIr: (n: NegocioResumen) => void
 }) {
   if (consulta.isPending) {
     return (
@@ -232,11 +406,11 @@ function Resultados({
       </p>
       <ul className="divide-y divide-line">
         {items.map((n) => (
-          <li key={n.id}>
+          <li key={n.id} className="flex items-center">
             <button
               type="button"
               onClick={() => alAbrir(n.slug)}
-              className="group flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg focus-visible:bg-bg"
+              className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left hover:bg-bg focus-visible:bg-bg"
             >
               <span
                 className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-caja text-2xl ring-1 ring-black/5"
@@ -261,9 +435,17 @@ function Resultados({
                 </span>
                 <EstadoAbierto abierto={n.abierto_ahora} />
               </span>
-              <span className="shrink-0 text-xl text-muted transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true">
-                ›
+            </button>
+            <button
+              type="button"
+              onClick={() => alIr(n)}
+              aria-label={`Cómo llegar a ${n.nombre}`}
+              className="tap mx-3 flex shrink-0 flex-col items-center justify-center rounded-caja bg-block px-2.5 py-1.5 text-xs font-bold"
+            >
+              <span className="text-lg leading-none" aria-hidden="true">
+                🚶
               </span>
+              Ir
             </button>
           </li>
         ))}

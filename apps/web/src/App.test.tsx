@@ -22,6 +22,36 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('Mapa del barrio (/)', () => {
+  it('"Ir" muestra la tarjeta del camino y, sin ubicación, pide activarla', async () => {
+    gpsNegado()
+    apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    renderEn('/')
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Cómo llegar a Panadería El Trigal' }))
+    const tarjeta = await screen.findByText('Activa tu ubicación para ver el camino.')
+    expect(tarjeta.closest('[role="status"]')).toHaveTextContent('Panadería El Trigal')
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar el camino' }))
+    expect(screen.queryByText('Activa tu ubicación para ver el camino.')).not.toBeInTheDocument()
+  })
+
+  it('la lista sube al desplazarla y baja con la manija', async () => {
+    gpsNegado()
+    apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    renderEn('/')
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
+    await screen.findByText('Panadería El Trigal')
+
+    const hoja = screen.getByRole('region', { name: 'Resultados' })
+    expect(hoja).toHaveAttribute('data-expandida', 'false')
+    const lista = screen.getByText('Panadería El Trigal').closest('.overflow-y-auto') as HTMLElement
+    lista.scrollTop = 40
+    fireEvent.scroll(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Bajar la lista y ver el mapa' }))
+    expect(hoja).toHaveAttribute('data-expandida', 'false')
+  })
+
   it('sin GPS pide el barrio y muestra los negocios cercanos con distancia en cuadras', async () => {
     gpsNegado()
     const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })

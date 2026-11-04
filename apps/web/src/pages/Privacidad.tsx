@@ -30,6 +30,14 @@ export function Privacidad() {
       </ul>
       <p className="mt-2">No vendemos tus datos. Tu celular no se muestra a otros usuarios.</p>
 
+      <h2 className="mt-6 text-xl font-black">Tu ubicación</h2>
+      <p className="mt-2">
+        Si das permiso, el mapa usa tu ubicación para mostrarte los negocios cercanos y el punto azul de dónde estás. No
+        la guardamos. Cuando pides el camino a un negocio, tu punto de partida y el del negocio se envían al servicio de
+        rutas de OpenStreetMap (routing.openstreetmap.de, operado por FOSSGIS en Alemania) para calcularlo, sin tu nombre
+        ni tu cuenta.
+      </p>
+
       <h2 className="mt-6 text-xl font-black">Tus derechos</h2>
       <p className="mt-2">
         Puedes conocer, actualizar, rectificar y pedir que borremos tus datos, y revocar esta autorización en cualquier

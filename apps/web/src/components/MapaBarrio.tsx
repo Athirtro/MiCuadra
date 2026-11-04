@@ -2,8 +2,8 @@ import L from 'leaflet'
 import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet/dist/leaflet.css'
-import { useEffect } from 'react'
-import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { useEffect, useRef } from 'react'
+import { Circle, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { NegocioResumen, Punto } from '../lib/api'
 import { emojiCategoria } from '../lib/negocio'
 import type { Yo } from '../lib/useUbicacion'
@@ -53,16 +53,29 @@ function Marcadores({ negocios, alElegir }: { negocios: NegocioResumen[]; alEleg
   return null
 }
 
+// Punto azul con una flecha que gira hacia donde miras (brújula) o caminas (GPS).
 const ICONO_YO = L.divIcon({
   className: '',
-  html: '<span class="yo" aria-hidden="true"></span>',
-  iconSize: [22, 22],
-  iconAnchor: [11, 11],
+  html:
+    '<span class="yo" aria-hidden="true">' +
+    '<svg class="yo-flecha" viewBox="0 0 40 40" width="40" height="40">' +
+    '<path d="M20 3 L31 33 L20 26 L9 33 Z" fill="#2f7cf6" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>' +
+    '</svg></span>',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 })
 
-/** Punto azul "estás aquí" con el círculo de precisión del GPS. */
+/** "Estás aquí": punto azul (o flecha, si se sabe el rumbo) con el círculo de precisión del GPS. */
 function EstoyAqui({ yo }: { yo: Yo }) {
   const centro: [number, number] = [yo.punto.lat, yo.punto.lng]
+  const marcador = useRef<L.Marker>(null)
+  // Girar el ícono existente en vez de recrearlo: la brújula cambia muchas veces por segundo.
+  useEffect(() => {
+    const el = marcador.current?.getElement()?.querySelector<HTMLElement>('.yo')
+    if (!el) return
+    el.dataset.rumbo = yo.rumbo === null ? 'no' : 'si'
+    if (yo.rumbo !== null) el.style.setProperty('--rumbo', `${Math.round(yo.rumbo)}deg`)
+  }, [yo.rumbo])
   return (
     <>
       {yo.precision < 500 && (
@@ -73,7 +86,7 @@ function EstoyAqui({ yo }: { yo: Yo }) {
           pathOptions={{ color: '#2f7cf6', weight: 1, opacity: 0.4, fillOpacity: 0.12 }}
         />
       )}
-      <Marker position={centro} icon={ICONO_YO} interactive={false} keyboard={false} zIndexOffset={1000} />
+      <Marker ref={marcador} position={centro} icon={ICONO_YO} interactive={false} keyboard={false} zIndexOffset={1000} />
     </>
   )
 }
@@ -98,6 +111,27 @@ function BotonCentrarme({ yo, alPedir }: { yo: Yo | null; alPedir: () => void })
         <path d="M12 2v3M12 19v3M2 12h3M19 12h3" strokeLinecap="round" />
       </svg>
     </button>
+  )
+}
+
+/** Camino a pie: línea azul con borde blanco; el mapa se encuadra para verlo completo. */
+function Camino({ trazado }: { trazado: [number, number][] }) {
+  const mapa = useMap()
+  useEffect(() => {
+    if (trazado.length > 1)
+      mapa.flyToBounds(L.latLngBounds(trazado), {
+        // Arriba queda la tarjeta del camino: más margen para que no tape el final.
+        paddingTopLeft: [32, 150],
+        paddingBottomRight: [32, 40],
+        maxZoom: 18,
+        duration: 0.6,
+      })
+  }, [mapa, trazado])
+  return (
+    <>
+      <Polyline positions={trazado} interactive={false} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
+      <Polyline positions={trazado} interactive={false} pathOptions={{ color: '#2f7cf6', weight: 5, lineCap: 'round', lineJoin: 'round' }} />
+    </>
   )
 }
 
@@ -139,11 +173,13 @@ interface Props {
   alMover?: (centro: Punto) => void
   /** Posición en vivo de la persona; null si no dio permiso. */
   yo?: Yo | null
+  /** Camino a pie hasta el negocio elegido. */
+  camino?: [number, number][] | null
   alPedirUbicacion?: () => void
   className?: string
 }
 
-export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, yo = null, alPedirUbicacion, className }: Props) {
+export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, yo = null, camino = null, alPedirUbicacion, className }: Props) {
   return (
     <MapContainer center={[centro.lat, centro.lng]} zoom={16} className={className} zoomControl={false}>
       <TileLayer attribution={ATRIBUCION} url={TILES} maxZoom={19} />
@@ -155,6 +191,7 @@ export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, yo = n
       <AjustarTamano />
       <Recentrar centro={centro} />
       {alMover && <AlMover alMover={alMover} />}
+      {camino && <Camino trazado={camino} />}
       <Marcadores negocios={negocios} alElegir={alElegir} />
       {yo && <EstoyAqui yo={yo} />}
       {alPedirUbicacion && <BotonCentrarme yo={yo} alPedir={alPedirUbicacion} />}

@@ -23,6 +23,7 @@
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-rebote: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-cajon: cubic-bezier(0.32, 0.72, 0, 1);
   color-scheme: light;
 }
 
@@ -264,26 +265,51 @@
   border-color: var(--sun);
   box-shadow: 0 0 0 3px var(--sun-ink), 0 2px 6px rgb(0 0 0 / 0.3);
 }
-/* "Estás aquí": punto azul con borde blanco y un halo que respira (movimiento constante → lineal). */
+/* "Estás aquí": punto azul con borde blanco y un halo que respira (movimiento constante → lineal).
+   Si se sabe el rumbo, el punto se vuelve una flecha que gira hacia donde miras. */
 .yo {
   position: relative;
-  display: block;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+}
+.yo::before {
+  content: '';
   width: 22px;
   height: 22px;
   border-radius: 50%;
   background: #2f7cf6;
   border: 3px solid #fff;
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  grid-area: 1 / 1;
 }
 .yo::after {
   content: '';
-  position: absolute;
-  inset: -3px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #2f7cf6;
   opacity: 0.35;
   animation: respirar 2s linear infinite;
+  grid-area: 1 / 1;
   z-index: -1;
+}
+.yo-flecha {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: rotate(var(--rumbo, 0deg)) scale(0.6);
+  transition:
+    transform 200ms var(--ease-out),
+    opacity 150ms ease;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.35));
+}
+.yo[data-rumbo='si']::before {
+  opacity: 0;
+}
+.yo[data-rumbo='si'] .yo-flecha {
+  opacity: 1;
+  transform: rotate(var(--rumbo, 0deg));
 }
 @keyframes respirar {
   from {
@@ -320,6 +346,24 @@
 .leaflet-control-attribution {
   font-size: 11px;
 }
+/* Hoja de resultados en el celular: abajo deja ver el 45 % inferior; arriba tapa el mapa.
+   Se mueve con transform (no con altura) y la curva de cajón de iOS. */
+@media (width < 48rem) {
+  .hoja {
+    transform: translateY(55%);
+    transition: transform 380ms var(--ease-cajon);
+    will-change: transform;
+  }
+  .hoja[data-expandida='true'] {
+    transform: translateY(0);
+  }
+}
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .hoja {
+    transition-duration: 0ms;
+  }
+}
+
 /* En el celular la hoja de resultados monta 16 px sobre el mapa: la atribución sube para seguir visible. */
 @media (width < 48rem) {
   .mapa-con-hoja .leaflet-bottom {
