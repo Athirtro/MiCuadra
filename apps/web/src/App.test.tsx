@@ -113,6 +113,45 @@ describe('Mapa del barrio (/)', () => {
 })
 
 describe('Perfil del negocio (/n/:slug)', () => {
+  it('"Cómo llegar" dibuja el camino a pie en la página, sin abrir Google Maps', async () => {
+    const posicion = { coords: { latitude: 4.797, longitude: -75.731, accuracy: 20 } }
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      geolocation: {
+        getCurrentPosition: (ok: (p: unknown) => void) => ok(posicion),
+        watchPosition: () => 1,
+        clearWatch: () => undefined,
+      },
+    })
+    const { fetchFalso } = apiFalsa({
+      '/negocios/': DETALLE,
+      'https://routing.openstreetmap.de': {
+        code: 'Ok',
+        routes: [{ distance: 230, duration: 170, geometry: { coordinates: [[-75.731, 4.797], [-75.7305, 4.7985]] } }],
+      },
+    })
+    const abrir = vi.spyOn(window, 'open')
+    renderEn('/n/panaderia-el-trigal')
+
+    fireEvent.click(await screen.findByRole('button', { name: /Cómo llegar/ }))
+    expect(await screen.findByText('🚶 3 min')).toBeInTheDocument()
+    expect(screen.getByText(/230 m a pie desde donde estás/)).toBeInTheDocument()
+    expect(fetchFalso.mock.calls.some(([url]) => url.includes('/foot/-75.731,4.797;'))).toBe(true)
+    expect(abrir).not.toHaveBeenCalled()
+    expect(screen.queryByRole('link', { name: /Cómo llegar/ })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar camino' }))
+    expect(screen.getByRole('button', { name: /Cómo llegar/ })).toBeInTheDocument()
+  })
+
+  it('"Cómo llegar" sin permiso de ubicación lo explica', async () => {
+    gpsNegado()
+    apiFalsa({ '/negocios/': DETALLE })
+    renderEn('/n/panaderia-el-trigal')
+    fireEvent.click(await screen.findByRole('button', { name: /Cómo llegar/ }))
+    expect(await screen.findByText(/No pudimos ver tu ubicación/)).toBeInTheDocument()
+  })
+
   it('muestra datos, horario agrupado y WhatsApp con saludo', async () => {
     const { posts } = apiFalsa({ '/negocios/panaderia-el-trigal': DETALLE })
     renderEn('/n/panaderia-el-trigal')

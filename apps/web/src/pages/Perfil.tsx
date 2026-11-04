@@ -1,11 +1,14 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Dialogo } from '../components/Dialogo'
 import { CLAVE_QUE_PEDIRIA } from '../components/ListaEspera'
-import { ApiError, apiEnviar, apiGet, type NegocioDetalle, type ReporteEntrada } from '../lib/api'
+import { ApiError, apiEnviar, apiGet, type NegocioDetalle, type Punto, type ReporteEntrada } from '../lib/api'
 import { registrarEvento } from '../lib/eventos'
-import { DIAS, diaHoy, emojiCategoria, enlaceComoLlegar, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
+import { formatoDistancia } from '../lib/formato'
+import { DIAS, diaHoy, emojiCategoria, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
+import { rutaAPie } from '../lib/ruta'
+import { useBrujula } from '../lib/useUbicacion'
 import { EstadoAbierto } from './Mapa'
 
 const MiniMapa = lazy(() => import('../components/MapaBarrio').then((m) => ({ default: m.MiniMapa })))
@@ -65,6 +68,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
   const [modalReporte, setModalReporte] = useState(false)
   const [copiado, setCopiado] = useState(false)
   const emoji = emojiCategoria(n.categoria.slug)
+  const llegar = useComoLlegar(n.ubicacion)
 
   async function compartir() {
     const url = `${location.origin}/n/${n.slug}`
@@ -129,18 +133,55 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               </h2>
               {n.direccion_texto && <p className="mt-0.5 text-sm text-muted">{n.direccion_texto}</p>}
             </div>
-            <a
-              href={enlaceComoLlegar(n.ubicacion)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => registrarEvento('click_como_llegar', n.id)}
-              className="tap inline-flex shrink-0 items-center rounded-full bg-block px-4 text-sm font-bold"
-            >
-              Cómo llegar
-            </a>
+            {llegar.estado === 'inactivo' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  registrarEvento('click_como_llegar', n.id)
+                  llegar.pedir()
+                }}
+                className="tap inline-flex shrink-0 items-center gap-1.5 rounded-full bg-green px-4 text-sm font-bold text-green-ink"
+              >
+                <span aria-hidden="true">🚶</span> Cómo llegar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={llegar.quitar}
+                className="tap inline-flex shrink-0 items-center rounded-full bg-block px-4 text-sm font-bold"
+              >
+                Quitar camino
+              </button>
+            )}
           </div>
+          {llegar.estado !== 'inactivo' && (
+            <p role="status" className="entra -mt-1 px-4 pb-3 text-sm">
+              {llegar.estado === 'ubicando' ? (
+                <span className="text-muted">Buscando dónde estás…</span>
+              ) : llegar.estado === 'sin_ubicacion' ? (
+                <span className="text-red">
+                  No pudimos ver tu ubicación. Revisa que el navegador tenga permiso de ubicación para MiCuadra.
+                </span>
+              ) : llegar.ruta.isPending ? (
+                <span className="text-muted">Buscando el camino…</span>
+              ) : llegar.ruta.isError ? (
+                <span className="text-red">{llegar.ruta.error.message}</span>
+              ) : (
+                <>
+                  <span className="font-bold">🚶 {llegar.ruta.data.minutos} min</span>
+                  <span className="text-muted"> · {formatoDistancia(llegar.ruta.data.metros)} a pie desde donde estás</span>
+                </>
+              )}
+            </p>
+          )}
           <Suspense fallback={<div className="esqueleto h-40" />}>
-            <MiniMapa punto={n.ubicacion} color={n.categoria.color} emoji={emoji} />
+            <MiniMapa
+              punto={n.ubicacion}
+              color={n.categoria.color}
+              emoji={emoji}
+              yo={llegar.yo}
+              camino={llegar.ruta.data?.trazado ?? null}
+            />
           </Suspense>
         </section>
 
@@ -255,6 +296,60 @@ function Carrusel({ fotos, nombre, emoji, color }: { fotos: string[]; nombre: st
       )}
     </div>
   )
+}
+
+/**
+ * "Cómo llegar" sin salir de MiCuadra: pide la ubicación solo al tocar el botón y dibuja el
+ * camino a pie en el mapa del perfil. La flecha usa la brújula si el celular la da.
+ */
+function useComoLlegar(destino: Punto) {
+  const [estado, setEstado] = useState<'inactivo' | 'ubicando' | 'sin_ubicacion' | 'listo'>('inactivo')
+  const [desde, setDesde] = useState<{ punto: Punto; precision: number } | null>(null)
+  const { rumbo, pedirBrujula } = useBrujula()
+
+  // Mientras el camino esté a la vista, el punto sigue a la persona.
+  useEffect(() => {
+    if (estado !== 'listo' || !('geolocation' in navigator)) return
+    const id = navigator.geolocation.watchPosition(
+      (pos) => setDesde({ punto: { lat: pos.coords.latitude, lng: pos.coords.longitude }, precision: pos.coords.accuracy }),
+      () => undefined,
+      { enableHighAccuracy: true, maximumAge: 10_000 },
+    )
+    return () => navigator.geolocation.clearWatch(id)
+  }, [estado])
+
+  // El camino se recalcula solo si la persona se mueve más de ~25 m.
+  const origen = desde ? { lat: Math.round(desde.punto.lat * 4000) / 4000, lng: Math.round(desde.punto.lng * 4000) / 4000 } : null
+  const ruta = useQuery({
+    queryKey: ['camino', origen, destino],
+    queryFn: ({ signal }) => rutaAPie(origen as Punto, destino, signal),
+    enabled: estado === 'listo' && origen !== null,
+    staleTime: Infinity,
+    retry: 1,
+    placeholderData: keepPreviousData,
+  })
+
+  function pedir() {
+    pedirBrujula()
+    if (!('geolocation' in navigator)) return setEstado('sin_ubicacion')
+    setEstado('ubicando')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setDesde({ punto: { lat: pos.coords.latitude, lng: pos.coords.longitude }, precision: pos.coords.accuracy })
+        setEstado('listo')
+      },
+      () => setEstado('sin_ubicacion'),
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
+    )
+  }
+
+  return {
+    estado,
+    ruta,
+    yo: estado === 'listo' && desde ? { ...desde, rumbo } : null,
+    pedir,
+    quitar: () => setEstado('inactivo'),
+  }
 }
 
 /** Fase 1: el botón mide demanda y lleva a la lista de espera (SPEC §6.3). */

@@ -115,18 +115,18 @@ function BotonCentrarme({ yo, alPedir }: { yo: Yo | null; alPedir: () => void })
 }
 
 /** Camino a pie: línea azul con borde blanco; el mapa se encuadra para verlo completo. */
-function Camino({ trazado }: { trazado: [number, number][] }) {
+function Camino({ trazado, margenArriba = 150 }: { trazado: [number, number][]; margenArriba?: number }) {
   const mapa = useMap()
   useEffect(() => {
     if (trazado.length > 1)
       mapa.flyToBounds(L.latLngBounds(trazado), {
         // Arriba queda la tarjeta del camino: más margen para que no tape el final.
-        paddingTopLeft: [32, 150],
+        paddingTopLeft: [32, margenArriba],
         paddingBottomRight: [32, 40],
         maxZoom: 18,
         duration: 0.6,
       })
-  }, [mapa, trazado])
+  }, [mapa, trazado, margenArriba])
   return (
     <>
       <Polyline positions={trazado} interactive={false} pathOptions={{ color: '#ffffff', weight: 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
@@ -200,21 +200,36 @@ export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, yo = n
 }
 
 /** Mini mapa estático del perfil. */
-export function MiniMapa({ punto, color, emoji }: { punto: Punto; color: string; emoji: string }) {
+interface PropsMini {
+  punto: Punto
+  color: string
+  emoji: string
+  /** Con camino, el mapa crece y se puede mover para seguirlo. */
+  camino?: [number, number][] | null
+  yo?: Yo | null
+}
+
+export function MiniMapa({ punto, color, emoji, camino = null, yo = null }: PropsMini) {
+  const conCamino = Boolean(camino)
   return (
     <MapContainer
+      // Leaflet no cambia estas opciones después de crear el mapa: con camino se crea otro.
+      key={conCamino ? 'camino' : 'fijo'}
       center={[punto.lat, punto.lng]}
       zoom={17}
-      className="h-44 w-full"
-      dragging={false}
+      className={conCamino ? 'h-80 w-full' : 'h-44 w-full'}
+      dragging={conCamino}
       scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
+      doubleClickZoom={conCamino}
+      touchZoom={conCamino}
       zoomControl={false}
       keyboard={false}
     >
       <TileLayer attribution={ATRIBUCION} url={TILES} />
+      <AjustarTamano />
+      {camino && <Camino trazado={camino} margenArriba={32} />}
       <PinFijo punto={punto} color={color} emoji={emoji} />
+      {yo && <EstoyAqui yo={yo} />}
     </MapContainer>
   )
 }

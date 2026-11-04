@@ -1,4 +1,3 @@
-import type { Punto } from './api'
 
 /** Emoji por categoría: liviano, sin descargar íconos, y se entiende en cualquier celular. */
 export const EMOJI_CATEGORIA: Record<string, string> = {
@@ -22,11 +21,6 @@ export function emojiCategoria(slug: string): string {
 export function enlaceWhatsapp(celular: string, nombreNegocio: string): string {
   const texto = `Hola, ${nombreNegocio}. Te encontré en MiCuadra 👋`
   return `https://wa.me/57${celular}?text=${encodeURIComponent(texto)}`
-}
-
-/** Abre la app de mapas del celular (Google Maps entiende el formato en Android, iOS y web). */
-export function enlaceComoLlegar({ lat, lng }: Punto): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
 }
 
 export const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'] as const
