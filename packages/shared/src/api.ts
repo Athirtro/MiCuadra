@@ -529,9 +529,15 @@ export interface components {
             slug: string;
             /** Nombre */
             nombre: string;
+            /** @description Centro de sus negocios activos */
             centroide: components["schemas"]["Punto"];
             /** Es Piloto */
             es_piloto: boolean;
+            /**
+             * Negocios
+             * @description Negocios activos en el barrio
+             */
+            negocios: number;
         };
         /** BarrioCorto */
         BarrioCorto: {
@@ -993,6 +999,11 @@ export interface components {
             descripcion?: string | null;
             /** Direccion Texto */
             direccion_texto: string;
+            /**
+             * Barrio
+             * @description Nombre del barrio como lo escribe el dueño; si no existe se crea
+             */
+            barrio?: string | null;
             ubicacion: components["schemas"]["Punto"];
             /** Horarios */
             horarios?: components["schemas"]["HorarioEntrada"][];

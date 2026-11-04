@@ -58,11 +58,19 @@ def listar_categorias(db: Session) -> list[Categoria]:
 
 
 def listar_barrios(db: Session) -> list[Barrio]:
+    """Barrios que ya tienen negocios en el mapa, del más poblado al menos.
+
+    La lista crece sola: cada negocio aprobado suma su barrio. El centro es el promedio de
+    sus negocios, así el mapa abre donde de verdad están las tiendas.
+    """
     filas = db.execute(
         text(
-            "select id, slug, nombre, es_piloto,"
-            " st_y(centroide::geometry) as lat, st_x(centroide::geometry) as lng"
-            " from barrios order by es_piloto desc, nombre"
+            "select b.id, b.slug, b.nombre, b.es_piloto, count(*) as negocios,"
+            " avg(st_y(n.ubicacion::geometry)) as lat, avg(st_x(n.ubicacion::geometry)) as lng"
+            " from barrios b"
+            " join negocios n on n.barrio_id = b.id"
+            "  and n.estado = 'activo' and n.deleted_at is null"
+            " group by b.id order by negocios desc, b.nombre"
         )
     ).mappings()
     return [
@@ -71,6 +79,7 @@ def listar_barrios(db: Session) -> list[Barrio]:
             slug=f["slug"],
             nombre=f["nombre"],
             es_piloto=f["es_piloto"],
+            negocios=f["negocios"],
             centroide=Punto(lat=f["lat"], lng=f["lng"]),
         )
         for f in filas

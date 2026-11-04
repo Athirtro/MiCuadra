@@ -27,7 +27,7 @@ describe('Mapa del barrio (/)', () => {
     const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
     renderEn('/')
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Cuba' }))
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
 
     expect(await screen.findByText('Panadería El Trigal')).toBeInTheDocument()
     expect(screen.getByText('Panadería · 1 cuadra · 120 m')).toBeInTheDocument()
@@ -53,7 +53,7 @@ describe('Mapa del barrio (/)', () => {
     gpsNegado()
     const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
     renderEn('/')
-    fireEvent.click(await screen.findByRole('button', { name: 'Cuba' }))
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
     await screen.findByText('Panadería El Trigal')
 
     fireEvent.click(screen.getByRole('button', { name: /Panadería/, pressed: false }))
@@ -76,7 +76,7 @@ describe('Mapa del barrio (/)', () => {
       '/negocios': { items: [], total: 0, siguiente_cursor: null },
     })
     renderEn('/')
-    fireEvent.click(await screen.findByRole('button', { name: 'Cuba' }))
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
     expect(await screen.findByText('Todavía no hay negocios en esta cuadra.')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Agrégalo' })).toBeInTheDocument()
   })

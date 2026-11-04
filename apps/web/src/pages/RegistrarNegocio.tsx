@@ -33,6 +33,7 @@ interface Borrador {
   telefono: string
   descripcion: string
   direccion_texto: string
+  barrio: string
   ubicacion: Punto | null
   horarios: Horario[]
 }
@@ -44,6 +45,7 @@ const VACIO: Borrador = {
   telefono: '',
   descripcion: '',
   direccion_texto: '',
+  barrio: '',
   ubicacion: null,
   horarios: [],
 }
@@ -135,6 +137,7 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
         telefono: b.telefono.trim() || null,
         descripcion: b.descripcion.trim() || null,
         direccion_texto: b.direccion_texto.trim(),
+        barrio: b.barrio.trim(),
         ubicacion: b.ubicacion as Punto,
         horarios: b.horarios,
       }
@@ -180,7 +183,7 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
   const whatsappValido = /^3\d{9}$/.test(b.whatsapp.replace(/\D/g, ''))
   const listo = [
     b.nombre.trim().length >= 2 && b.categoria !== '' && whatsappValido && b.descripcion.length <= 280,
-    b.ubicacion !== null && b.direccion_texto.trim().length >= 3,
+    b.ubicacion !== null && b.direccion_texto.trim().length >= 3 && b.barrio.trim().length >= 2,
     true, // el horario es opcional
     true,
   ]
@@ -327,6 +330,12 @@ function PasoUbicacion({
   const punto = b.ubicacion ?? inicial
   const alCambiar = useCallback((p: Punto) => cambiar('ubicacion', p), [cambiar])
   const [buscando, setBuscando] = useState(false)
+  const barrioPerfil = perfil.barrio?.nombre
+  useEffect(() => {
+    if (!b.barrio && barrioPerfil) cambiar('barrio', barrioPerfil)
+    // Solo al entrar al paso: si el dueño borra el barrio, no se lo volvemos a poner.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function usarGps() {
     if (!('geolocation' in navigator)) return
@@ -363,6 +372,23 @@ function PasoUbicacion({
           className={INPUT}
           autoComplete="street-address"
         />
+      </Campo>
+      <Campo etiqueta="Barrio" ayuda="Escríbelo como lo conocen tus vecinos. Si no está en la lista, lo agregamos al mapa.">
+        <input
+          required
+          minLength={2}
+          maxLength={60}
+          list="barrios-conocidos"
+          value={b.barrio}
+          onChange={(e) => cambiar('barrio', e.target.value)}
+          className={INPUT}
+          autoComplete="off"
+        />
+        <datalist id="barrios-conocidos">
+          {barrios?.map((x) => (
+            <option key={x.slug} value={x.nombre} />
+          ))}
+        </datalist>
       </Campo>
     </>
   )
@@ -474,7 +500,9 @@ function PasoRevisar({ b, categorias, irA }: { b: Borrador; categorias?: Categor
         {b.descripcion && <p className="mt-1 text-sm">{b.descripcion}</p>}
       </Resumen>
       <Resumen titulo="Ubicación" alEditar={() => irA(1)}>
-        <p className="text-sm">{b.direccion_texto}</p>
+        <p className="text-sm">
+          {b.direccion_texto} · {b.barrio}
+        </p>
       </Resumen>
       <Resumen titulo="Horario" alEditar={() => irA(2)}>
         <p className="text-sm">{dias.length ? `Abre: ${dias.join(', ')}` : 'Sin horario (lo puedes agregar después)'}</p>

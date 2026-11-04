@@ -3,7 +3,7 @@ import { useEffect, type CSSProperties } from 'react'
 import { useLocation } from 'react-router'
 import { InstalarApp } from '../components/InstalarApp'
 import { BarraMetas, ListaEspera } from '../components/ListaEspera'
-import { apiGet, type Health } from '../lib/api'
+import { apiGet, type Barrio, type Health } from '../lib/api'
 
 /** "Conoce MiCuadra": qué es, instalar la app, metas y lista de espera (SPEC §6.1). */
 export function Conoce() {
@@ -21,21 +21,10 @@ export function Conoce() {
           Encuentra en segundos los negocios de tu barrio — y si no puedes salir, un vecino va por
           ti.
         </p>
-        <div className="mt-5 grid grid-cols-4 gap-1" aria-hidden="true">
-          {['Cuba', 'Álamos', 'Boston', 'El Jardín'].map((barrio, i) => (
-            <div
-              key={barrio}
-              className={`flex aspect-square items-end rounded-md p-1.5 font-mono text-[10px] ${
-                i === 1 ? 'bg-sun text-sun-ink' : 'bg-block text-muted'
-              }`}
-            >
-              {barrio}
-            </div>
-          ))}
-        </div>
+        <BarriosVivos />
         <p className="mt-5 text-sm">
-          Estamos cargando las tiendas, panaderías, barberías y droguerías de Cuba, Álamos, Boston
-          y El Jardín. Instala la app para tenerla a mano y entra a la lista de espera de los mandados.
+          Cada tienda, panadería, barbería o droguería que se suma pone su barrio en el mapa. Instala
+          la app para tenerla a mano y entra a la lista de espera de los mandados.
         </p>
         <div className="mt-5">
           <InstalarApp />
@@ -52,6 +41,28 @@ export function Conoce() {
 
       {import.meta.env.DEV && <EstadoApi />}
     </section>
+  )
+}
+
+/** Los barrios que ya tienen negocios, del más poblado al menos: la lista crece con el mapa. */
+function BarriosVivos() {
+  const barrios = useQuery({ queryKey: ['barrios'], queryFn: () => apiGet<Barrio[]>('/barrios'), staleTime: Infinity })
+  const primeros = barrios.data?.slice(0, 4) ?? []
+  if (!primeros.length) return null
+  return (
+    <ul className="mt-5 grid grid-cols-4 gap-1" aria-label="Barrios con más negocios">
+      {primeros.map((b, i) => (
+        <li
+          key={b.slug}
+          className={`flex aspect-square flex-col justify-end rounded-md p-1.5 font-mono text-[10px] leading-tight ${
+            i === 0 ? 'bg-sun text-sun-ink' : 'bg-block text-muted'
+          }`}
+        >
+          <span className="truncate">{b.nombre}</span>
+          <span className="opacity-70">{b.negocios}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 

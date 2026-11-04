@@ -7,8 +7,8 @@ export const CATEGORIAS: Categoria[] = [
 ]
 
 export const BARRIOS: Barrio[] = [
-  { id: 'b1', slug: 'cuba', nombre: 'Cuba', es_piloto: true, centroide: { lat: 4.798, lng: -75.73 } },
-  { id: 'b2', slug: 'alamos', nombre: 'Álamos', es_piloto: true, centroide: { lat: 4.8, lng: -75.683 } },
+  { id: 'b1', slug: 'cuba', nombre: 'Cuba', es_piloto: true, negocios: 7, centroide: { lat: 4.798, lng: -75.73 } },
+  { id: 'b2', slug: 'alamos', nombre: 'Álamos', es_piloto: true, negocios: 3, centroide: { lat: 4.8, lng: -75.683 } },
 ]
 
 export const LISTA: ListaNegocios = {

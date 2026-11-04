@@ -80,3 +80,12 @@ Formato: contexto → decisión → consecuencias. Las marcadas *(default SPEC)*
 - La documentación original dice que "la comisión" es la tarifa completa, pero también que el
   mensajero gana $1.200–$2.500 netos. Se adopta **20 % plataforma / 80 % mensajero**
   (`config.comision_plataforma_pct = 20`).
+
+### ADR‑012 · Barrios que crecen con el mapa
+- **Decisión:** los 4 barrios piloto dejan de ser una lista fija en la interfaz. Al registrar su
+  negocio, el dueño escribe el barrio (con sugerencias de los que ya existen); si no existe se
+  crea, sin importar tildes ni mayúsculas. `GET /barrios` devuelve solo los barrios con negocios
+  **activos**, del más poblado al menos, con el centro en el promedio de sus negocios.
+- **Consecuencias:** un barrio nuevo aparece en el mapa apenas el admin aprueba su primer
+  negocio, no antes (evita barrios basura). `es_piloto` se conserva para el gate y las métricas.
+  Los errores de escritura crean barrios duplicados; se corrigen a mano desde la base por ahora.

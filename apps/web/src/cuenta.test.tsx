@@ -168,6 +168,8 @@ describe('Registro del negocio', () => {
     expect(siguiente).toBeDisabled()
     fireEvent.click(await screen.findByRole('button', { name: 'Mover pin' }))
     fireEvent.change(screen.getByLabelText(/Dirección/), { target: { value: 'Calle 72 # 25-10' } })
+    // El barrio se escribe libre: si no existe, el mapa lo agrega.
+    fireEvent.change(screen.getByLabelText(/^Barrio/), { target: { value: 'Villa Verde' } })
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
 
     // Paso 3: horario con plantilla
@@ -185,6 +187,7 @@ describe('Registro del negocio', () => {
       categoria: 'panaderia',
       whatsapp: '3104567890',
       direccion_texto: 'Calle 72 # 25-10',
+      barrio: 'Villa Verde',
       ubicacion: { lat: 4.7985, lng: -75.7305 },
     })
     expect(cuerpo?.horarios).toHaveLength(6)

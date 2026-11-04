@@ -1507,11 +1507,17 @@
             "title": "Nombre"
           },
           "centroide": {
-            "$ref": "#/components/schemas/Punto"
+            "$ref": "#/components/schemas/Punto",
+            "description": "Centro de sus negocios activos"
           },
           "es_piloto": {
             "type": "boolean",
             "title": "Es Piloto"
+          },
+          "negocios": {
+            "type": "integer",
+            "title": "Negocios",
+            "description": "Negocios activos en el barrio"
           }
         },
         "type": "object",
@@ -1520,7 +1526,8 @@
           "slug",
           "nombre",
           "centroide",
-          "es_piloto"
+          "es_piloto",
+          "negocios"
         ],
         "title": "Barrio"
       },
@@ -2810,6 +2817,20 @@
             "maxLength": 120,
             "minLength": 3,
             "title": "Direccion Texto"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio",
+            "description": "Nombre del barrio como lo escribe el dueño; si no existe se crea"
           },
           "ubicacion": {
             "$ref": "#/components/schemas/Punto"

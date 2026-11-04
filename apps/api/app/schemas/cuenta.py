@@ -58,6 +58,12 @@ class NegocioEntrada(BaseModel):
     telefono: str | None = Field(default=None, max_length=20)
     descripcion: str | None = Field(default=None, max_length=280)
     direccion_texto: str = Field(min_length=3, max_length=120)
+    barrio: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=60,
+        description="Nombre del barrio como lo escribe el dueño; si no existe se crea",
+    )
     ubicacion: Punto
     horarios: list[HorarioEntrada] = Field(default_factory=list, max_length=21)
 
@@ -65,6 +71,11 @@ class NegocioEntrada(BaseModel):
     @classmethod
     def sin_espacios_extra(cls, v: str) -> str:
         return " ".join(v.split())
+
+    @field_validator("barrio")
+    @classmethod
+    def barrio_limpio(cls, v: str | None) -> str | None:
+        return " ".join(v.split()) or None if v is not None else None
 
     @field_validator("ubicacion")
     @classmethod

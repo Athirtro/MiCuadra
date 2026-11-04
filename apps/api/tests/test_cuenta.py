@@ -86,6 +86,25 @@ def test_bienvenida_como_empresario_agrega_rol_dueno(client: TestClient, nuevo: 
     assert r.json()["roles"] == ["dueno", "vecino"] and r.json()["barrio"] is None
 
 
+def test_barrio_escrito_por_el_dueno_se_crea_o_se_reutiliza(client: TestClient, nuevo: str) -> None:
+    client.put(f"{V1}/yo/perfil", json=_perfil("dueno"), headers=_auth(nuevo))
+    lejos = {**NEGOCIO, "ubicacion": {"lat": 4.85, "lng": -75.79}}
+    r = client.post(
+        f"{V1}/mis-negocios", json={**lejos, "barrio": "  Villa  Verde "}, headers=_auth(nuevo)
+    )
+    assert r.status_code == 201
+    assert r.json()["barrio"] == {"slug": "villa-verde", "nombre": "Villa Verde"}
+    assert r.json()["slug"].endswith("-villa-verde")
+
+    # Otro negocio con el mismo barrio escrito distinto cae en el mismo barrio.
+    otro = {**lejos, "nombre": "Panadería La Espiga", "barrio": "VILLA VERDE"}
+    r = client.post(f"{V1}/mis-negocios", json=otro, headers=_auth(nuevo))
+    assert r.json()["barrio"] == {"slug": "villa-verde", "nombre": "Villa Verde"}
+
+    # Mientras no se apruebe ningún negocio, el barrio no sale en el mapa.
+    assert "villa-verde" not in {b["slug"] for b in client.get(f"{V1}/barrios").json()}
+
+
 @pytest.mark.parametrize(
     ("cambios", "codigo"),
     [

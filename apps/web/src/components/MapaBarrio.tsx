@@ -3,9 +3,10 @@ import 'leaflet.markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet/dist/leaflet.css'
 import { useEffect } from 'react'
-import { Circle, MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { NegocioResumen, Punto } from '../lib/api'
 import { emojiCategoria } from '../lib/negocio'
+import type { Yo } from '../lib/useUbicacion'
 
 const ATRIBUCION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -52,6 +53,54 @@ function Marcadores({ negocios, alElegir }: { negocios: NegocioResumen[]; alEleg
   return null
 }
 
+const ICONO_YO = L.divIcon({
+  className: '',
+  html: '<span class="yo" aria-hidden="true"></span>',
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+})
+
+/** Punto azul "estás aquí" con el círculo de precisión del GPS. */
+function EstoyAqui({ yo }: { yo: Yo }) {
+  const centro: [number, number] = [yo.punto.lat, yo.punto.lng]
+  return (
+    <>
+      {yo.precision < 500 && (
+        <Circle
+          center={centro}
+          radius={yo.precision}
+          interactive={false}
+          pathOptions={{ color: '#2f7cf6', weight: 1, opacity: 0.4, fillOpacity: 0.12 }}
+        />
+      )}
+      <Marker position={centro} icon={ICONO_YO} interactive={false} keyboard={false} zIndexOffset={1000} />
+    </>
+  )
+}
+
+/** Botón flotante para volver a tu posición. */
+function BotonCentrarme({ yo, alPedir }: { yo: Yo | null; alPedir: () => void }) {
+  const mapa = useMap()
+  return (
+    <button
+      type="button"
+      aria-label="Centrar el mapa en mi ubicación"
+      title="Mi ubicación"
+      onClick={(e) => {
+        e.stopPropagation()
+        if (yo) mapa.flyTo([yo.punto.lat, yo.punto.lng], Math.max(mapa.getZoom(), 17), { duration: 0.6 })
+        alPedir()
+      }}
+      className="tap absolute right-3 bottom-8 z-[1000] grid place-items-center rounded-full bg-surface text-ink shadow-2"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="4" fill={yo ? '#2f7cf6' : 'none'} stroke={yo ? '#2f7cf6' : 'currentColor'} />
+        <path d="M12 2v3M12 19v3M2 12h3M19 12h3" strokeLinecap="round" />
+      </svg>
+    </button>
+  )
+}
+
 /** Centra el mapa cuando cambia la ubicación de búsqueda (GPS o barrio elegido). */
 function Recentrar({ centro }: { centro: Punto }) {
   const mapa = useMap()
@@ -88,10 +137,13 @@ interface Props {
   negocios: NegocioResumen[]
   alElegir: (slug: string) => void
   alMover?: (centro: Punto) => void
+  /** Posición en vivo de la persona; null si no dio permiso. */
+  yo?: Yo | null
+  alPedirUbicacion?: () => void
   className?: string
 }
 
-export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, className }: Props) {
+export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, yo = null, alPedirUbicacion, className }: Props) {
   return (
     <MapContainer center={[centro.lat, centro.lng]} zoom={16} className={className} zoomControl={false}>
       <TileLayer attribution={ATRIBUCION} url={TILES} maxZoom={19} />
@@ -104,6 +156,8 @@ export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, classN
       <Recentrar centro={centro} />
       {alMover && <AlMover alMover={alMover} />}
       <Marcadores negocios={negocios} alElegir={alElegir} />
+      {yo && <EstoyAqui yo={yo} />}
+      {alPedirUbicacion && <BotonCentrarme yo={yo} alPedir={alPedirUbicacion} />}
     </MapContainer>
   )
 }

@@ -4,7 +4,7 @@ import secrets
 import unicodedata
 from uuid import UUID
 
-from sqlalchemy import text
+from sqlalchemy import RowMapping, text
 from sqlalchemy.orm import Session
 
 from app.errors import ApiError
@@ -21,6 +21,27 @@ BUCKET_FOTOS = "negocio-fotos"
 def slugificar(texto: str) -> str:
     sin_tildes = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
     return "-".join("".join(c if c.isalnum() else " " for c in sin_tildes.lower()).split())[:60]
+
+
+def _barrio_por_nombre(db: Session, nombre: str, punto: dict[str, float]) -> RowMapping | None:
+    """Barrio escrito por el dueño: si ya existe (sin importar tildes ni mayúsculas) se reutiliza;
+    si no, se crea con el negocio como primer punto. Así la lista de barrios crece con el mapa."""
+    slug = slugificar(nombre)
+    if not slug:
+        return None
+    return (
+        db.execute(
+            text(
+                "insert into barrios (slug, nombre, centroide)"
+                " values (:slug, :nombre, st_point(:lng, :lat, 4326)::geography)"
+                " on conflict (ciudad, slug) do update set slug = excluded.slug"
+                " returning id, slug"
+            ),
+            {**punto, "slug": slug, "nombre": nombre},
+        )
+        .mappings()
+        .one()
+    )
 
 
 def obtener_perfil(db: Session, usuario_id: UUID, email: str | None) -> Perfil:
@@ -133,7 +154,9 @@ def crear_negocio(db: Session, dueno_id: UUID, datos: NegocioEntrada) -> MiNegoc
 
     punto = {"lat": datos.ubicacion.lat, "lng": datos.ubicacion.lng}
     barrio = (
-        db.execute(
+        _barrio_por_nombre(db, datos.barrio, punto)
+        if datos.barrio
+        else db.execute(
             text(
                 "select id, slug from barrios"
                 " where st_dwithin(centroide, st_point(:lng, :lat, 4326)::geography, :radio)"

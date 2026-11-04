@@ -46,11 +46,21 @@ def test_categorias_en_orden(api: TestClient) -> None:
     assert slugs[:3] == ["tienda", "panaderia", "barberia"] and len(slugs) == 10
 
 
-def test_barrios_piloto_con_centroide(api: TestClient) -> None:
+def test_barrios_salen_de_los_negocios_activos(api: TestClient, conn: psycopg.Connection) -> None:
     r = api.get(f"{V1}/barrios")
-    pilotos = {b["slug"]: b for b in r.json() if b["es_piloto"]}
-    assert set(pilotos) == {"cuba", "alamos", "boston", "el-jardin"}
-    assert 4.7 < pilotos["cuba"]["centroide"]["lat"] < 4.9
+    barrios = r.json()
+    activos = dict(
+        conn.execute(
+            "select b.slug, count(*) from negocios n join barrios b on b.id = n.barrio_id"
+            " where n.estado = 'activo' and n.deleted_at is null group by b.slug"
+        ).fetchall()
+    )
+    # Solo barrios con negocios en el mapa, del más poblado al menos.
+    assert {b["slug"]: b["negocios"] for b in barrios} == activos
+    conteos = [b["negocios"] for b in barrios]
+    assert conteos == sorted(conteos, reverse=True)
+    # El centro es el de sus negocios, dentro de Pereira.
+    assert all(4.7 < b["centroide"]["lat"] < 4.9 for b in barrios)
 
 
 # ── Búsqueda geoespacial ──

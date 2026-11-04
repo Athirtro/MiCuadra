@@ -17,7 +17,7 @@ const RADIOS = [
 
 export function Mapa() {
   const navigate = useNavigate()
-  const { ubicacion, pedirGps, elegirBarrio } = useUbicacion()
+  const { ubicacion, yo, pedirGps, elegirBarrio } = useUbicacion()
   const [categoria, setCategoria] = useState<string | null>(null)
   const [texto, setTexto] = useState('')
   const q = useDeferredValue(texto)
@@ -71,6 +71,7 @@ export function Mapa() {
         cargando={barrios.isPending}
         error={barrios.isError ? () => barrios.refetch() : null}
         alElegir={elegirBarrio}
+        alPedirGps={'geolocation' in navigator ? pedirGps : null}
       />
     )
   }
@@ -91,15 +92,6 @@ export function Mapa() {
               enterKeyHint="search"
             />
           </label>
-          <button
-            type="button"
-            onClick={pedirGps}
-            className="tap rounded-caja border border-line bg-bg px-3 text-sm font-bold"
-            aria-label="Usar mi ubicación"
-            title="Usar mi ubicación"
-          >
-            📍
-          </button>
         </div>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Categorías">
           <Chip activo={categoria === null} onClick={() => setCategoria(null)}>
@@ -149,6 +141,8 @@ export function Mapa() {
             negocios={items}
             alElegir={abrir}
             alMover={setCentroMapa}
+            yo={yo}
+            alPedirUbicacion={pedirGps}
             className="h-full w-full"
           />
         </Suspense>
@@ -307,17 +301,36 @@ function ElegirBarrio({
   cargando,
   error,
   alElegir,
+  alPedirGps,
 }: {
   barrios?: Barrio[]
   cargando: boolean
   error: (() => void) | null
   alElegir: (slug: string, punto: Punto) => void
+  alPedirGps: (() => void) | null
 }) {
   return (
     <section className="mx-auto max-w-md px-4 py-10">
       <h1 className="text-3xl font-black">¿En qué barrio estás?</h1>
       <p className="mt-2 text-muted">No pudimos ver tu ubicación. Elige tu barrio y te mostramos lo que hay cerca.</p>
+      {alPedirGps && (
+        <button
+          type="button"
+          onClick={alPedirGps}
+          className="tap mt-4 inline-flex items-center gap-2 rounded-caja border border-line bg-surface px-4 font-bold shadow-1"
+        >
+          <span aria-hidden="true">◎</span> Usar mi ubicación
+        </button>
+      )}
       {cargando && <p className="mt-6 text-muted">Cargando barrios…</p>}
+      {barrios?.length === 0 && (
+        <p className="mt-6 text-muted">
+          Todavía no hay negocios en el mapa.{' '}
+          <Link to="/conoce" className="font-bold text-green underline">
+            Sé el primero
+          </Link>
+        </p>
+      )}
       {error && (
         <p className="mt-6">
           No pudimos cargar los barrios.{' '}
@@ -327,19 +340,20 @@ function ElegirBarrio({
         </p>
       )}
       <div className="escalonado mt-6 grid grid-cols-2 gap-2">
-        {barrios
-          ?.filter((b) => b.es_piloto)
-          .map((b, i) => (
-            <button
-              key={b.slug}
-              type="button"
-              style={{ '--i': i } as React.CSSProperties}
-              onClick={() => alElegir(b.slug, b.centroide)}
-              className="tap flex aspect-[4/3] items-end rounded-caja bg-block p-3 text-left font-display text-lg font-black hover:bg-sun hover:text-sun-ink"
-            >
-              {b.nombre}
-            </button>
-          ))}
+        {barrios?.slice(0, 12).map((b, i) => (
+          <button
+            key={b.slug}
+            type="button"
+            style={{ '--i': i } as React.CSSProperties}
+            onClick={() => alElegir(b.slug, b.centroide)}
+            className="tap flex aspect-[4/3] flex-col items-start justify-end rounded-caja bg-block p-3 text-left hover:bg-sun hover:text-sun-ink"
+          >
+            <span className="font-display text-lg leading-tight font-black">{b.nombre}</span>
+            <span className="font-mono text-xs opacity-70">
+              {b.negocios} {b.negocios === 1 ? 'negocio' : 'negocios'}
+            </span>
+          </button>
+        ))}
       </div>
     </section>
   )

@@ -25,8 +25,9 @@ class Barrio(BaseModel):
     id: UUID
     slug: str
     nombre: str
-    centroide: Punto
+    centroide: Punto = Field(description="Centro de sus negocios activos")
     es_piloto: bool
+    negocios: int = Field(description="Negocios activos en el barrio")
 
 
 class CategoriaCorta(BaseModel):
