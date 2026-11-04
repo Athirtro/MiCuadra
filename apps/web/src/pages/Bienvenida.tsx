@@ -79,7 +79,7 @@ function FormularioBienvenida({ perfil, token }: { perfil: Perfil; token?: strin
             autoComplete="name"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="tap w-full rounded-r border border-line bg-surface px-4 text-base"
+            className="tap w-full rounded-caja border border-line bg-surface px-4 text-base"
           />
         </Campo>
 
@@ -93,7 +93,7 @@ function FormularioBienvenida({ perfil, token }: { perfil: Perfil; token?: strin
             value={celular}
             onChange={(e) => setCelular(e.target.value)}
             aria-invalid={celular !== '' && !celularValido}
-            className="tap w-full rounded-r border border-line bg-surface px-4 text-base"
+            className="tap w-full rounded-caja border border-line bg-surface px-4 text-base"
           />
           {celular !== '' && !celularValido && (
             <span className="text-sm text-red">Revisa el número: debe tener 10 dígitos y empezar por 3.</span>
@@ -104,7 +104,7 @@ function FormularioBienvenida({ perfil, token }: { perfil: Perfil; token?: strin
           <select
             value={barrio}
             onChange={(e) => setBarrio(e.target.value)}
-            className="tap w-full rounded-r border border-line bg-surface px-3 text-base"
+            className="tap w-full rounded-caja border border-line bg-surface px-3 text-base"
           >
             <option value="">Otro barrio de Pereira</option>
             {barrios.data?.map((b) => (
@@ -141,7 +141,7 @@ function FormularioBienvenida({ perfil, token }: { perfil: Perfil; token?: strin
         <button
           type="submit"
           disabled={!tipo || !celularValido || !acepta || guardar.isPending}
-          className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+          className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
         >
           {guardar.isPending ? 'Guardando…' : tipo === 'dueno' ? 'Seguir con mi negocio →' : 'Listo, ir al mapa'}
         </button>
@@ -156,7 +156,7 @@ function OpcionTipo(props: { activo: boolean; onClick: () => void; emoji: string
       type="button"
       aria-pressed={props.activo}
       onClick={props.onClick}
-      className={`flex flex-col items-start gap-1 rounded-r border-2 p-4 text-left ${
+      className={`flex flex-col items-start gap-1 rounded-caja border-2 p-4 text-left ${
         props.activo ? 'border-green bg-green/10' : 'border-line bg-surface'
       }`}
     >

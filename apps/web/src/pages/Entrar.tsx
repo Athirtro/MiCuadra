@@ -50,14 +50,14 @@ export function Entrar() {
       </div>
 
       {!authDisponible && (
-        <p className="rounded-r border border-red p-3 text-sm">Las cuentas no están configuradas en este ambiente.</p>
+        <p className="rounded-caja border border-red p-3 text-sm">Las cuentas no están configuradas en este ambiente.</p>
       )}
 
       <button
         type="button"
         onClick={conGoogle}
         disabled={!authDisponible}
-        className="tap flex items-center justify-center gap-3 rounded-r border border-line bg-surface px-4 font-bold disabled:opacity-50"
+        className="tap flex items-center justify-center gap-3 rounded-caja border border-line bg-surface px-4 font-bold disabled:opacity-50"
       >
         <LogoGoogle />
         Continuar con Google
@@ -68,7 +68,7 @@ export function Entrar() {
       </div>
 
       {estado === 'enviado' ? (
-        <div role="status" className="entra rounded-r bg-block p-4">
+        <div role="status" className="entra rounded-caja bg-block p-4">
           <p className="font-bold">📬 Revisa tu correo</p>
           <p className="mt-1 text-sm">
             Te enviamos un enlace a <strong>{email}</strong>. Ábrelo desde este mismo celular para entrar. Si no
@@ -87,13 +87,13 @@ export function Entrar() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tucorreo@gmail.com"
-              className="tap rounded-r border border-line bg-surface px-4 text-base"
+              className="tap rounded-caja border border-line bg-surface px-4 text-base"
             />
           </label>
           <button
             type="submit"
             disabled={estado === 'enviando' || !authDisponible}
-            className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-60"
+            className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-60"
           >
             {estado === 'enviando' ? 'Enviando…' : 'Enviarme un enlace para entrar'}
           </button>

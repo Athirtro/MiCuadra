@@ -87,14 +87,14 @@ export function Mapa() {
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               placeholder="Pan, droguería, barbería…"
-              className="tap w-full rounded-r border border-line bg-bg px-4 text-base text-ink placeholder:text-muted"
+              className="tap w-full rounded-caja border border-line bg-bg px-4 text-base text-ink placeholder:text-muted"
               enterKeyHint="search"
             />
           </label>
           <button
             type="button"
             onClick={pedirGps}
-            className="tap rounded-r border border-line bg-bg px-3 text-sm font-bold"
+            className="tap rounded-caja border border-line bg-bg px-3 text-sm font-bold"
             aria-label="Usar mi ubicación"
             title="Usar mi ubicación"
           >
@@ -122,7 +122,7 @@ export function Mapa() {
           ))}
           {ubicacion.estado === 'barrio' && barrios.data && (
             <select
-              className="tap shrink-0 rounded-r border border-line bg-bg px-2"
+              className="tap shrink-0 rounded-caja border border-line bg-bg px-2"
               value={ubicacion.barrio}
               aria-label="Barrio"
               onChange={(e) => {
@@ -192,7 +192,7 @@ function Resultados({
         <ul className="divide-y divide-line" aria-hidden="true">
           {[0, 1, 2, 3].map((i) => (
             <li key={i} className="flex items-center gap-3 px-4 py-3">
-              <span className="esqueleto size-14 shrink-0 rounded-r" />
+              <span className="esqueleto size-14 shrink-0 rounded-caja" />
               <span className="flex flex-1 flex-col gap-2">
                 <span className="esqueleto h-4 w-2/3 rounded" />
                 <span className="esqueleto h-3 w-1/3 rounded" />
@@ -208,7 +208,7 @@ function Resultados({
       <div className="p-4">
         <p className="font-bold">No pudimos cargar los negocios.</p>
         <p className="text-sm text-muted">{consulta.error.message}</p>
-        <button type="button" onClick={() => consulta.refetch()} className="tap mt-3 rounded-r border border-line px-4 font-bold">
+        <button type="button" onClick={() => consulta.refetch()} className="tap mt-3 rounded-caja border border-line px-4 font-bold">
           Reintentar
         </button>
       </div>
@@ -245,7 +245,7 @@ function Resultados({
               className="group flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg focus-visible:bg-bg"
             >
               <span
-                className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-r text-2xl ring-1 ring-black/5"
+                className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-caja text-2xl ring-1 ring-black/5"
                 style={{ background: `${n.categoria.color}22` }}
                 aria-hidden="true"
               >
@@ -335,7 +335,7 @@ function ElegirBarrio({
               type="button"
               style={{ '--i': i } as React.CSSProperties}
               onClick={() => alElegir(b.slug, b.centroide)}
-              className="tap flex aspect-[4/3] items-end rounded-r bg-block p-3 text-left font-display text-lg font-black hover:bg-sun hover:text-sun-ink"
+              className="tap flex aspect-[4/3] items-end rounded-caja bg-block p-3 text-left font-display text-lg font-black hover:bg-sun hover:text-sun-ink"
             >
               {b.nombre}
             </button>

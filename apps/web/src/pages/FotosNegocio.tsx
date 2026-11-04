@@ -87,7 +87,7 @@ export function FotosNegocio() {
 
       <ul className="grid grid-cols-2 gap-2">
         {lista.map((f, i) => (
-          <li key={f.orden} className="relative overflow-hidden rounded-r border border-line bg-block">
+          <li key={f.orden} className="relative overflow-hidden rounded-caja border border-line bg-block">
             <img src={f.url} alt={`Foto ${i + 1} de ${nombre}`} className="aspect-[4/3] w-full object-cover" loading="lazy" />
             {i === 0 && <span className="absolute top-2 left-2 rounded bg-sun px-1.5 text-xs font-bold text-sun-ink">Portada</span>}
             <button
@@ -102,7 +102,7 @@ export function FotosNegocio() {
           </li>
         ))}
         {Array.from({ length: subiendo }, (_, i) => (
-          <li key={`subiendo-${i}`} className="grid aspect-[4/3] place-items-center rounded-r bg-block text-sm text-muted" role="status">
+          <li key={`subiendo-${i}`} className="grid aspect-[4/3] place-items-center rounded-caja bg-block text-sm text-muted" role="status">
             Subiendo…
           </li>
         ))}
@@ -120,11 +120,11 @@ export function FotosNegocio() {
         type="button"
         disabled={espacio <= 0 || subiendo > 0}
         onClick={() => entrada.current?.click()}
-        className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+        className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
       >
         {espacio <= 0 ? 'Ya tienes las 5 fotos' : subiendo ? 'Subiendo…' : '📷 Agregar fotos'}
       </button>
-      <Link to="/cuenta" className="tap flex items-center justify-center rounded-r border border-line px-4 font-bold">
+      <Link to="/cuenta" className="tap flex items-center justify-center rounded-caja border border-line px-4 font-bold">
         Listo
       </Link>
     </section>

@@ -50,7 +50,7 @@ export function ListaEsperaAdmin() {
       </div>
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted">{lista.data?.length ?? 0} inscritos</p>
-        <button type="button" onClick={exportar} className="tap rounded-r border border-line bg-surface px-4 font-bold">
+        <button type="button" onClick={exportar} className="tap rounded-caja border border-line bg-surface px-4 font-bold">
           Exportar CSV
         </button>
       </div>

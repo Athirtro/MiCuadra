@@ -15,7 +15,7 @@ export function Dialogo({ titulo, alCerrar, children }: { titulo: string; alCerr
       ref={ref}
       onClose={alCerrar}
       aria-label={titulo}
-      className="m-auto w-[min(92vw,26rem)] rounded-r bg-surface p-6 text-ink shadow-2xl backdrop:bg-black/50"
+      className="m-auto w-[min(92vw,26rem)] rounded-caja bg-surface p-6 text-ink shadow-2xl backdrop:bg-black/50"
     >
       {children}
     </dialog>

@@ -48,7 +48,7 @@ export function Reportes() {
                     type="button"
                     disabled={cambiar.isPending}
                     onClick={() => cambiar.mutate({ id: r.id, estado: 'resuelta' })}
-                    className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+                    className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
                   >
                     Ya lo corregí
                   </button>
@@ -56,7 +56,7 @@ export function Reportes() {
                     type="button"
                     disabled={cambiar.isPending}
                     onClick={() => cambiar.mutate({ id: r.id, estado: 'descartada' })}
-                    className="tap rounded-r border border-line px-4 font-bold disabled:opacity-50"
+                    className="tap rounded-caja border border-line px-4 font-bold disabled:opacity-50"
                   >
                     Descartar
                   </button>

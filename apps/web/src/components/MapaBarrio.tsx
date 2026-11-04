@@ -158,7 +158,7 @@ export function SelectorUbicacion({
   emoji?: string
 }) {
   return (
-    <MapContainer center={[punto.lat, punto.lng]} zoom={17} className="h-72 w-full rounded-r" zoomControl>
+    <MapContainer center={[punto.lat, punto.lng]} zoom={17} className="h-72 w-full rounded-caja" zoomControl>
       <TileLayer attribution={ATRIBUCION} url={TILES} maxZoom={19} />
       <AjustarTamano />
       <Recentrar centro={punto} />

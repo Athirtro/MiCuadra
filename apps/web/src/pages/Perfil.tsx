@@ -39,7 +39,7 @@ export function Perfil() {
           <div className="esqueleto h-4 w-1/3 rounded" />
           <div className="esqueleto h-8 w-3/4 rounded" />
           <div className="esqueleto h-4 w-1/4 rounded" />
-          <div className="esqueleto mt-4 h-48 rounded-r" />
+          <div className="esqueleto mt-4 h-48 rounded-caja" />
         </div>
       </div>
     )
@@ -50,7 +50,7 @@ export function Perfil() {
       <section className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="text-2xl font-black">{noExiste ? 'Este negocio no está en el mapa' : 'No pudimos cargar el negocio'}</h1>
         <p className="mt-2 text-muted">{noExiste ? 'Puede que ya no exista o que aún no lo hayamos aprobado.' : negocio.error.message}</p>
-        <Link to="/" className="tap mt-6 inline-flex items-center rounded-r bg-green px-5 font-bold text-green-ink">
+        <Link to="/" className="tap mt-6 inline-flex items-center rounded-caja bg-green px-5 font-bold text-green-ink">
           Volver al mapa
         </Link>
       </section>
@@ -185,7 +185,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               rel="noopener noreferrer"
               onClick={() => registrarEvento('click_whatsapp', n.id)}
               aria-label="Escribir por WhatsApp"
-              className="tap flex flex-1 items-center justify-center gap-2 rounded-r bg-green px-3 font-bold whitespace-nowrap text-green-ink shadow-1"
+              className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-green px-3 font-bold whitespace-nowrap text-green-ink shadow-1"
             >
               <span aria-hidden="true">💬</span> WhatsApp
             </a>
@@ -196,7 +196,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               registrarEvento('click_pedir_mandado', n.id)
               setModalMandado(true)
             }}
-            className="tap flex flex-1 items-center justify-center gap-2 rounded-r bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
+            className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
           >
             🛵 Pedir mandado
           </button>
@@ -288,14 +288,14 @@ function ModalProximamente({ nombre, alCerrar }: { nombre: string; alCerrar: () 
           value={pedido}
           onChange={(e) => setPedido(e.target.value)}
           placeholder="Ej.: 6 panes y una leche"
-          className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+          className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
         />
       </label>
       <div className="mt-5 flex flex-col gap-2">
-        <button type="button" onClick={irALista} className="tap rounded-r bg-green px-4 font-bold text-green-ink">
+        <button type="button" onClick={irALista} className="tap rounded-caja bg-green px-4 font-bold text-green-ink">
           Quiero estar en la lista
         </button>
-        <button type="button" onClick={alCerrar} className="tap rounded-r border border-line px-4 font-bold">
+        <button type="button" onClick={alCerrar} className="tap rounded-caja border border-line px-4 font-bold">
           Ahora no
         </button>
       </div>
@@ -329,7 +329,7 @@ function ModalReportar({ negocioId, alCerrar }: { negocioId: string; alCerrar: (
         <div role="status" className="entra">
           <h2 className="text-2xl font-black">¡Gracias por avisar!</h2>
           <p className="mt-2 text-muted">El equipo de MiCuadra lo revisa y corrige el mapa.</p>
-          <button type="button" onClick={alCerrar} className="tap mt-5 w-full rounded-r bg-green px-4 font-bold text-green-ink">
+          <button type="button" onClick={alCerrar} className="tap mt-5 w-full rounded-caja bg-green px-4 font-bold text-green-ink">
             Listo
           </button>
         </div>
@@ -358,7 +358,7 @@ function ModalReportar({ negocioId, alCerrar }: { negocioId: string; alCerrar: (
               rows={3}
               value={detalle}
               onChange={(e) => setDetalle(e.target.value)}
-              className="w-full rounded-r border border-line bg-bg px-4 py-2 text-base"
+              className="w-full rounded-caja border border-line bg-bg px-4 py-2 text-base"
             />
           </label>
           {reportar.isError && (
@@ -370,11 +370,11 @@ function ModalReportar({ negocioId, alCerrar }: { negocioId: string; alCerrar: (
             <button
               type="submit"
               disabled={!motivo || reportar.isPending}
-              className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+              className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
             >
               {reportar.isPending ? 'Enviando…' : 'Enviar reporte'}
             </button>
-            <button type="button" onClick={alCerrar} className="tap rounded-r border border-line px-4 font-bold">
+            <button type="button" onClick={alCerrar} className="tap rounded-caja border border-line px-4 font-bold">
               Cancelar
             </button>
           </div>

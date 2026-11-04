@@ -42,7 +42,7 @@ export function Negocios() {
           placeholder="Buscar por nombre"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="tap rounded-r border border-line bg-surface px-4 text-base sm:w-64"
+          className="tap rounded-caja border border-line bg-surface px-4 text-base sm:w-64"
         />
       </div>
       <Estado cargando={negocios.isPending} error={negocios.error} vacio={negocios.data?.length === 0}>
@@ -109,14 +109,14 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
               rows={2}
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
-              className="rounded-r border border-line bg-bg px-3 py-2 text-base font-normal"
+              className="rounded-caja border border-line bg-bg px-3 py-2 text-base font-normal"
             />
           </label>
           <div className="flex gap-2">
-            <button type="submit" disabled={!motivo.trim() || cambiar.isPending} className="tap rounded-r bg-red px-4 font-bold text-white disabled:opacity-50">
+            <button type="submit" disabled={!motivo.trim() || cambiar.isPending} className="tap rounded-caja bg-red px-4 font-bold text-white disabled:opacity-50">
               Rechazar
             </button>
-            <button type="button" onClick={() => setRechazando(false)} className="tap rounded-r border border-line px-4 font-bold">
+            <button type="button" onClick={() => setRechazando(false)} className="tap rounded-caja border border-line px-4 font-bold">
               Cancelar
             </button>
           </div>
@@ -128,26 +128,26 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
               type="button"
               disabled={cambiar.isPending}
               onClick={() => cambiar.mutate({ estado: 'activo' })}
-              className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+              className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
             >
               {n.estado === 'pendiente' ? 'Aprobar' : 'Activar'}
             </button>
           )}
           {n.estado === 'pendiente' && (
-            <button type="button" onClick={() => setRechazando(true)} className="tap rounded-r border border-line px-4 font-bold">
+            <button type="button" onClick={() => setRechazando(true)} className="tap rounded-caja border border-line px-4 font-bold">
               Rechazar
             </button>
           )}
           {n.estado === 'activo' && (
             <>
-              <Link to={`/n/${n.slug}`} className="tap inline-flex items-center rounded-r border border-line px-4 font-bold">
+              <Link to={`/n/${n.slug}`} className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold">
                 Ver perfil
               </Link>
               <button
                 type="button"
                 disabled={cambiar.isPending}
                 onClick={() => cambiar.mutate({ estado: 'inactivo' })}
-                className="tap rounded-r border border-line px-4 font-bold disabled:opacity-50"
+                className="tap rounded-caja border border-line px-4 font-bold disabled:opacity-50"
               >
                 Desactivar
               </button>

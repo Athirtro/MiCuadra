@@ -29,7 +29,7 @@ export function Cuenta() {
       <section className="mx-auto max-w-md px-4 py-10">
         <p className="font-bold">No pudimos cargar tu cuenta.</p>
         <p className="text-sm text-muted">{perfil.error.message}</p>
-        <button type="button" onClick={() => perfil.refetch()} className="tap mt-3 rounded-r border border-line px-4 font-bold">
+        <button type="button" onClick={() => perfil.refetch()} className="tap mt-3 rounded-caja border border-line px-4 font-bold">
           Reintentar
         </button>
       </section>
@@ -95,7 +95,7 @@ export function Cuenta() {
           </ul>
           <Link
             to="/mi-negocio/nuevo"
-            className="tap flex items-center justify-center rounded-r bg-green px-4 font-bold text-green-ink"
+            className="tap flex items-center justify-center rounded-caja bg-green px-4 font-bold text-green-ink"
           >
             {negocios.data?.length ? 'Registrar otro negocio' : 'Registrar mi negocio'}
           </Link>
@@ -111,16 +111,16 @@ export function Cuenta() {
       )}
 
       {p.roles.includes('admin') && (
-        <Link to="/admin" className="tap flex items-center justify-center rounded-r bg-ink px-4 font-bold text-bg">
+        <Link to="/admin" className="tap flex items-center justify-center rounded-caja bg-ink px-4 font-bold text-bg">
           Panel de administración
         </Link>
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Link to="/" className="tap inline-flex items-center rounded-r border border-line px-4 font-bold">
+        <Link to="/" className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold">
           Ir al mapa
         </Link>
-        <button type="button" onClick={() => void salir()} className="tap rounded-r border border-line px-4 font-bold">
+        <button type="button" onClick={() => void salir()} className="tap rounded-caja border border-line px-4 font-bold">
           Salir
         </button>
       </div>

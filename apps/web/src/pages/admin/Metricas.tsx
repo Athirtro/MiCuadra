@@ -18,7 +18,7 @@ export function Metricas() {
         {gate.data && (
           <>
             <div
-              className={`rounded-r p-4 font-bold ${gate.data.listo ? 'bg-green text-green-ink' : 'border border-line bg-surface'}`}
+              className={`rounded-caja p-4 font-bold ${gate.data.listo ? 'bg-green text-green-ink' : 'border border-line bg-surface'}`}
               role="status"
             >
               {gate.data.listo
@@ -118,7 +118,7 @@ function Entrevistas() {
             maxLength={80}
             value={persona}
             onChange={(e) => setPersona(e.target.value)}
-            className="tap rounded-r border border-line bg-bg px-3 text-base font-normal"
+            className="tap rounded-caja border border-line bg-bg px-3 text-base font-normal"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-bold">
@@ -127,7 +127,7 @@ function Entrevistas() {
             maxLength={60}
             value={barrio}
             onChange={(e) => setBarrio(e.target.value)}
-            className="tap rounded-r border border-line bg-bg px-3 text-base font-normal"
+            className="tap rounded-caja border border-line bg-bg px-3 text-base font-normal"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-bold sm:col-span-2">
@@ -137,14 +137,14 @@ function Entrevistas() {
             rows={2}
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
-            className="rounded-r border border-line bg-bg px-3 py-2 text-base font-normal"
+            className="rounded-caja border border-line bg-bg px-3 py-2 text-base font-normal"
           />
         </label>
         <label className="flex items-center gap-3 text-sm font-bold">
           <input type="checkbox" checked={confirma} onChange={(e) => setConfirma(e.target.checked)} className="size-5 accent-[var(--green)]" />
           Confirma que usaría los mandados
         </label>
-        <button type="submit" disabled={guardar.isPending} className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50">
+        <button type="submit" disabled={guardar.isPending} className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50">
           {guardar.isPending ? 'Guardando…' : 'Registrar entrevista'}
         </button>
         {guardar.isError && (

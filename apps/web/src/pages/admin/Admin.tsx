@@ -34,7 +34,7 @@ export function Admin() {
             key={s.ruta}
             to={s.ruta}
             className={({ isActive }) =>
-              `tap flex shrink-0 items-center rounded-r px-4 text-sm font-bold ${isActive ? 'bg-green text-green-ink' : 'border border-line bg-surface'}`
+              `tap flex shrink-0 items-center rounded-caja px-4 text-sm font-bold ${isActive ? 'bg-green text-green-ink' : 'border border-line bg-surface'}`
             }
           >
             {s.texto}

@@ -74,7 +74,7 @@ function BotonCuenta() {
   if (cargandoSesion) return null
   if (!sesion) {
     return (
-      <Link to="/entrar" className="tap flex items-center rounded-r bg-green px-4 text-sm font-bold text-green-ink">
+      <Link to="/entrar" className="tap flex items-center rounded-caja bg-green px-4 text-sm font-bold text-green-ink">
         Entrar
       </Link>
     )
@@ -100,7 +100,7 @@ function NoEncontrado() {
     <section className="mx-auto max-w-xl px-4 py-16 text-center">
       <h1 className="text-3xl font-black">Esta cuadra no existe</h1>
       <p className="mt-2 text-muted">La página que buscas no está en el mapa.</p>
-      <Link to="/" className="tap mt-6 inline-flex items-center rounded-r bg-green px-5 font-bold text-green-ink">
+      <Link to="/" className="tap mt-6 inline-flex items-center rounded-caja bg-green px-5 font-bold text-green-ink">
         Volver al mapa
       </Link>
     </section>

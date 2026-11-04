@@ -72,7 +72,7 @@
   --color-sun: var(--sun);
   --color-sun-ink: var(--sun-ink);
   --color-red: var(--red);
-  --radius-r: var(--r);
+  --radius-caja: var(--r);
   --shadow-1: var(--sombra-1);
   --shadow-2: var(--sombra-2);
   --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;

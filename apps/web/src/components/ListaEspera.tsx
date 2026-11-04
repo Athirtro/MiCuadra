@@ -102,7 +102,7 @@ export function ListaEspera() {
               type="button"
               aria-pressed={rol === r.rol}
               onClick={() => setRol(r.rol)}
-              className={`tap flex items-center gap-2 rounded-r border-2 px-3 text-left font-bold ${
+              className={`tap flex items-center gap-2 rounded-caja border-2 px-3 text-left font-bold ${
                 rol === r.rol ? 'border-green bg-green/10' : 'border-line'
               }`}
             >
@@ -121,7 +121,7 @@ export function ListaEspera() {
           autoComplete="name"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+          className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
         />
       </Campo>
 
@@ -135,7 +135,7 @@ export function ListaEspera() {
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
           aria-invalid={whatsapp !== '' && !celularValido}
-          className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+          className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
         />
         {whatsapp !== '' && !celularValido && (
           <span className="text-sm text-red">Revisa el número: debe tener 10 dígitos y empezar por 3.</span>
@@ -147,7 +147,7 @@ export function ListaEspera() {
           required
           value={barrio}
           onChange={(e) => setBarrio(e.target.value)}
-          className="tap w-full rounded-r border border-line bg-bg px-3 text-base"
+          className="tap w-full rounded-caja border border-line bg-bg px-3 text-base"
         >
           <option value="" disabled>
             Elige tu barrio
@@ -167,7 +167,7 @@ export function ListaEspera() {
             maxLength={60}
             value={otroBarrio}
             onChange={(e) => setOtroBarrio(e.target.value)}
-            className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+            className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
           />
         </Campo>
       )}
@@ -180,7 +180,7 @@ export function ListaEspera() {
               maxLength={80}
               value={negocioNombre}
               onChange={(e) => setNegocioNombre(e.target.value)}
-              className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+              className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
             />
           </Campo>
           <Campo etiqueta="¿Qué tipo de negocio es?" ayuda="Tienda, panadería, barbería…">
@@ -189,7 +189,7 @@ export function ListaEspera() {
               maxLength={60}
               value={negocioTipo}
               onChange={(e) => setNegocioTipo(e.target.value)}
-              className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+              className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
             />
           </Campo>
         </>
@@ -202,7 +202,7 @@ export function ListaEspera() {
             placeholder="El pan de la mañana, una droga…"
             value={quePediria}
             onChange={(e) => setQuePediria(e.target.value)}
-            className="tap w-full rounded-r border border-line bg-bg px-4 text-base"
+            className="tap w-full rounded-caja border border-line bg-bg px-4 text-base"
           />
         </Campo>
       )}
@@ -233,7 +233,7 @@ export function ListaEspera() {
       <button
         type="submit"
         disabled={!listo || inscribir.isPending}
-        className="tap rounded-r bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+        className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
       >
         {inscribir.isPending ? 'Guardando…' : 'Inscribirme'}
       </button>

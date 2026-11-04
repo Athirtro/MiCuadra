@@ -94,7 +94,7 @@ function HacermeEmpresario({ perfil, token }: { perfil: Perfil; token?: string }
         type="button"
         onClick={() => cambiar.mutate()}
         disabled={cambiar.isPending}
-        className="tap mt-6 w-full rounded-r bg-green px-4 font-bold text-green-ink"
+        className="tap mt-6 w-full rounded-caja bg-green px-4 font-bold text-green-ink"
       >
         Sí, quiero registrar mi negocio
       </button>
@@ -165,11 +165,11 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
         <div className="mt-6 flex flex-col gap-2">
           <Link
             to={`/mi-negocio/${enviar.data.id}/fotos`}
-            className="tap inline-flex items-center justify-center rounded-r bg-green px-5 font-bold text-green-ink"
+            className="tap inline-flex items-center justify-center rounded-caja bg-green px-5 font-bold text-green-ink"
           >
             📷 Subir fotos
           </Link>
-          <Link to="/cuenta" className="tap inline-flex items-center justify-center rounded-r border border-line px-5 font-bold">
+          <Link to="/cuenta" className="tap inline-flex items-center justify-center rounded-caja border border-line px-5 font-bold">
             Más tarde
           </Link>
         </div>
@@ -212,14 +212,14 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
 
         <div className="flex gap-2">
           {paso > 0 && (
-            <button type="button" onClick={() => setPaso(paso - 1)} className="tap rounded-r border border-line px-5 font-bold">
+            <button type="button" onClick={() => setPaso(paso - 1)} className="tap rounded-caja border border-line px-5 font-bold">
               Atrás
             </button>
           )}
           <button
             type="submit"
             disabled={!listo[paso] || enviar.isPending}
-            className="tap flex-1 rounded-r bg-green px-5 font-bold text-green-ink disabled:opacity-50"
+            className="tap flex-1 rounded-caja bg-green px-5 font-bold text-green-ink disabled:opacity-50"
           >
             {paso < PASOS.length - 1 ? 'Siguiente' : enviar.isPending ? 'Enviando…' : 'Enviar a revisión'}
           </button>
@@ -245,7 +245,7 @@ function Progreso({ paso }: { paso: number }) {
 }
 
 type Cambiar = <K extends keyof Borrador>(campo: K, valor: Borrador[K]) => void
-const INPUT = 'tap w-full rounded-r border border-line bg-surface px-4 text-base'
+const INPUT = 'tap w-full rounded-caja border border-line bg-surface px-4 text-base'
 
 function PasoDatos({
   b,
@@ -272,7 +272,7 @@ function PasoDatos({
               type="button"
               aria-pressed={b.categoria === c.slug}
               onClick={() => cambiar('categoria', c.slug)}
-              className={`tap flex items-center gap-2 rounded-r border-2 px-3 text-left text-sm font-bold ${
+              className={`tap flex items-center gap-2 rounded-caja border-2 px-3 text-left text-sm font-bold ${
                 b.categoria === c.slug ? 'border-green bg-green/10' : 'border-line bg-surface'
               }`}
             >
@@ -304,7 +304,7 @@ function PasoDatos({
           rows={3}
           value={b.descripcion}
           onChange={(e) => cambiar('descripcion', e.target.value)}
-          className="w-full rounded-r border border-line bg-surface px-4 py-3 text-base"
+          className="w-full rounded-caja border border-line bg-surface px-4 py-3 text-base"
           placeholder="Pan caliente desde las 5 a. m., pandebono y tinto."
         />
       </Campo>
@@ -347,10 +347,10 @@ function PasoUbicacion({
         <p className="font-bold">¿Dónde queda tu negocio?</p>
         <p className="text-sm text-muted">Arrastra el pin o toca el mapa justo donde está la puerta.</p>
       </div>
-      <button type="button" onClick={usarGps} className="tap rounded-r border border-line px-4 font-bold">
+      <button type="button" onClick={usarGps} className="tap rounded-caja border border-line px-4 font-bold">
         {buscando ? 'Buscando…' : '📍 Estoy en mi negocio, usar mi ubicación'}
       </button>
-      <Suspense fallback={<div className="h-72 rounded-r bg-block" />}>
+      <Suspense fallback={<div className="h-72 rounded-caja bg-block" />}>
         <SelectorUbicacion punto={punto} alCambiar={alCambiar} />
       </Suspense>
       {!b.ubicacion && <p className="text-sm text-red">Mueve el pin para confirmar la ubicación.</p>}
@@ -424,7 +424,7 @@ function PasoHorario({ horarios, alCambiar }: { horarios: Horario[]; alCambiar: 
                     aria-label={`${DIAS[dia]}: abre`}
                     value={f.abre}
                     onChange={(e) => ponerDia(dia, franjas.map((x, j) => (j === i ? { ...x, abre: e.target.value } : x)))}
-                    className="tap rounded-r border border-line bg-bg px-2"
+                    className="tap rounded-caja border border-line bg-bg px-2"
                   />
                   a
                   <input
@@ -432,7 +432,7 @@ function PasoHorario({ horarios, alCambiar }: { horarios: Horario[]; alCambiar: 
                     aria-label={`${DIAS[dia]}: cierra`}
                     value={f.cierra}
                     onChange={(e) => ponerDia(dia, franjas.map((x, j) => (j === i ? { ...x, cierra: e.target.value } : x)))}
-                    className="tap rounded-r border border-line bg-bg px-2"
+                    className="tap rounded-caja border border-line bg-bg px-2"
                   />
                   {i === 1 && (
                     <button type="button" onClick={() => ponerDia(dia, franjas.slice(0, 1))} className="tap text-sm text-muted underline">
