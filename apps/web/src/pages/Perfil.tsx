@@ -1,11 +1,13 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { CatalogoNegocio, DialogoCarrito } from '../components/CatalogoNegocio'
 import { Dialogo } from '../components/Dialogo'
 import { CLAVE_QUE_PEDIRIA } from '../components/ListaEspera'
-import { ApiError, apiEnviar, apiGet, type NegocioDetalle, type Punto, type ReporteEntrada } from '../lib/api'
+import { ApiError, apiEnviar, apiGet, type Catalogo, type NegocioDetalle, type Punto, type ReporteEntrada } from '../lib/api'
+import { resumenCarrito, useCarrito } from '../lib/carrito'
 import { registrarEvento } from '../lib/eventos'
-import { formatoDistancia } from '../lib/formato'
+import { formatoCOP, formatoDistancia } from '../lib/formato'
 import { DIAS, diaHoy, emojiCategoria, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
 import { rutaAPie } from '../lib/ruta'
 import { useBrujula } from '../lib/useUbicacion'
@@ -69,6 +71,13 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
   const [copiado, setCopiado] = useState(false)
   const emoji = emojiCategoria(n.categoria.slug)
   const llegar = useComoLlegar(n.ubicacion)
+  const catalogo = useQuery({
+    queryKey: ['catalogo', n.slug],
+    queryFn: () => apiGet<Catalogo>(`/negocios/${encodeURIComponent(n.slug)}/catalogo`),
+  })
+  const { carrito, poner, vaciar } = useCarrito(n.id)
+  const [verCarrito, setVerCarrito] = useState(false)
+  const resumen = resumenCarrito(catalogo.data, carrito)
 
   async function compartir() {
     const url = `${location.origin}/n/${n.slug}`
@@ -124,6 +133,10 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
             </a>
           )}
         </div>
+
+        {catalogo.data && catalogo.data.items.length > 0 && (
+          <CatalogoNegocio n={n} catalogo={catalogo.data} carrito={carrito} poner={poner} />
+        )}
 
         <section className="tarjeta mt-5 overflow-hidden" aria-labelledby="titulo-donde">
           <div className="flex items-start justify-between gap-3 p-4">
@@ -231,18 +244,40 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               <span aria-hidden="true">💬</span> WhatsApp
             </a>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              registrarEvento('click_pedir_mandado', n.id)
-              setModalMandado(true)
-            }}
-            className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
-          >
-            🛵 Pedir mandado
-          </button>
+          {resumen.unidades > 0 ? (
+            <button
+              type="button"
+              onClick={() => setVerCarrito(true)}
+              className="entra tap flex flex-[1.3] items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
+            >
+              🛒 Apartar ({resumen.unidades})
+              {resumen.total > 0 && <span className="font-mono text-sm">· {formatoCOP(resumen.total)}</span>}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                registrarEvento('click_pedir_mandado', n.id)
+                setModalMandado(true)
+              }}
+              className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
+            >
+              🛵 Pedir mandado
+            </button>
+          )}
         </div>
       </div>
+
+      {verCarrito && catalogo.data && (
+        <DialogoCarrito
+          n={n}
+          catalogo={catalogo.data}
+          carrito={carrito}
+          poner={poner}
+          vaciar={vaciar}
+          alCerrar={() => setVerCarrito(false)}
+        />
+      )}
 
       {modalMandado && <ModalProximamente nombre={n.nombre} alCerrar={() => setModalMandado(false)} />}
       {modalReporte && <ModalReportar negocioId={n.id} alCerrar={() => setModalReporte(false)} />}

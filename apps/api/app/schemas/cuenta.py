@@ -93,6 +93,7 @@ class MiNegocio(BaseModel):
     motivo_rechazo: str | None
     categoria: str
     barrio: BarrioCorto | None
+    apartados_pendientes: int = Field(default=0, description="Apartados por confirmar")
 
 
 class Foto(BaseModel):

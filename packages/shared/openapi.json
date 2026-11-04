@@ -621,6 +621,818 @@
         }
       }
     },
+    "/api/v1/negocios/{id_o_slug}/catalogo": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Catalogo Publico",
+        "description": "Productos y servicios visibles de un negocio activo.",
+        "operationId": "catalogo_publico_api_v1_negocios__id_o_slug__catalogo_get",
+        "parameters": [
+          {
+            "name": "id_o_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id O Slug"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalogo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/catalogo": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Mi Catalogo",
+        "description": "Todo el catálogo, incluidos los ítems ocultos.",
+        "operationId": "mi_catalogo_api_v1_mis_negocios__negocio_id__catalogo_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalogo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/secciones": {
+      "post": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Crear Seccion",
+        "operationId": "crear_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeccionEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Seccion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/secciones/{seccion_id}": {
+      "put": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Editar Seccion",
+        "operationId": "editar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "seccion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Seccion Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeccionEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Seccion"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Borrar Seccion",
+        "operationId": "borrar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "seccion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Seccion Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items": {
+      "post": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Crear Item",
+        "description": "Producto o servicio nuevo. La foto (opcional) la sube la web a `negocio-fotos/{id}/catalogo/`.",
+        "operationId": "crear_item_api_v1_mis_negocios__negocio_id__catalogo_items_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Item"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items/{item_id}": {
+      "put": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Editar Item",
+        "operationId": "editar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Item"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Borrar Item",
+        "operationId": "borrar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FotoBorrada"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items/{item_id}/stock": {
+      "post": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Ajustar Stock",
+        "description": "Suma o resta unidades sin abrir el formulario (llegó mercancía, se vendió en la tienda).",
+        "operationId": "ajustar_stock_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__stock_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioStock"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Item"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/apartados": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Apartados Del Negocio",
+        "description": "Apartados que recibió el negocio; `abiertos` = pendientes, confirmados y listos.",
+        "operationId": "apartados_del_negocio_api_v1_mis_negocios__negocio_id__apartados_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "abiertos",
+                    "pendiente",
+                    "confirmado",
+                    "listo",
+                    "entregado",
+                    "cancelado"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Estado"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Apartado"
+                  },
+                  "title": "Response Apartados Del Negocio Api V1 Mis Negocios  Negocio Id  Apartados Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-negocios/{negocio_id}/apartados/{apartado_id}/estado": {
+      "post": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Cambiar Estado Apartado",
+        "description": "Confirmar descuenta el stock; cancelar un apartado confirmado lo devuelve.",
+        "operationId": "cambiar_estado_apartado_api_v1_mis_negocios__negocio_id__apartados__apartado_id__estado_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "apartado_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Apartado Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioEstadoApartado"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apartado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/negocios/{negocio_id}/apartados": {
+      "post": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Apartar",
+        "description": "El vecino aparta lo de su carrito. Se paga en la tienda al recoger.",
+        "operationId": "apartar_api_v1_negocios__negocio_id__apartados_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApartadoEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apartado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mis-apartados": {
+      "get": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Mis Apartados",
+        "operationId": "mis_apartados_api_v1_mis_apartados_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Apartado"
+                  },
+                  "type": "array",
+                  "title": "Response Mis Apartados Api V1 Mis Apartados Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/mis-apartados/{apartado_id}/cancelar": {
+      "post": {
+        "tags": [
+          "catalogo"
+        ],
+        "summary": "Cancelar Apartado",
+        "operationId": "cancelar_apartado_api_v1_mis_apartados__apartado_id__cancelar_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "apartado_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Apartado Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Cancelacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Apartado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/eventos": {
       "post": {
         "tags": [
@@ -1491,6 +2303,218 @@
   },
   "components": {
     "schemas": {
+      "Apartado": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "codigo": {
+            "type": "string",
+            "title": "Codigo",
+            "description": "Código corto para decirlo por WhatsApp"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "pendiente",
+              "confirmado",
+              "listo",
+              "entregado",
+              "cancelado"
+            ],
+            "title": "Estado"
+          },
+          "negocio": {
+            "$ref": "#/components/schemas/NegocioDelApartado"
+          },
+          "vecino": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VecinoDelApartado"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Solo lo ve el negocio, para saber a quién entregarle"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApartadoItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "description": "Suma de los ítems con precio, en pesos COP"
+          },
+          "hay_sin_precio": {
+            "type": "boolean",
+            "title": "Hay Sin Precio"
+          },
+          "motivo_cancelacion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo Cancelacion"
+          },
+          "cancelado_por": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "vecino",
+                  "negocio"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancelado Por"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "codigo",
+          "estado",
+          "negocio",
+          "items",
+          "nota",
+          "total",
+          "hay_sin_precio",
+          "motivo_cancelacion",
+          "cancelado_por",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Apartado"
+      },
+      "ApartadoEntrada": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ApartadoItemEntrada"
+            },
+            "type": "array",
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Items"
+          },
+          "nota": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nota"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "ApartadoEntrada"
+      },
+      "ApartadoItem": {
+        "properties": {
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "precio": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio"
+          },
+          "cantidad": {
+            "type": "integer",
+            "title": "Cantidad"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "nombre",
+          "precio",
+          "cantidad"
+        ],
+        "title": "ApartadoItem"
+      },
+      "ApartadoItemEntrada": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Item Id"
+          },
+          "cantidad": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Cantidad"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_id",
+          "cantidad"
+        ],
+        "title": "ApartadoItemEntrada"
+      },
       "Barrio": {
         "properties": {
           "id": {
@@ -1548,6 +2572,37 @@
           "nombre"
         ],
         "title": "BarrioCorto"
+      },
+      "CambioEstadoApartado": {
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "confirmado",
+              "listo",
+              "entregado",
+              "cancelado"
+            ],
+            "title": "Estado"
+          },
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "estado"
+        ],
+        "title": "CambioEstadoApartado"
       },
       "CambioEstadoNegocio": {
         "properties": {
@@ -1610,6 +2665,65 @@
           "estado"
         ],
         "title": "CambioReporte"
+      },
+      "CambioStock": {
+        "properties": {
+          "delta": {
+            "type": "integer",
+            "maximum": 100000.0,
+            "minimum": -100000.0,
+            "title": "Delta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "delta"
+        ],
+        "title": "CambioStock",
+        "description": "Ajuste rápido desde el panel: suma o resta unidades (no baja de 0)."
+      },
+      "Cancelacion": {
+        "properties": {
+          "motivo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Motivo"
+          }
+        },
+        "type": "object",
+        "title": "Cancelacion"
+      },
+      "Catalogo": {
+        "properties": {
+          "secciones": {
+            "items": {
+              "$ref": "#/components/schemas/Seccion"
+            },
+            "type": "array",
+            "title": "Secciones"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Ordenados por sección y orden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "secciones",
+          "items"
+        ],
+        "title": "Catalogo"
       },
       "Categoria": {
         "properties": {
@@ -2026,6 +3140,27 @@
         ],
         "title": "Foto"
       },
+      "FotoBorrada": {
+        "properties": {
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url",
+            "description": "Foto que la web debe quitar del almacenamiento"
+          }
+        },
+        "type": "object",
+        "required": [
+          "foto_url"
+        ],
+        "title": "FotoBorrada"
+      },
       "FotoEntrada": {
         "properties": {
           "url": {
@@ -2284,6 +3419,205 @@
         ],
         "title": "InscritoEspera"
       },
+      "Item": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "seccion_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion Id"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "producto",
+              "servicio"
+            ],
+            "title": "Tipo"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "precio": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio",
+            "description": "Pesos COP; null = preguntar el precio"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          },
+          "stock": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock",
+            "description": "Unidades disponibles; null = no se controla"
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "seccion_id",
+          "tipo",
+          "nombre",
+          "descripcion",
+          "precio",
+          "foto_url",
+          "stock",
+          "visible",
+          "orden"
+        ],
+        "title": "Item"
+      },
+      "ItemEntrada": {
+        "properties": {
+          "seccion_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seccion Id"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "producto",
+              "servicio"
+            ],
+            "title": "Tipo",
+            "default": "producto"
+          },
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "precio": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio"
+          },
+          "foto_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Foto Url"
+          },
+          "stock": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stock"
+          },
+          "visible": {
+            "type": "boolean",
+            "title": "Visible",
+            "default": true
+          },
+          "orden": {
+            "type": "integer",
+            "maximum": 999.0,
+            "minimum": 0.0,
+            "title": "Orden",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "ItemEntrada"
+      },
       "ListaEsperaEntrada": {
         "properties": {
           "rol": {
@@ -2503,6 +3837,12 @@
                 "type": "null"
               }
             ]
+          },
+          "apartados_pendientes": {
+            "type": "integer",
+            "title": "Apartados Pendientes",
+            "description": "Apartados por confirmar",
+            "default": 0
           }
         },
         "type": "object",
@@ -2642,6 +3982,42 @@
           "created_at"
         ],
         "title": "NegocioAdmin"
+      },
+      "NegocioDelApartado": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "nombre",
+          "whatsapp"
+        ],
+        "title": "NegocioDelApartado"
       },
       "NegocioDetalle": {
         "properties": {
@@ -3213,6 +4589,52 @@
         ],
         "title": "ReporteEntrada"
       },
+      "Seccion": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "orden": {
+            "type": "integer",
+            "title": "Orden"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nombre",
+          "orden"
+        ],
+        "title": "Seccion"
+      },
+      "SeccionEntrada": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Nombre"
+          },
+          "orden": {
+            "type": "integer",
+            "maximum": 999.0,
+            "minimum": 0.0,
+            "title": "Orden",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "SeccionEntrada"
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -3252,6 +4674,38 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VecinoDelApartado": {
+        "properties": {
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre"
+          },
+          "celular": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Celular"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "celular"
+        ],
+        "title": "VecinoDelApartado"
       }
     },
     "securitySchemes": {

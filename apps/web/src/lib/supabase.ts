@@ -26,8 +26,15 @@ export const urlRegreso = () => `${location.origin}/cuenta`
 const BUCKET_FOTOS = 'negocio-fotos'
 
 /** Sube una foto a Supabase Storage con la sesión del dueño y devuelve su URL pública. */
-export async function subirFoto(negocioId: string, foto: Blob, token: string): Promise<string> {
-  const ruta = `${negocioId}/${crypto.randomUUID()}.${foto.type === 'image/webp' ? 'webp' : 'jpg'}`
+export async function subirFoto(
+  negocioId: string,
+  foto: Blob,
+  token: string,
+  /** Subcarpeta dentro del negocio, p. ej. `catalogo` para las fotos de productos. */
+  carpeta?: string,
+): Promise<string> {
+  const archivo = `${crypto.randomUUID()}.${foto.type === 'image/webp' ? 'webp' : 'jpg'}`
+  const ruta = carpeta ? `${negocioId}/${carpeta}/${archivo}` : `${negocioId}/${archivo}`
   const res = await fetch(`${URL_SUPABASE}/storage/v1/object/${BUCKET_FOTOS}/${ruta}`, {
     method: 'POST',
     headers: { apikey: LLAVE_PUBLICA ?? '', Authorization: `Bearer ${token}`, 'Content-Type': foto.type, 'x-upsert': 'false' },
