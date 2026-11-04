@@ -150,7 +150,8 @@ def _usuario(
         "insert into usuarios (id, email) values (%s, %s) on conflict (id) do nothing", (uid, email)
     )
     conn.execute(
-        "update usuarios set nombre = %s, celular = %s, acepta_datos_at = coalesce(acepta_datos_at, now())"
+        "update usuarios set nombre = %s, celular = %s, acepta_datos_at = coalesce(acepta_datos_at, now()),"
+        " perfil_completo_at = coalesce(perfil_completo_at, now())"
         " where id = %s",
         (nombre, celular, uid),
     )

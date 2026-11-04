@@ -15,6 +15,15 @@
   --red: #c8462f;
   --focus: #1e6b4e;
   --r: 14px;
+  /* Sombras en dos capas (contacto + ambiente), teñidas del verde de la marca. */
+  --sombra-1: 0 1px 2px rgb(22 38 31 / 0.06), 0 2px 8px rgb(22 38 31 / 0.05);
+  --sombra-2: 0 2px 4px rgb(22 38 31 / 0.06), 0 12px 32px rgb(22 38 31 / 0.12);
+  /* Curvas de movimiento (criterios de Emil Kowalski): entrar/salir con ease-out fuerte,
+     mover en pantalla con ease-in-out. Nunca ease-in en la interfaz. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-rebote: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-cajon: cubic-bezier(0.32, 0.72, 0, 1);
   color-scheme: light;
 }
 
@@ -30,6 +39,8 @@
     --green-ink: #0b1611;
     --red: #ee7158;
     --focus: #f4b635;
+    --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+    --sombra-2: 0 4px 8px rgb(0 0 0 / 0.4), 0 16px 40px rgb(0 0 0 / 0.5);
     color-scheme: dark;
   }
 }
@@ -45,6 +56,8 @@
   --green-ink: #0b1611;
   --red: #ee7158;
   --focus: #f4b635;
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.03);
+  --sombra-2: 0 4px 8px rgb(0 0 0 / 0.4), 0 16px 40px rgb(0 0 0 / 0.5);
   color-scheme: dark;
 }
 
@@ -60,7 +73,9 @@
   --color-sun: var(--sun);
   --color-sun-ink: var(--sun-ink);
   --color-red: var(--red);
-  --radius-r: var(--r);
+  --radius-caja: var(--r);
+  --shadow-1: var(--sombra-1);
+  --shadow-2: var(--sombra-2);
   --font-display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
   --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
@@ -83,8 +98,275 @@
   }
 }
 
+@layer base {
+  /* Respuesta al presionar: todo lo que se toca se hunde un poco (160 ms, nunca menos de 0.97). */
+  button,
+  a.tap,
+  summary {
+    transition:
+      transform 160ms var(--ease-out),
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease,
+      opacity 150ms ease;
+  }
+  button:not(:disabled):active,
+  a.tap:active,
+  summary:active {
+    transform: scale(0.97);
+  }
+
+  /* Modales: entran desde 0.96 con opacidad (nunca desde scale(0)), origen al centro. */
+  dialog {
+    transition:
+      opacity 200ms var(--ease-out),
+      transform 200ms var(--ease-out);
+  }
+  dialog::backdrop {
+    transition: opacity 200ms ease;
+  }
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+    }
+    dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+
+  /* Barras de progreso: se llenan una vez al aparecer (explican la meta, pueden ir más lento). */
+  [role='progressbar'] > div {
+    transform-origin: left;
+    transition: transform 700ms var(--ease-out);
+  }
+  @starting-style {
+    [role='progressbar'] > div {
+      transform: scaleX(0);
+    }
+  }
+
+  /* Lista que se está actualizando: se atenúa en vez de desaparecer. */
+  [aria-busy='true'] > * {
+    opacity: 0.6;
+    transition: opacity 150ms ease;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes celebrar {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-12deg);
+  }
+}
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Contenido que aparece de forma ocasional (pantallas de éxito, avisos). */
+@utility entra {
+  animation: aparecer 260ms var(--ease-out) both;
+}
+/* Momentos raros que merecen deleite: el 🎉 al terminar un registro. */
+@utility celebra {
+  display: inline-block;
+  animation: celebrar 520ms var(--ease-rebote) 80ms both;
+}
+/* Hijos que entran escalonados 50 ms; decorativo, nunca bloquea el uso. */
+@utility escalonado {
+  & > * {
+    animation: aparecer 320ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 50ms);
+  }
+}
+/* Esqueleto de carga: movimiento constante, por eso lineal. */
+@utility esqueleto {
+  background: linear-gradient(90deg, var(--block) 0%, var(--line) 50%, var(--block) 100%);
+  background-size: 200% 100%;
+  animation: brillo 1.4s linear infinite;
+}
+
+/* Movimiento reducido: sin desplazamientos ni escalas; se conservan opacidad y color. */
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  a.tap:active,
+  summary:active {
+    transform: none;
+  }
+  @starting-style {
+    dialog[open] {
+      transform: none;
+    }
+    [role='progressbar'] > div {
+      transform: none;
+    }
+  }
+  .entra,
+  .celebra,
+  .escalonado > * {
+    animation-name: aparecer-suave;
+  }
+  .esqueleto {
+    animation: none;
+  }
+}
+@keyframes aparecer-suave {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Tarjeta: la superficie básica de la app. */
+@utility tarjeta {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--sombra-1);
+}
+
+/* Barra de acciones fija abajo en el celular, respetando la zona segura del iPhone. */
+@utility barra-inferior {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
 @utility tap {
   /* Objetivo táctil mínimo de 44 px (accesibilidad AA, uso con una mano). */
   min-height: 44px;
   min-width: 44px;
+}
+
+/* ── Mapa (Leaflet) ── */
+.pin {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: var(--surface);
+  border: 3px solid var(--pin, var(--red));
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+  font-size: 17px;
+  line-height: 1;
+}
+.pin > span {
+  /* el emoji queda derecho aunque la gota esté girada */
+  transform: rotate(45deg);
+}
+.pin-destacado {
+  border-color: var(--sun);
+  box-shadow: 0 0 0 3px var(--sun-ink), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+/* "Estás aquí": punto azul con borde blanco y un halo que respira (movimiento constante → lineal).
+   Si se sabe el rumbo, el punto se vuelve una flecha que gira hacia donde miras. */
+.yo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+}
+.yo::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2f7cf6;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  grid-area: 1 / 1;
+}
+.yo::after {
+  content: '';
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #2f7cf6;
+  opacity: 0.35;
+  animation: respirar 2s linear infinite;
+  grid-area: 1 / 1;
+  z-index: -1;
+}
+.yo-flecha {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: rotate(var(--rumbo, 0deg)) scale(0.6);
+  transition:
+    transform 200ms var(--ease-out),
+    opacity 150ms ease;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 0.35));
+}
+.yo[data-rumbo='si']::before {
+  opacity: 0;
+}
+.yo[data-rumbo='si'] .yo-flecha {
+  opacity: 1;
+  transform: rotate(var(--rumbo, 0deg));
+}
+@keyframes respirar {
+  from {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .yo::after {
+    animation: none;
+  }
+}
+.cluster {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--green-ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 700;
+  border: 3px solid var(--surface);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
+}
+.leaflet-container {
+  font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  background: var(--block);
+}
+.leaflet-control-attribution {
+  font-size: 11px;
+}
+/* Hoja de resultados en el celular: abajo deja ver el 45 % inferior; arriba tapa el mapa.
+   Se mueve con transform (no con altura) y la curva de cajón de iOS. */
+@media (width < 48rem) {
+  .hoja {
+    transform: translateY(55%);
+    transition: transform 380ms var(--ease-cajon);
+    will-change: transform;
+  }
+  .hoja[data-expandida='true'] {
+    transform: translateY(0);
+  }
+}
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .hoja {
+    transition-duration: 0ms;
+  }
+}
+
+/* En el celular la hoja de resultados monta 16 px sobre el mapa: la atribución sube para seguir visible. */
+@media (width < 48rem) {
+  .mapa-con-hoja .leaflet-bottom {
+    margin-bottom: 16px;
+  }
 }

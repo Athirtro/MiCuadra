@@ -27,8 +27,34 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Shell en caché; el API nunca se cachea aquí (Fase 1 decide qué datos guardar offline).
+        cleanupOutdatedCaches: true,
         navigateFallbackDenylist: [/^\/api\//],
+        // Offline básico (SPEC §13): el último mapa consultado se ve sin conexión.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/tile\.openstreetmap\.org\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mapa-teselas',
+              expiration: { maxEntries: 400, maxAgeSeconds: 7 * 24 * 3600 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            urlPattern: ({ url, request }) => url.pathname.startsWith('/api/v1/') && request.method === 'GET',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 60, maxAgeSeconds: 24 * 3600 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/placehold\.co\//,
+            handler: 'CacheFirst',
+            options: { cacheName: 'fotos', expiration: { maxEntries: 150, maxAgeSeconds: 7 * 24 * 3600 } },
+          },
+        ],
       },
     }),
   ],
@@ -38,7 +64,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/test/setup.tsx'],
     css: false,
   },
 })

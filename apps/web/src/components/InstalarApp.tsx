@@ -45,7 +45,7 @@ export function InstalarApp() {
     return (
       <button
         type="button"
-        className="tap inline-flex items-center justify-center gap-2 rounded-r bg-green px-5 font-bold text-green-ink"
+        className="tap inline-flex items-center justify-center gap-2 rounded-caja bg-green px-5 font-bold text-green-ink"
         onClick={async () => {
           await evento.prompt()
           const { outcome } = await evento.userChoice

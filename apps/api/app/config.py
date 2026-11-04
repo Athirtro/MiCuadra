@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     supabase_jwt_audience: str = "authenticated"
 
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
+    # URL pública de la web (enlaces al compartir). Vacía → el primer origen https de CORS.
+    sitio_url: str = ""
 
     # Feature flags (sección 4 de SPEC.md). En Fase 2+ también podrán leerse de la tabla `config`.
     mandados_activos: bool = False
@@ -35,6 +37,8 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def usar_driver_psycopg(cls, v: str) -> str:
+        # Tolera espacios y comillas que se cuelan al pegar la URL en un panel.
+        v = v.strip().strip("'\"").strip()
         # Supabase y Render entregan `postgres://` o `postgresql://`; SQLAlchemy necesita el driver.
         for prefijo in ("postgres://", "postgresql://"):
             if v.startswith(prefijo):
@@ -47,6 +51,13 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [o.strip() for o in v.split(",") if o.strip()]
         return v
+
+    @property
+    def url_web(self) -> str:
+        if self.sitio_url:
+            return self.sitio_url.rstrip("/")
+        https = [o for o in self.cors_origins if o.startswith("https://")]
+        return (https or self.cors_origins or ["http://localhost:5173"])[0].rstrip("/")
 
 
 @lru_cache

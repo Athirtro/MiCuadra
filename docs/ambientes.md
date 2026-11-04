@@ -1,5 +1,21 @@
 # Ambientes
 
+## Estado actual (noviembre 2026)
+
+Por ahora hay **un solo ambiente en internet**, que hace de producción mientras se arman staging y prod por separado:
+
+| Pieza | Dónde | Notas |
+|---|---|---|
+| Web | https://micuadra-lyart.vercel.app (proyecto Vercel `micuadra`) | `VITE_API_URL` en Vercel. Se publica con `vercel deploy --prod` desde la raíz del repo |
+| API | https://micuadra-api.onrender.com (servicio Render `micuadra-api`, plan Free, Virginia) | Repositorio público, rama `fase-1-directorio`, carpeta `apps/api`. **No se redespliega solo**: botón *Manual Deploy* en Render |
+| Base | Supabase `rnrtzncnmmjdtadsqwvn` (us-east-1) | Conexión por *Session pooler*. Tiene cargados los datos `[DEMO]` (`make seed-clean` los borra) |
+
+Render Free se duerme tras ~15 min sin visitas: la primera carga después tarda hasta ~50 s.
+Para que Render y Vercel se publiquen solos con cada push, la cuenta dueña del repo (`Athirtro`)
+tiene que darles acceso a `Athirtro/MiCuadra` desde GitHub.
+
+## Plan de ambientes
+
 | Ambiente | Web (Vercel) | API (Render) | Base de datos (Supabase) | Rama |
 |---|---|---|---|---|
 | **dev** | `localhost:5173` | `localhost:8000` | Postgres local (`micuadra`) | cualquiera |
