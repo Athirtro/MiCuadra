@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Link, Navigate, NavLink, Route, Routes } from 'react-router'
+import { BotonVolver, NavInferior } from './components/Navegacion'
 import { registrarSesion } from './lib/eventos'
 import { usePerfil } from './lib/sesion'
 import { authDisponible } from './lib/supabase'
@@ -31,10 +32,13 @@ export function App() {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-[1100] border-b border-line bg-surface/90 backdrop-blur-md">
         <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link to="/" className="tap flex items-center gap-2 font-display text-xl font-black">
-            <img src="/icono.svg" alt="" width={28} height={28} />
-            MiCuadra
-          </Link>
+          <div className="flex items-center gap-1">
+            <BotonVolver />
+            <Link to="/" className="tap flex items-center gap-2 font-display text-xl font-black">
+              <img src="/icono.svg" alt="" width={28} height={28} />
+              MiCuadra
+            </Link>
+          </div>
           <div className="flex items-center gap-1">
             <NavLink
               to="/conoce"
@@ -42,11 +46,12 @@ export function App() {
             >
               Conoce MiCuadra
             </NavLink>
-            {authDisponible && <BotonCuenta />}
+            {/* En el celular la cuenta está en el menú inferior. */}
+            <div className="max-md:hidden">{authDisponible && <BotonCuenta />}</div>
           </div>
         </nav>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 pb-[var(--nav)]">
         <Suspense fallback={<p className="p-4 text-muted">Cargando…</p>}>
         <Routes>
           <Route path="/" element={<Mapa />} />
@@ -72,6 +77,7 @@ export function App() {
         </Routes>
         </Suspense>
       </main>
+      <NavInferior />
     </div>
   )
 }

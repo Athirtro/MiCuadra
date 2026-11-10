@@ -22,6 +22,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('Mapa del barrio (/)', () => {
+  it('el menú inferior lleva a las pantallas principales y no sale en el perfil', async () => {
+    gpsNegado()
+    apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    const { unmount } = renderEn('/')
+    const menu = await screen.findByRole('navigation', { name: 'Menú principal' })
+    expect(within(menu).getByRole('link', { name: 'Mapa' })).toHaveAttribute('aria-current', 'page')
+    expect(within(menu).getByRole('link', { name: 'Apartados' })).toHaveAttribute('href', '/mis-apartados')
+    expect(screen.queryByRole('button', { name: 'Volver' })).not.toBeInTheDocument()
+    unmount()
+
+    apiFalsa({ '/negocios/': DETALLE })
+    renderEn('/n/panaderia-el-trigal')
+    expect(await screen.findByRole('heading', { name: 'Panadería El Trigal' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument()
+  })
+
   it('"Ir" muestra la tarjeta del camino y, sin ubicación, pide activarla', async () => {
     gpsNegado()
     apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
@@ -88,7 +105,7 @@ describe('Mapa del barrio (/)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Panadería/, pressed: false }))
     fireEvent.click(screen.getByRole('button', { name: /Abierto ahora/, pressed: false }))
-    fireEvent.click(screen.getByRole('button', { name: '5 cuadras' }))
+    fireEvent.click(screen.getByRole('radio', { name: '5 cuadras' }))
 
     await waitFor(() => {
       const ultima = String(fetchFalso.mock.calls.at(-1)?.[0])

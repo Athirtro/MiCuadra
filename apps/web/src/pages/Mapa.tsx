@@ -106,7 +106,7 @@ export function Mapa() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-57px)] flex-col md:grid md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
+    <div className="flex h-[calc(100dvh-57px-var(--nav))] flex-col md:grid md:grid-cols-[380px_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)]">
       {/* Filtros */}
       <div className="relative z-[1002] flex flex-col gap-2 border-b border-line bg-surface px-4 py-3 shadow-1 md:col-span-2">
         <label>
@@ -134,11 +134,21 @@ export function Mapa() {
           <Chip activo={abiertoAhora} onClick={() => setAbiertoAhora(!abiertoAhora)}>
             🟢 Abierto ahora
           </Chip>
-          {RADIOS.map((r) => (
-            <Chip key={r.metros} activo={radioM === r.metros} onClick={() => setRadioM(r.metros)}>
-              {r.cuadras} cuadras
-            </Chip>
-          ))}
+          <div className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-surface p-1" role="radiogroup" aria-label="¿Qué tan cerca?">
+            <span className="pl-2 pr-1 text-xs font-bold text-muted">Hasta</span>
+            {RADIOS.map((r) => (
+              <button
+                key={r.metros}
+                type="button"
+                role="radio"
+                aria-checked={radioM === r.metros}
+                onClick={() => setRadioM(r.metros)}
+                className={`h-9 rounded-full px-3 text-sm font-bold whitespace-nowrap ${radioM === r.metros ? 'bg-green text-green-ink' : 'text-ink'}`}
+              >
+                {r.cuadras} cuadras
+              </button>
+            ))}
+          </div>
           {ubicacion.estado === 'barrio' && barrios.data && (
             <select
               className="tap shrink-0 rounded-caja border border-line bg-bg px-2"

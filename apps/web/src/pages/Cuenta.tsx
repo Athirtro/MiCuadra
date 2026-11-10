@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { apiGet, type MiNegocio } from '../lib/api'
 import { usePerfil, useSesion } from '../lib/sesion'
+import { guardarTema, leerTema, type Tema } from '../lib/tema'
 import { leerVolver, olvidarVolver } from '../lib/volver'
 
 const ESTADOS: Record<MiNegocio['estado'], { texto: string; clase: string }> = {
@@ -143,6 +144,8 @@ export function Cuenta() {
         </Link>
       )}
 
+      <Apariencia />
+
       <div className="flex flex-wrap gap-2">
         <Link to="/" className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold">
           Ir al mapa
@@ -167,4 +170,38 @@ export function Cargando() {
 function Volver({ a }: { a: string }) {
   useEffect(olvidarVolver, [])
   return <Navigate to={a} replace />
+}
+
+const TEMAS: { valor: Tema; texto: string }[] = [
+  { valor: 'claro', texto: '☀️ Claro' },
+  { valor: 'oscuro', texto: '🌙 Oscuro' },
+  { valor: 'auto', texto: 'Como el celular' },
+]
+
+function Apariencia() {
+  const [tema, setTema] = useState<Tema>(leerTema)
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 id="titulo-apariencia" className="text-lg font-black">
+        Apariencia
+      </h2>
+      <div className="grid grid-cols-3 gap-1 rounded-caja bg-block p-1" role="radiogroup" aria-labelledby="titulo-apariencia">
+        {TEMAS.map((t) => (
+          <button
+            key={t.valor}
+            type="button"
+            role="radio"
+            aria-checked={tema === t.valor}
+            onClick={() => {
+              guardarTema(t.valor)
+              setTema(t.valor)
+            }}
+            className={`tap rounded-[10px] text-sm font-bold ${tema === t.valor ? 'bg-surface shadow-1' : 'text-muted'}`}
+          >
+            {t.texto}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
