@@ -8,7 +8,7 @@ from sqlalchemy import RowMapping, text
 from sqlalchemy.orm import Session
 
 from app.errors import ApiError
-from app.schemas.cuenta import Foto, MiNegocio, NegocioEntrada, Perfil, PerfilEntrada
+from app.schemas.cuenta import Foto, MiNegocio, NegocioBase, NegocioEntrada, Perfil, PerfilEntrada
 from app.schemas.directorio import BarrioCorto
 
 # Un negocio nuevo queda en el barrio piloto más cercano si está a menos de esta distancia.
@@ -134,18 +134,16 @@ def _slug_libre(db: Session, base: str) -> str:
     return slug
 
 
-def crear_negocio(db: Session, dueno_id: UUID, datos: NegocioEntrada) -> MiNegocio:
-    total = db.execute(
-        text("select count(*) from negocios where dueno_id = :id and deleted_at is null"),
-        {"id": dueno_id},
-    ).scalar_one()
-    if total >= MAX_NEGOCIOS_POR_DUENO:
-        raise ApiError(
-            422,
-            "limite_negocios",
-            "Ya tienes muchos negocios registrados. Escríbenos si necesitas más.",
-        )
-
+def insertar_negocio(
+    db: Session,
+    datos: NegocioBase,
+    *,
+    whatsapp: str | None,
+    dueno_id: UUID | None,
+    estado: str,
+    por_admin: bool,
+) -> UUID:
+    """Inserta el negocio con sus horarios (sin commit). La usan el dueño y la carga del equipo."""
     categoria_id = db.execute(
         text("select id from categorias where slug = :slug and activa"), {"slug": datos.categoria}
     ).scalar_one_or_none()
@@ -169,12 +167,12 @@ def crear_negocio(db: Session, dueno_id: UUID, datos: NegocioEntrada) -> MiNegoc
     )
     slug = _slug_libre(db, slugificar(f"{datos.nombre} {barrio['slug'] if barrio else 'pereira'}"))
 
-    negocio_id = db.execute(
+    negocio_id: UUID = db.execute(
         text(
             "insert into negocios (slug, nombre, categoria_id, descripcion, whatsapp, telefono,"
             " direccion_texto, barrio_id, ubicacion, estado, dueno_id, creado_por_admin)"
             " values (:slug, :nombre, :categoria, :descripcion, :whatsapp, :telefono, :direccion,"
-            " :barrio, st_point(:lng, :lat, 4326)::geography, 'pendiente', :dueno, false)"
+            " :barrio, st_point(:lng, :lat, 4326)::geography, :estado, :dueno, :por_admin)"
             " returning id"
         ),
         {
@@ -183,11 +181,13 @@ def crear_negocio(db: Session, dueno_id: UUID, datos: NegocioEntrada) -> MiNegoc
             "nombre": datos.nombre,
             "categoria": categoria_id,
             "descripcion": datos.descripcion or None,
-            "whatsapp": datos.whatsapp,
+            "whatsapp": whatsapp,
             "telefono": datos.telefono or None,
             "direccion": datos.direccion_texto,
             "barrio": barrio["id"] if barrio else None,
             "dueno": dueno_id,
+            "estado": estado,
+            "por_admin": por_admin,
         },
     ).scalar_one()
     for h in datos.horarios:
@@ -198,6 +198,24 @@ def crear_negocio(db: Session, dueno_id: UUID, datos: NegocioEntrada) -> MiNegoc
             ),
             {"id": negocio_id, "dia": h.dia_semana, "abre": h.abre, "cierra": h.cierra},
         )
+    return negocio_id
+
+
+def crear_negocio(db: Session, dueno_id: UUID, datos: NegocioEntrada) -> MiNegocio:
+    total = db.execute(
+        text("select count(*) from negocios where dueno_id = :id and deleted_at is null"),
+        {"id": dueno_id},
+    ).scalar_one()
+    if total >= MAX_NEGOCIOS_POR_DUENO:
+        raise ApiError(
+            422,
+            "limite_negocios",
+            "Ya tienes muchos negocios registrados. Escríbenos si necesitas más.",
+        )
+
+    negocio_id = insertar_negocio(
+        db, datos, whatsapp=datos.whatsapp, dueno_id=dueno_id, estado="pendiente", por_admin=False
+    )
     db.commit()
     return next(n for n in listar_mis_negocios(db, dueno_id) if n.id == negocio_id)
 

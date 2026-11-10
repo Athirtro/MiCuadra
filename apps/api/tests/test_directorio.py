@@ -43,7 +43,11 @@ def test_categorias_en_orden(api: TestClient) -> None:
     r = api.get(f"{V1}/categorias")
     assert r.status_code == 200
     slugs = [c["slug"] for c in r.json()]
-    assert slugs[:3] == ["tienda", "panaderia", "barberia"] and len(slugs) == 10
+    assert (
+        slugs[:3] == ["tienda", "panaderia", "barberia"]
+        and len(slugs) == 11
+        and "ferreteria" in slugs
+    )
 
 
 def test_barrios_salen_de_los_negocios_activos(api: TestClient, conn: psycopg.Connection) -> None:

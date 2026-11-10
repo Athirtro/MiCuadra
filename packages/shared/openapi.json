@@ -1579,6 +1579,51 @@
       }
     },
     "/api/v1/admin/negocios": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Crear Negocio",
+        "description": "El equipo carga un negocio que visitó (sin dueño todavía; el dueño lo reclama después).",
+        "operationId": "crear_negocio_api_v1_admin_negocios_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NegocioCargaEntrada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NegocioAdmin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": [
           "admin"
@@ -1693,6 +1738,53 @@
             }
           }
         }
+      }
+    },
+    "/api/v1/admin/negocios/lote": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Cargar Lote",
+        "description": "Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna.",
+        "operationId": "cargar_lote_api_v1_admin_negocios_lote_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoteEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoteResultado"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/admin/negocios/{negocio_id}/estado": {
@@ -3055,6 +3147,32 @@
         ],
         "title": "EntrevistaEntrada"
       },
+      "ErrorFila": {
+        "properties": {
+          "fila": {
+            "type": "integer",
+            "title": "Fila"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "mensajes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Mensajes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fila",
+          "nombre",
+          "mensajes"
+        ],
+        "title": "ErrorFila"
+      },
       "EventoEntrada": {
         "properties": {
           "tipo": {
@@ -3119,6 +3237,118 @@
           "anon_id"
         ],
         "title": "EventoEntrada"
+      },
+      "FilaCsv": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre",
+            "default": ""
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria",
+            "default": ""
+          },
+          "barrio": {
+            "type": "string",
+            "title": "Barrio",
+            "default": ""
+          },
+          "direccion": {
+            "type": "string",
+            "title": "Direccion",
+            "default": ""
+          },
+          "ubicacion": {
+            "type": "string",
+            "title": "Ubicacion",
+            "description": "«lat, lng» o un enlace de Google Maps",
+            "default": ""
+          },
+          "whatsapp": {
+            "type": "string",
+            "title": "Whatsapp",
+            "default": ""
+          },
+          "telefono": {
+            "type": "string",
+            "title": "Telefono",
+            "default": ""
+          },
+          "descripcion": {
+            "type": "string",
+            "title": "Descripcion",
+            "default": ""
+          },
+          "horario": {
+            "type": "string",
+            "title": "Horario",
+            "description": "Ej.: «lun-sab 7:00-19:00; dom 8:00-13:00»",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "FilaCsv",
+        "description": "Una fila de la plantilla, tal cual viene del archivo (todo texto)."
+      },
+      "FilaValida": {
+        "properties": {
+          "fila": {
+            "type": "integer",
+            "title": "Fila",
+            "description": "Número de fila en el archivo (la 1 es el encabezado)"
+          },
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "categoria": {
+            "type": "string",
+            "title": "Categoria"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio"
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp"
+          },
+          "franjas": {
+            "type": "integer",
+            "title": "Franjas",
+            "description": "Franjas de horario reconocidas"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fila",
+          "nombre",
+          "categoria",
+          "barrio",
+          "ubicacion",
+          "whatsapp",
+          "franjas"
+        ],
+        "title": "FilaValida"
       },
       "Foto": {
         "properties": {
@@ -3749,6 +3979,69 @@
         ],
         "title": "ListaNegocios"
       },
+      "LoteEntrada": {
+        "properties": {
+          "filas": {
+            "items": {
+              "$ref": "#/components/schemas/FilaCsv"
+            },
+            "type": "array",
+            "maxItems": 300,
+            "minItems": 1,
+            "title": "Filas"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activo",
+              "pendiente"
+            ],
+            "title": "Estado",
+            "default": "activo"
+          },
+          "simular": {
+            "type": "boolean",
+            "title": "Simular",
+            "description": "true = solo revisa, no crea nada",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "filas"
+        ],
+        "title": "LoteEntrada"
+      },
+      "LoteResultado": {
+        "properties": {
+          "validas": {
+            "items": {
+              "$ref": "#/components/schemas/FilaValida"
+            },
+            "type": "array",
+            "title": "Validas"
+          },
+          "errores": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorFila"
+            },
+            "type": "array",
+            "title": "Errores"
+          },
+          "creados": {
+            "type": "integer",
+            "title": "Creados",
+            "description": "0 si se simuló o si hubo errores: se crean todos o ninguno"
+          }
+        },
+        "type": "object",
+        "required": [
+          "validas",
+          "errores",
+          "creados"
+        ],
+        "title": "LoteResultado"
+      },
       "Meta": {
         "properties": {
           "valor": {
@@ -3983,6 +4276,107 @@
         ],
         "title": "NegocioAdmin"
       },
+      "NegocioCargaEntrada": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "categoria": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Categoria",
+            "description": "Slug de la categoría"
+          },
+          "telefono": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telefono"
+          },
+          "descripcion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 280
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Descripcion"
+          },
+          "direccion_texto": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Direccion Texto"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 60,
+                "minLength": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio",
+            "description": "Nombre del barrio como lo escribe el dueño; si no existe se crea"
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "horarios": {
+            "items": {
+              "$ref": "#/components/schemas/HorarioEntrada"
+            },
+            "type": "array",
+            "maxItems": 21,
+            "title": "Horarios"
+          },
+          "whatsapp": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^3\\d{9}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whatsapp"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "activo",
+              "pendiente"
+            ],
+            "title": "Estado",
+            "default": "activo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "categoria",
+          "direccion_texto",
+          "ubicacion"
+        ],
+        "title": "NegocioCargaEntrada",
+        "description": "Negocio que carga el equipo: el WhatsApp va solo si el dueño dio permiso."
+      },
       "NegocioDelApartado": {
         "properties": {
           "id": {
@@ -4159,11 +4553,6 @@
             "title": "Categoria",
             "description": "Slug de la categoría"
           },
-          "whatsapp": {
-            "type": "string",
-            "pattern": "^3\\d{9}$",
-            "title": "Whatsapp"
-          },
           "telefono": {
             "anyOf": [
               {
@@ -4218,17 +4607,23 @@
             "type": "array",
             "maxItems": 21,
             "title": "Horarios"
+          },
+          "whatsapp": {
+            "type": "string",
+            "pattern": "^3\\d{9}$",
+            "title": "Whatsapp"
           }
         },
         "type": "object",
         "required": [
           "nombre",
           "categoria",
-          "whatsapp",
           "direccion_texto",
-          "ubicacion"
+          "ubicacion",
+          "whatsapp"
         ],
-        "title": "NegocioEntrada"
+        "title": "NegocioEntrada",
+        "description": "Registro del dueño: el WhatsApp es obligatorio (es como lo contactan los vecinos)."
       },
       "NegocioResumen": {
         "properties": {

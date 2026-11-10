@@ -401,3 +401,39 @@ describe('Catálogo y apartados', () => {
     )
   })
 })
+
+describe('Panel: agregar negocios', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] }
+
+  it('revisa el CSV antes de crear y no deja crear si hay filas con errores', async () => {
+    const { posts } = apiFalsa({
+      '/yo': ADMIN,
+      'POST /admin/negocios/lote': {
+        validas: [{ fila: 2, nombre: 'Pastel Pan', categoria: 'panaderia', barrio: 'Cuba', ubicacion: { lat: 4.79, lng: -75.73 }, whatsapp: null, franjas: 7 }],
+        errores: [{ fila: 3, nombre: 'Tienda X', mensajes: ['No existe la categoría «Joyería».'] }],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+
+    const csv = 'nombre;categoria;ubicacion\nPastel Pan;Panadería;4.79, -75.73\nTienda X;Joyería;4.8, -75.7\n'
+    const archivo = new File([csv], 'negocios.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+
+    expect(await screen.findByText('No existe la categoría «Joyería».')).toBeInTheDocument()
+    expect(screen.getByText('1 fila lista')).toBeInTheDocument()
+    expect(posts.find((p) => p.ruta === '/admin/negocios/lote')).toEqual({
+      ruta: '/admin/negocios/lote',
+      cuerpo: {
+        filas: [
+          { nombre: 'Pastel Pan', categoria: 'Panadería', ubicacion: '4.79, -75.73' },
+          { nombre: 'Tienda X', categoria: 'Joyería', ubicacion: '4.8, -75.7' },
+        ],
+        estado: 'activo',
+        simular: true,
+      },
+    })
+    expect(screen.getByRole('button', { name: /Corrige las filas marcadas/ })).toBeDisabled()
+  })
+})

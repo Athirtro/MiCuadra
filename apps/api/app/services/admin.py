@@ -67,6 +67,11 @@ def _negocio(f: RowMapping) -> NegocioAdmin:
     )
 
 
+def buscar_negocio(db: Session, negocio_id: UUID) -> NegocioAdmin:
+    fila = db.execute(text(_NEGOCIOS + " and n.id = :id"), {"id": negocio_id}).mappings().one()
+    return _negocio(fila)
+
+
 def listar_negocios(
     db: Session,
     estado: EstadoNegocio | None,

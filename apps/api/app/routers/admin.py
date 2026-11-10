@@ -19,11 +19,14 @@ from app.schemas.admin import (
     EstadoReporte,
     Gate,
     InscritoEspera,
+    LoteEntrada,
+    LoteResultado,
     NegocioAdmin,
+    NegocioCargaEntrada,
     Reporte,
 )
 from app.schemas.comunidad import RolEspera
-from app.services import admin, get_notification_service, metricas
+from app.services import admin, carga, get_notification_service, metricas
 from app.services.horarios import ahora_utc
 from app.services.notificaciones import NotificationService
 
@@ -31,6 +34,18 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 Admin = Annotated[UsuarioActual, Depends(requiere_rol("admin"))]
 Db = Annotated[Session, Depends(get_db)]
+
+
+@router.post("/negocios", response_model=NegocioAdmin, status_code=201)
+def crear_negocio(datos: NegocioCargaEntrada, _: Admin, db: Db) -> NegocioAdmin:
+    """El equipo carga un negocio que visitó (sin dueño todavía; el dueño lo reclama después)."""
+    return carga.crear_negocio(db, datos)
+
+
+@router.post("/negocios/lote", response_model=LoteResultado)
+def cargar_lote(lote: LoteEntrada, _: Admin, db: Db) -> LoteResultado:
+    """Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna."""
+    return carga.cargar_lote(db, lote)
 
 
 @router.get("/negocios", response_model=list[NegocioAdmin])

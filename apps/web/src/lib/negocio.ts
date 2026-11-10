@@ -11,6 +11,7 @@ export const EMOJI_CATEGORIA: Record<string, string> = {
   gimnasio: '🏋️',
   lavanderia: '👕',
   'comida-casera': '🍲',
+  ferreteria: '🔨',
 }
 
 export function emojiCategoria(slug: string): string {

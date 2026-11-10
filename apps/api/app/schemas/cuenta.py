@@ -51,10 +51,11 @@ class HorarioEntrada(Horario):
         return self
 
 
-class NegocioEntrada(BaseModel):
+class NegocioBase(BaseModel):
+    """Campos comunes al registro del dueño y a la carga del equipo."""
+
     nombre: str = Field(min_length=2, max_length=80)
     categoria: str = Field(max_length=40, description="Slug de la categoría")
-    whatsapp: str = Field(pattern=CELULAR)
     telefono: str | None = Field(default=None, max_length=20)
     descripcion: str | None = Field(default=None, max_length=280)
     direccion_texto: str = Field(min_length=3, max_length=120)
@@ -83,6 +84,12 @@ class NegocioEntrada(BaseModel):
         if not (4.6 <= v.lat <= 5.0 and -76.0 <= v.lng <= -75.5):
             raise ValueError("La ubicación debe estar en Pereira")
         return v
+
+
+class NegocioEntrada(NegocioBase):
+    """Registro del dueño: el WhatsApp es obligatorio (es como lo contactan los vecinos)."""
+
+    whatsapp: str = Field(pattern=CELULAR)
 
 
 class MiNegocio(BaseModel):

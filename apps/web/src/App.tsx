@@ -20,6 +20,7 @@ const Metricas = lazy(() => import('./pages/admin/Metricas').then((m) => ({ defa
 const NegociosAdmin = lazy(() => import('./pages/admin/Negocios').then((m) => ({ default: m.Negocios })))
 const ListaEsperaAdmin = lazy(() => import('./pages/admin/ListaEspera').then((m) => ({ default: m.ListaEsperaAdmin })))
 const Reportes = lazy(() => import('./pages/admin/Reportes').then((m) => ({ default: m.Reportes })))
+const AgregarNegocios = lazy(() => import('./pages/admin/AgregarNegocios').then((m) => ({ default: m.AgregarNegocios })))
 // Paneles del dueño y del vecino: solo los descarga quien los usa.
 const CatalogoDueno = lazy(() => import('./pages/CatalogoDueno').then((m) => ({ default: m.CatalogoDueno })))
 const ApartadosDueno = lazy(() => import('./pages/ApartadosDueno').then((m) => ({ default: m.ApartadosDueno })))
@@ -70,6 +71,7 @@ export function App() {
             <Route index element={<Navigate to="metricas" replace />} />
             <Route path="metricas" element={<Metricas />} />
             <Route path="negocios" element={<NegociosAdmin />} />
+            <Route path="negocios/agregar" element={<AgregarNegocios />} />
             <Route path="lista-espera" element={<ListaEsperaAdmin />} />
             <Route path="reportes" element={<Reportes />} />
           </Route>

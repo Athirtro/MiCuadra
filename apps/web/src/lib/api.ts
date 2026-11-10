@@ -35,6 +35,9 @@ export type SeccionEntrada = Esquemas['SeccionEntrada']
 export type Apartado = Esquemas['Apartado']
 export type ApartadoEntrada = Esquemas['ApartadoEntrada']
 export type CambioEstadoApartado = Esquemas['CambioEstadoApartado']
+export type FilaCsv = Esquemas['FilaCsv']
+export type LoteEntrada = Esquemas['LoteEntrada']
+export type LoteResultado = Esquemas['LoteResultado']
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api/v1'
 

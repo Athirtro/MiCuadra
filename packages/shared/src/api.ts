@@ -519,7 +519,31 @@ export interface paths {
          */
         get: operations["negocios_api_v1_admin_negocios_get"];
         put?: never;
-        post?: never;
+        /**
+         * Crear Negocio
+         * @description El equipo carga un negocio que visitó (sin dueño todavía; el dueño lo reclama después).
+         */
+        post: operations["crear_negocio_api_v1_admin_negocios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/negocios/lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cargar Lote
+         * @description Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna.
+         */
+        post: operations["cargar_lote_api_v1_admin_negocios_lote_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1015,6 +1039,15 @@ export interface components {
             /** Notas */
             notas?: string | null;
         };
+        /** ErrorFila */
+        ErrorFila: {
+            /** Fila */
+            fila: number;
+            /** Nombre */
+            nombre: string;
+            /** Mensajes */
+            mensajes: string[];
+        };
         /** EventoEntrada */
         EventoEntrada: {
             /**
@@ -1033,6 +1066,81 @@ export interface components {
             metadata?: {
                 [key: string]: string | number | boolean | null;
             };
+        };
+        /**
+         * FilaCsv
+         * @description Una fila de la plantilla, tal cual viene del archivo (todo texto).
+         */
+        FilaCsv: {
+            /**
+             * Nombre
+             * @default
+             */
+            nombre: string;
+            /**
+             * Categoria
+             * @default
+             */
+            categoria: string;
+            /**
+             * Barrio
+             * @default
+             */
+            barrio: string;
+            /**
+             * Direccion
+             * @default
+             */
+            direccion: string;
+            /**
+             * Ubicacion
+             * @description «lat, lng» o un enlace de Google Maps
+             * @default
+             */
+            ubicacion: string;
+            /**
+             * Whatsapp
+             * @default
+             */
+            whatsapp: string;
+            /**
+             * Telefono
+             * @default
+             */
+            telefono: string;
+            /**
+             * Descripcion
+             * @default
+             */
+            descripcion: string;
+            /**
+             * Horario
+             * @description Ej.: «lun-sab 7:00-19:00; dom 8:00-13:00»
+             * @default
+             */
+            horario: string;
+        };
+        /** FilaValida */
+        FilaValida: {
+            /**
+             * Fila
+             * @description Número de fila en el archivo (la 1 es el encabezado)
+             */
+            fila: number;
+            /** Nombre */
+            nombre: string;
+            /** Categoria */
+            categoria: string;
+            /** Barrio */
+            barrio: string | null;
+            ubicacion: components["schemas"]["Punto"];
+            /** Whatsapp */
+            whatsapp: string | null;
+            /**
+             * Franjas
+             * @description Franjas de horario reconocidas
+             */
+            franjas: number;
         };
         /** Foto */
         Foto: {
@@ -1284,6 +1392,35 @@ export interface components {
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
         };
+        /** LoteEntrada */
+        LoteEntrada: {
+            /** Filas */
+            filas: components["schemas"]["FilaCsv"][];
+            /**
+             * Estado
+             * @default activo
+             * @enum {string}
+             */
+            estado: "activo" | "pendiente";
+            /**
+             * Simular
+             * @description true = solo revisa, no crea nada
+             * @default true
+             */
+            simular: boolean;
+        };
+        /** LoteResultado */
+        LoteResultado: {
+            /** Validas */
+            validas: components["schemas"]["FilaValida"][];
+            /** Errores */
+            errores: components["schemas"]["ErrorFila"][];
+            /**
+             * Creados
+             * @description 0 si se simuló o si hubo errores: se crean todos o ninguno
+             */
+            creados: number;
+        };
         /** Meta */
         Meta: {
             /** Valor */
@@ -1362,6 +1499,41 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * NegocioCargaEntrada
+         * @description Negocio que carga el equipo: el WhatsApp va solo si el dueño dio permiso.
+         */
+        NegocioCargaEntrada: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Categoria
+             * @description Slug de la categoría
+             */
+            categoria: string;
+            /** Telefono */
+            telefono?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Direccion Texto */
+            direccion_texto: string;
+            /**
+             * Barrio
+             * @description Nombre del barrio como lo escribe el dueño; si no existe se crea
+             */
+            barrio?: string | null;
+            ubicacion: components["schemas"]["Punto"];
+            /** Horarios */
+            horarios?: components["schemas"]["HorarioEntrada"][];
+            /** Whatsapp */
+            whatsapp?: string | null;
+            /**
+             * Estado
+             * @default activo
+             * @enum {string}
+             */
+            estado: "activo" | "pendiente";
+        };
         /** NegocioDelApartado */
         NegocioDelApartado: {
             /**
@@ -1410,7 +1582,10 @@ export interface components {
             destacado: boolean;
             mandados: components["schemas"]["Disponibilidad"];
         };
-        /** NegocioEntrada */
+        /**
+         * NegocioEntrada
+         * @description Registro del dueño: el WhatsApp es obligatorio (es como lo contactan los vecinos).
+         */
         NegocioEntrada: {
             /** Nombre */
             nombre: string;
@@ -1419,8 +1594,6 @@ export interface components {
              * @description Slug de la categoría
              */
             categoria: string;
-            /** Whatsapp */
-            whatsapp: string;
             /** Telefono */
             telefono?: string | null;
             /** Descripcion */
@@ -1435,6 +1608,8 @@ export interface components {
             ubicacion: components["schemas"]["Punto"];
             /** Horarios */
             horarios?: components["schemas"]["HorarioEntrada"][];
+            /** Whatsapp */
+            whatsapp: string;
         };
         /** NegocioResumen */
         NegocioResumen: {
@@ -2591,6 +2766,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NegocioAdmin"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_negocio_api_v1_admin_negocios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NegocioCargaEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NegocioAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cargar_lote_api_v1_admin_negocios_lote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoteEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoteResultado"];
                 };
             };
             /** @description Validation Error */
