@@ -62,7 +62,7 @@ export function CatalogoDueno() {
         <Link to="/cuenta" className="text-sm font-bold text-green underline">
           ← Mi cuenta
         </Link>
-        <h1 className="mt-1 text-2xl font-black">Catálogo de {negocio?.nombre ?? 'tu negocio'}</h1>
+        <h1 className="mt-1 text-2xl font-black">Catálogo de {negocio?.nombre ?? 'este negocio'}</h1>
         <p className="mt-1 text-muted">
           Lo que agregues aquí lo ven los vecinos en tu perfil y lo pueden apartar. Si llevas inventario, se descuenta solo
           cuando confirmas un apartado.

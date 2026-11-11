@@ -10,6 +10,7 @@ import { registrarEvento } from '../lib/eventos'
 import { formatoCOP, formatoDistancia } from '../lib/formato'
 import { DIAS, diaHoy, emojiCategoria, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
 import { rutaAPie } from '../lib/ruta'
+import { usePerfil } from '../lib/sesion'
 import { useBrujula } from '../lib/useUbicacion'
 import { EstadoAbierto } from './Mapa'
 
@@ -63,6 +64,31 @@ export function Perfil() {
   }
 
   return <FichaNegocio n={negocio.data} />
+}
+
+/** La tienda aún no sube productos: se dice, y un admin puede armarle el catálogo. */
+function SinCatalogo({ n }: { n: NegocioDetalle }) {
+  const { perfil } = usePerfil()
+  const esAdmin = perfil.data?.roles.includes('admin') ?? false
+  const contacto = n.whatsapp ? 'Escríbele por WhatsApp' : n.telefono ? 'Llámala' : 'Pasa por la tienda'
+  return (
+    <section className="tarjeta mt-5 p-4" aria-labelledby="titulo-catalogo">
+      <h2 id="titulo-catalogo" className="text-lg font-black">
+        Catálogo
+      </h2>
+      <p className="mt-1 text-sm text-muted">
+        Esta tienda todavía no ha subido sus productos. {contacto} para saber qué tiene.
+      </p>
+      {esAdmin && (
+        <Link
+          to={`/mi-negocio/${n.id}/catalogo`}
+          className="tap mt-3 inline-flex items-center gap-2 rounded-full bg-green px-4 text-sm font-bold text-green-ink shadow-1"
+        >
+          <span aria-hidden="true">＋</span> Armar el catálogo
+        </Link>
+      )}
+    </section>
+  )
 }
 
 function FichaNegocio({ n }: { n: NegocioDetalle }) {
@@ -137,6 +163,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
         {catalogo.data && catalogo.data.items.length > 0 && (
           <CatalogoNegocio n={n} catalogo={catalogo.data} carrito={carrito} poner={poner} />
         )}
+        {catalogo.data && catalogo.data.items.length === 0 && <SinCatalogo n={n} />}
 
         <section className="tarjeta mt-5 overflow-hidden" aria-labelledby="titulo-donde">
           <div className="flex items-start justify-between gap-3 p-4">
