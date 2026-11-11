@@ -4038,6 +4038,12 @@
             "title": "Simular",
             "description": "true = solo revisa, no crea nada",
             "default": true
+          },
+          "solo_listas": {
+            "type": "boolean",
+            "title": "Solo Listas",
+            "description": "true = crea las filas listas aunque otras tengan errores (quedan para después)",
+            "default": false
           }
         },
         "type": "object",

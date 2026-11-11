@@ -1426,6 +1426,12 @@ export interface components {
              * @default true
              */
             simular: boolean;
+            /**
+             * Solo Listas
+             * @description true = crea las filas listas aunque otras tengan errores (quedan para después)
+             * @default false
+             */
+            solo_listas: boolean;
         };
         /** LoteResultado */
         LoteResultado: {
