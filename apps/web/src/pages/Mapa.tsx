@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { apiGet, rutaNegocios, type Barrio, type Categoria, type ListaNegocios, type NegocioResumen, type Punto } from '../lib/api'
+import { Precio } from '../components/Precio'
 import { registrarEvento } from '../lib/eventos'
 import { formatoDistancia } from '../lib/formato'
 import { emojiCategoria } from '../lib/negocio'
@@ -23,6 +24,7 @@ export function Mapa() {
   const [texto, setTexto] = useState('')
   const q = useDeferredValue(texto)
   const [abiertoAhora, setAbiertoAhora] = useState(false)
+  const [conOfertas, setConOfertas] = useState(false)
   const [radioM, setRadioM] = useState(1000)
   const [centroMapa, setCentroMapa] = useState<Punto | null>(null)
   // "Buscar en esta zona" vale mientras no cambie la ubicación de origen (GPS o barrio).
@@ -46,9 +48,9 @@ export function Mapa() {
   const centro = busquedaEn && busquedaEn.origen === origen ? busquedaEn.punto : origen
 
   const negocios = useQuery({
-    queryKey: ['negocios', centro, radioM, categoria, q, abiertoAhora],
+    queryKey: ['negocios', centro, radioM, categoria, q, abiertoAhora, conOfertas],
     queryFn: () =>
-      apiGet<ListaNegocios>(rutaNegocios({ centro: centro as Punto, radioM, categoria, q, abiertoAhora })),
+      apiGet<ListaNegocios>(rutaNegocios({ centro: centro as Punto, radioM, categoria, q, abiertoAhora, conOfertas })),
     enabled: centro !== null,
     placeholderData: keepPreviousData,
   })
@@ -110,12 +112,12 @@ export function Mapa() {
       {/* Filtros */}
       <div className="relative z-[1002] flex flex-col gap-2 border-b border-line bg-surface px-4 py-3 shadow-1 md:col-span-2">
         <label>
-          <span className="sr-only">Buscar negocios</span>
+          <span className="sr-only">Buscar negocios o productos</span>
           <input
             type="search"
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Pan, droguería, barbería…"
+            placeholder="Pan, cemento, acetaminofén…"
             className="tap w-full rounded-caja border border-line bg-bg px-4 text-base text-ink placeholder:text-muted"
             enterKeyHint="search"
           />
@@ -133,6 +135,9 @@ export function Mapa() {
         <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 text-sm [scrollbar-width:none]">
           <Chip activo={abiertoAhora} onClick={() => setAbiertoAhora(!abiertoAhora)}>
             🟢 Abierto ahora
+          </Chip>
+          <Chip activo={conOfertas} onClick={() => setConOfertas(!conOfertas)}>
+            🔥 Ofertas
           </Chip>
           <div className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-surface p-1" role="radiogroup" aria-label="¿Qué tan cerca?">
             <span className="pl-2 pr-1 text-xs font-bold text-muted">Hasta</span>
@@ -443,7 +448,24 @@ function Resultados({
                 <span className="block text-sm text-muted">
                   {n.categoria.nombre} · {formatoDistancia(n.distancia_m)}
                 </span>
-                <EstadoAbierto abierto={n.abierto_ahora} />
+                <span className="flex flex-wrap items-center gap-x-2">
+                  <EstadoAbierto abierto={n.abierto_ahora} />
+                  {n.ofertas > 0 && (
+                    <span className="rounded-full bg-red/10 px-2 text-xs font-bold text-red">
+                      🔥 {n.ofertas} {n.ofertas === 1 ? 'oferta' : 'ofertas'}
+                    </span>
+                  )}
+                </span>
+                {n.productos && n.productos.length > 0 && (
+                  <span className="mt-1.5 flex flex-col gap-0.5 rounded-caja bg-bg px-2 py-1.5 text-sm">
+                    {n.productos.map((p) => (
+                      <span key={p.nombre} className="flex items-baseline justify-between gap-2">
+                        <span className="truncate">🔎 {p.nombre}</span>
+                        <Precio precio={p.precio} oferta={p.precio_oferta} className="shrink-0 text-sm" />
+                      </span>
+                    ))}
+                  </span>
+                )}
               </span>
             </button>
             <button

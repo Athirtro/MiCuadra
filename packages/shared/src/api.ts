@@ -117,6 +117,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mis-negocios/{negocio_id}/estadisticas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Estadisticas Del Negocio */
+        get: operations["estadisticas_del_negocio_api_v1_mis_negocios__negocio_id__estadisticas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categorias": {
         parameters: {
             query?: never;
@@ -980,6 +997,23 @@ export interface components {
             /** Serie */
             serie: components["schemas"]["PuntoSerie"][];
         };
+        /** Dia */
+        Dia: {
+            /**
+             * Fecha
+             * Format: date
+             */
+            fecha: string;
+            /** Vistas */
+            vistas: number;
+            /**
+             * Contactos
+             * @description WhatsApp + Cómo llegar
+             */
+            contactos: number;
+            /** Apartados */
+            apartados: number;
+        };
         /**
          * Disponibilidad
          * @description Contrato de `GET /negocios/{id}/mandados-disponibles`. No cambia entre fases.
@@ -1049,6 +1083,24 @@ export interface components {
             nombre: string;
             /** Mensajes */
             mensajes: string[];
+        };
+        /** Estadisticas */
+        Estadisticas: {
+            /** Dias */
+            dias: number;
+            totales: components["schemas"]["Totales"];
+            /** @description Los mismos números del periodo anterior, para comparar */
+            anteriores: components["schemas"]["Totales"];
+            /**
+             * Por Dia
+             * @description Un día por fila, del más viejo al de hoy (hora de Bogotá)
+             */
+            por_dia: components["schemas"]["Dia"][];
+            /**
+             * Mas Apartados
+             * @description Hasta 5 productos con más unidades
+             */
+            mas_apartados: components["schemas"]["ProductoTop"][];
         };
         /** EventoEntrada */
         EventoEntrada: {
@@ -1315,6 +1367,11 @@ export interface components {
              * @description Pesos COP; null = preguntar el precio
              */
             precio: number | null;
+            /**
+             * Precio Oferta
+             * @description Precio rebajado (menor que `precio`); null = sin oferta
+             */
+            precio_oferta?: number | null;
             /** Foto Url */
             foto_url: string | null;
             /**
@@ -1343,6 +1400,8 @@ export interface components {
             descripcion?: string | null;
             /** Precio */
             precio?: number | null;
+            /** Precio Oferta */
+            precio_oferta?: number | null;
             /** Foto Url */
             foto_url?: string | null;
             /** Stock */
@@ -1662,6 +1721,17 @@ export interface components {
             destacado: boolean;
             /** Foto Url */
             foto_url: string | null;
+            /**
+             * Ofertas
+             * @description Productos visibles con precio de oferta
+             * @default 0
+             */
+            ofertas: number;
+            /**
+             * Productos
+             * @description Hasta 3 productos del catálogo que coinciden con `q` (vacío sin búsqueda)
+             */
+            productos?: components["schemas"]["ProductoEncontrado"][];
         };
         /** Perfil */
         Perfil: {
@@ -1713,6 +1783,25 @@ export interface components {
              * @constant
              */
             acepta_datos: true;
+        };
+        /**
+         * ProductoEncontrado
+         * @description Producto del catálogo que coincide con la búsqueda.
+         */
+        ProductoEncontrado: {
+            /** Nombre */
+            nombre: string;
+            /** Precio */
+            precio: number | null;
+            /** Precio Oferta */
+            precio_oferta: number | null;
+        };
+        /** ProductoTop */
+        ProductoTop: {
+            /** Nombre */
+            nombre: string;
+            /** Unidades */
+            unidades: number;
         };
         /** Punto */
         Punto: {
@@ -1790,6 +1879,39 @@ export interface components {
              * @default 0
              */
             orden: number;
+        };
+        /** Totales */
+        Totales: {
+            /**
+             * Vistas
+             * @description Veces que abrieron la ficha
+             */
+            vistas: number;
+            /**
+             * Vecinos
+             * @description Personas distintas que abrieron la ficha
+             */
+            vecinos: number;
+            /**
+             * Whatsapp
+             * @description Toques en «WhatsApp»
+             */
+            whatsapp: number;
+            /**
+             * Como Llegar
+             * @description Toques en «Cómo llegar» (ficha o mapa)
+             */
+            como_llegar: number;
+            /**
+             * Apartados
+             * @description Apartados recibidos (sin contar cancelados)
+             */
+            apartados: number;
+            /**
+             * Vendido
+             * @description Pesos COP de los apartados entregados
+             */
+            vendido: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -2051,6 +2173,40 @@ export interface operations {
             };
         };
     };
+    estadisticas_del_negocio_api_v1_mis_negocios__negocio_id__estadisticas_get: {
+        parameters: {
+            query?: {
+                /** @description Días hacia atrás, contando hoy */
+                dias?: number;
+            };
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Estadisticas"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     categorias_api_v1_categorias_get: {
         parameters: {
             query?: never;
@@ -2100,6 +2256,8 @@ export interface operations {
                 categoria?: string | null;
                 q?: string | null;
                 abierto_ahora?: boolean;
+                /** @description Solo tiendas con productos en oferta */
+                con_ofertas?: boolean;
                 limit?: number;
                 cursor?: string | null;
             };

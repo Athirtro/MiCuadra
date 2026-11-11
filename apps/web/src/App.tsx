@@ -22,6 +22,9 @@ const ListaEsperaAdmin = lazy(() => import('./pages/admin/ListaEspera').then((m)
 const Reportes = lazy(() => import('./pages/admin/Reportes').then((m) => ({ default: m.Reportes })))
 const AgregarNegocios = lazy(() => import('./pages/admin/AgregarNegocios').then((m) => ({ default: m.AgregarNegocios })))
 // Paneles del dueño y del vecino: solo los descarga quien los usa.
+const EstadisticasNegocio = lazy(() =>
+  import('./pages/EstadisticasNegocio').then((m) => ({ default: m.EstadisticasNegocio })),
+)
 const CatalogoDueno = lazy(() => import('./pages/CatalogoDueno').then((m) => ({ default: m.CatalogoDueno })))
 const ApartadosDueno = lazy(() => import('./pages/ApartadosDueno').then((m) => ({ default: m.ApartadosDueno })))
 const MisApartados = lazy(() => import('./pages/MisApartados').then((m) => ({ default: m.MisApartados })))
@@ -64,6 +67,7 @@ export function App() {
           <Route path="/mi-negocio/nuevo" element={<RegistrarNegocio />} />
           <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
           <Route path="/mi-negocio/:id/catalogo" element={<CatalogoDueno />} />
+          <Route path="/mi-negocio/:id/estadisticas" element={<EstadisticasNegocio />} />
           <Route path="/mi-negocio/:id/apartados" element={<ApartadosDueno />} />
           <Route path="/mis-apartados" element={<MisApartados />} />
           <Route path="/privacidad" element={<Privacidad />} />

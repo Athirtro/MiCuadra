@@ -48,7 +48,8 @@ TRANSICIONES: dict[str, set[str]] = {
 _ALFABETO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 
 _COLUMNAS_ITEM = (
-    "id, seccion_id, tipo, nombre, descripcion, precio, foto_url, stock, visible, orden"
+    "id, seccion_id, tipo, nombre, descripcion, precio, precio_oferta, foto_url, stock, visible,"
+    " orden"
 )
 
 
@@ -188,6 +189,7 @@ def _parametros_item(datos: ItemEntrada) -> dict[str, object]:
         "nombre": datos.nombre,
         "descripcion": datos.descripcion,
         "precio": datos.precio,
+        "oferta": datos.precio_oferta,
         "foto": datos.foto_url,
         # Un servicio no lleva inventario.
         "stock": None if datos.tipo == "servicio" else datos.stock,
@@ -217,9 +219,9 @@ def crear_item(
         db.execute(
             text(
                 "insert into catalogo_items"
-                " (negocio_id, seccion_id, tipo, nombre, descripcion, precio, foto_url, stock,"
-                " visible, orden)"
-                " values (:negocio, :seccion, :tipo, :nombre, :descripcion, :precio, :foto,"
+                " (negocio_id, seccion_id, tipo, nombre, descripcion, precio, precio_oferta,"
+                " foto_url, stock, visible, orden)"
+                " values (:negocio, :seccion, :tipo, :nombre, :descripcion, :precio, :oferta, :foto,"
                 " :stock, :visible, :orden)"
                 f" returning {_COLUMNAS_ITEM}"
             ),
@@ -247,7 +249,8 @@ def editar_item(
         db.execute(
             text(
                 "update catalogo_items set seccion_id = :seccion, tipo = :tipo, nombre = :nombre,"
-                " descripcion = :descripcion, precio = :precio, foto_url = :foto, stock = :stock,"
+                " descripcion = :descripcion, precio = :precio, precio_oferta = :oferta,"
+                " foto_url = :foto, stock = :stock,"
                 " visible = :visible, orden = :orden"
                 f" where id = :id and negocio_id = :negocio returning {_COLUMNAS_ITEM}"
             ),
@@ -404,7 +407,9 @@ def crear_apartado(
         f["id"]: f
         for f in db.execute(
             text(
-                "select id, nombre, precio, stock from catalogo_items"
+                # Mientras haya oferta, se aparta al precio rebajado.
+                "select id, nombre, coalesce(precio_oferta, precio) as precio, stock"
+                " from catalogo_items"
                 " where negocio_id = :negocio and visible and id = any(:ids)"
             ),
             {"negocio": negocio_id, "ids": list(cantidades)},

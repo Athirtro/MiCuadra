@@ -87,6 +87,23 @@ describe('Mapa del barrio (/)', () => {
     expect(consulta).toContain('radio_m=1000')
   })
 
+  it('busca productos: muestra lo que coincide con su precio y filtra por ofertas', async () => {
+    gpsNegado()
+    const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    renderEn('/')
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
+
+    expect(await screen.findByText('🔎 Pandebono')).toBeInTheDocument()
+    expect(screen.getByText('$1.200')).toBeInTheDocument()
+    expect(screen.getByLabelText('antes $1.500')).toBeInTheDocument()
+    expect(screen.getByText('🔥 2 ofertas')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '🔥 Ofertas' }))
+    await waitFor(() =>
+      expect(fetchFalso.mock.calls.some(([url]) => url.includes('con_ofertas=true'))).toBe(true),
+    )
+  })
+
   it('recuerda el barrio elegido en la siguiente visita', async () => {
     gpsNegado()
     localStorage.setItem('micuadra.barrio', 'alamos')

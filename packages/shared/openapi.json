@@ -346,6 +346,68 @@
         }
       }
     },
+    "/api/v1/mis-negocios/{negocio_id}/estadisticas": {
+      "get": {
+        "tags": [
+          "cuenta"
+        ],
+        "summary": "Estadisticas Del Negocio",
+        "operationId": "estadisticas_del_negocio_api_v1_mis_negocios__negocio_id__estadisticas_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          },
+          {
+            "name": "dias",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 90,
+              "minimum": 1,
+              "description": "Días hacia atrás, contando hoy",
+              "default": 30,
+              "title": "Dias"
+            },
+            "description": "Días hacia atrás, contando hoy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estadisticas"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/categorias": {
       "get": {
         "tags": [
@@ -481,6 +543,18 @@
               "default": false,
               "title": "Abierto Ahora"
             }
+          },
+          {
+            "name": "con_ofertas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Solo tiendas con productos en oferta",
+              "default": false,
+              "title": "Con Ofertas"
+            },
+            "description": "Solo tiendas con productos en oferta"
           },
           {
             "name": "limit",
@@ -2949,6 +3023,36 @@
         ],
         "title": "Criterio"
       },
+      "Dia": {
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "format": "date",
+            "title": "Fecha"
+          },
+          "vistas": {
+            "type": "integer",
+            "title": "Vistas"
+          },
+          "contactos": {
+            "type": "integer",
+            "title": "Contactos",
+            "description": "WhatsApp + Cómo llegar"
+          },
+          "apartados": {
+            "type": "integer",
+            "title": "Apartados"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fecha",
+          "vistas",
+          "contactos",
+          "apartados"
+        ],
+        "title": "Dia"
+      },
       "Disponibilidad": {
         "properties": {
           "disponible": {
@@ -3172,6 +3276,46 @@
           "mensajes"
         ],
         "title": "ErrorFila"
+      },
+      "Estadisticas": {
+        "properties": {
+          "dias": {
+            "type": "integer",
+            "title": "Dias"
+          },
+          "totales": {
+            "$ref": "#/components/schemas/Totales"
+          },
+          "anteriores": {
+            "$ref": "#/components/schemas/Totales",
+            "description": "Los mismos números del periodo anterior, para comparar"
+          },
+          "por_dia": {
+            "items": {
+              "$ref": "#/components/schemas/Dia"
+            },
+            "type": "array",
+            "title": "Por Dia",
+            "description": "Un día por fila, del más viejo al de hoy (hora de Bogotá)"
+          },
+          "mas_apartados": {
+            "items": {
+              "$ref": "#/components/schemas/ProductoTop"
+            },
+            "type": "array",
+            "title": "Mas Apartados",
+            "description": "Hasta 5 productos con más unidades"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dias",
+          "totales",
+          "anteriores",
+          "por_dia",
+          "mas_apartados"
+        ],
+        "title": "Estadisticas"
       },
       "EventoEntrada": {
         "properties": {
@@ -3737,6 +3881,18 @@
             "title": "Precio",
             "description": "Pesos COP; null = preguntar el precio"
           },
+          "precio_oferta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio Oferta",
+            "description": "Precio rebajado (menor que `precio`); null = sin oferta"
+          },
           "foto_url": {
             "anyOf": [
               {
@@ -3837,6 +3993,19 @@
               }
             ],
             "title": "Precio"
+          },
+          "precio_oferta": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio Oferta"
           },
           "foto_url": {
             "anyOf": [
@@ -4730,6 +4899,20 @@
               }
             ],
             "title": "Foto Url"
+          },
+          "ofertas": {
+            "type": "integer",
+            "title": "Ofertas",
+            "description": "Productos visibles con precio de oferta",
+            "default": 0
+          },
+          "productos": {
+            "items": {
+              "$ref": "#/components/schemas/ProductoEncontrado"
+            },
+            "type": "array",
+            "title": "Productos",
+            "description": "Hasta 3 productos del catálogo que coinciden con `q` (vacío sin búsqueda)"
           }
         },
         "type": "object",
@@ -4892,6 +5075,62 @@
           "acepta_datos"
         ],
         "title": "PerfilEntrada"
+      },
+      "ProductoEncontrado": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "precio": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio"
+          },
+          "precio_oferta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Precio Oferta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "precio",
+          "precio_oferta"
+        ],
+        "title": "ProductoEncontrado",
+        "description": "Producto del catálogo que coincide con la búsqueda."
+      },
+      "ProductoTop": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "title": "Nombre"
+          },
+          "unidades": {
+            "type": "integer",
+            "title": "Unidades"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "unidades"
+        ],
+        "title": "ProductoTop"
       },
       "Punto": {
         "properties": {
@@ -5069,6 +5308,50 @@
           "nombre"
         ],
         "title": "SeccionEntrada"
+      },
+      "Totales": {
+        "properties": {
+          "vistas": {
+            "type": "integer",
+            "title": "Vistas",
+            "description": "Veces que abrieron la ficha"
+          },
+          "vecinos": {
+            "type": "integer",
+            "title": "Vecinos",
+            "description": "Personas distintas que abrieron la ficha"
+          },
+          "whatsapp": {
+            "type": "integer",
+            "title": "Whatsapp",
+            "description": "Toques en «WhatsApp»"
+          },
+          "como_llegar": {
+            "type": "integer",
+            "title": "Como Llegar",
+            "description": "Toques en «Cómo llegar» (ficha o mapa)"
+          },
+          "apartados": {
+            "type": "integer",
+            "title": "Apartados",
+            "description": "Apartados recibidos (sin contar cancelados)"
+          },
+          "vendido": {
+            "type": "integer",
+            "title": "Vendido",
+            "description": "Pesos COP de los apartados entregados"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vistas",
+          "vecinos",
+          "whatsapp",
+          "como_llegar",
+          "apartados",
+          "vendido"
+        ],
+        "title": "Totales"
       },
       "ValidationError": {
         "properties": {

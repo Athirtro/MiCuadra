@@ -27,6 +27,8 @@ export const LISTA: ListaNegocios = {
       abierto_ahora: true,
       destacado: true,
       foto_url: null,
+      ofertas: 2,
+      productos: [{ nombre: 'Pandebono', precio: 1500, precio_oferta: 1200 }],
     },
     {
       id: 'n2',
@@ -40,6 +42,8 @@ export const LISTA: ListaNegocios = {
       abierto_ahora: false,
       destacado: false,
       foto_url: null,
+      ofertas: 0,
+      productos: [],
     },
   ],
 }
@@ -104,8 +108,8 @@ export function gpsNegado() {
 export const CATALOGO: Catalogo = {
   secciones: [{ id: 's1', nombre: 'Panes', orden: 0 }],
   items: [
-    { id: 'i1', seccion_id: 's1', tipo: 'producto', nombre: 'Pan de bono', descripcion: 'Recién horneado', precio: 1500, foto_url: null, stock: 3, visible: true, orden: 0 },
-    { id: 'i2', seccion_id: 's1', tipo: 'producto', nombre: 'Croissant', descripcion: null, precio: 3000, foto_url: null, stock: 0, visible: true, orden: 1 },
+    { id: 'i1', seccion_id: 's1', tipo: 'producto', nombre: 'Pan de bono', descripcion: 'Recién horneado', precio: 1500, precio_oferta: 1200, foto_url: null, stock: 3, visible: true, orden: 0 },
+    { id: 'i2', seccion_id: 's1', tipo: 'producto', nombre: 'Croissant', descripcion: null, precio: 3000, precio_oferta: null, foto_url: null, stock: 0, visible: true, orden: 1 },
     { id: 'i3', seccion_id: null, tipo: 'servicio', nombre: 'Torta por encargo', descripcion: null, precio: null, foto_url: null, stock: null, visible: true, orden: 0 },
   ],
 }

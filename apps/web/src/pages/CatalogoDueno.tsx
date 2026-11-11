@@ -120,7 +120,8 @@ export function CatalogoDueno() {
                     <span className="min-w-0">
                       <span className="block truncate font-bold">{i.nombre}</span>
                       <span className="block text-sm text-muted">
-                        {i.precio !== null ? formatoCOP(i.precio) : 'Sin precio'}
+                        {i.precio !== null ? formatoCOP(i.precio_oferta ?? i.precio) : 'Sin precio'}
+                        {i.precio_oferta !== null && ' · 🔥 En oferta'}
                         {i.tipo === 'servicio' && ' · Servicio'}
                         {!i.visible && ' · Oculto'}
                       </span>
@@ -293,6 +294,8 @@ function FormItem({
   const [nombre, setNombre] = useState(item?.nombre ?? '')
   const [descripcion, setDescripcion] = useState(item?.descripcion ?? '')
   const [precio, setPrecio] = useState(item?.precio !== null && item?.precio !== undefined ? String(item.precio) : '')
+  const [oferta, setOferta] = useState(item?.precio_oferta != null ? String(item.precio_oferta) : '')
+  const [enOferta, setEnOferta] = useState(item?.precio_oferta != null)
   const [conStock, setConStock] = useState(item ? item.stock !== null : false)
   const [cantidad, setCantidad] = useState(item?.stock !== null && item?.stock !== undefined ? String(item.stock) : '')
   const [seccion, setSeccion] = useState(item?.seccion_id ?? '')
@@ -315,6 +318,7 @@ function FormItem({
         nombre: nombre.trim(),
         descripcion: descripcion.trim() || null,
         precio: precio ? Number(precio) : null,
+        precio_oferta: precio && enOferta && oferta ? Number(oferta) : null,
         stock: tipo === 'producto' && conStock ? Number(cantidad || 0) : null,
         seccion_id: seccion || null,
         foto_url: foto,
@@ -425,6 +429,33 @@ function FormItem({
             />
           </span>
         </label>
+        {precio && (
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-3 font-bold">
+              <input type="checkbox" checked={enOferta} onChange={(e) => setEnOferta(e.target.checked)} className="size-5 accent-[var(--green)]" />
+              🔥 Ponerlo en oferta
+            </label>
+            {enOferta && (
+              <label className="flex flex-col gap-1 text-sm font-bold">
+                Precio de oferta
+                <span className="flex items-center gap-2">
+                  <span className="text-muted">$</span>
+                  <input
+                    inputMode="numeric"
+                    value={oferta ? Number(oferta).toLocaleString('es-CO') : ''}
+                    onChange={(e) => setOferta(soloDigitos(e.target.value).slice(0, 8))}
+                    className={ENTRADA}
+                  />
+                </span>
+                {oferta && Number(oferta) >= Number(precio) ? (
+                  <span className="font-normal text-red">Tiene que ser menor que {formatoCOP(Number(precio))}.</span>
+                ) : (
+                  <span className="font-normal text-muted">Sale tachado el precio normal y la tienda aparece en «🔥 Ofertas» del mapa.</span>
+                )}
+              </label>
+            )}
+          </div>
+        )}
 
         {tipo === 'producto' && (
           <div className="flex flex-col gap-2">

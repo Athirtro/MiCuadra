@@ -51,7 +51,13 @@ export function resumenCarrito(catalogo: Catalogo | undefined, carrito: Carrito)
   return {
     lineas,
     unidades: lineas.reduce((s, l) => s + l.cantidad, 0),
-    total: lineas.reduce((s, l) => s + (l.item.precio ?? 0) * l.cantidad, 0),
+    // Con oferta se aparta al precio rebajado (igual que en el servidor).
+    total: lineas.reduce((s, l) => s + precioFinal(l.item) * l.cantidad, 0),
     hay_sin_precio: lineas.some((l) => l.item.precio === null),
   }
+}
+
+/** Lo que se cobra por unidad: el precio de oferta si hay, si no el normal (0 si no tiene precio). */
+export function precioFinal(item: Item): number {
+  return item.precio_oferta ?? item.precio ?? 0
 }

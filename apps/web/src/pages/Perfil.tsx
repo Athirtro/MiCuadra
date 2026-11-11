@@ -66,10 +66,8 @@ export function Perfil() {
   return <FichaNegocio n={negocio.data} />
 }
 
-/** La tienda aún no sube productos: se dice, y un admin puede armarle el catálogo. */
+/** La tienda aún no sube productos: se dice y se sugiere cómo preguntar. */
 function SinCatalogo({ n }: { n: NegocioDetalle }) {
-  const { perfil } = usePerfil()
-  const esAdmin = perfil.data?.roles.includes('admin') ?? false
   const contacto = n.whatsapp ? 'Escríbele por WhatsApp' : n.telefono ? 'Llámala' : 'Pasa por la tienda'
   return (
     <section className="tarjeta mt-5 p-4" aria-labelledby="titulo-catalogo">
@@ -79,15 +77,24 @@ function SinCatalogo({ n }: { n: NegocioDetalle }) {
       <p className="mt-1 text-sm text-muted">
         Esta tienda todavía no ha subido sus productos. {contacto} para saber qué tiene.
       </p>
-      {esAdmin && (
-        <Link
-          to={`/mi-negocio/${n.id}/catalogo`}
-          className="tap mt-3 inline-flex items-center gap-2 rounded-full bg-green px-4 text-sm font-bold text-green-ink shadow-1"
-        >
-          <span aria-hidden="true">＋</span> Armar el catálogo
-        </Link>
-      )}
     </section>
+  )
+}
+
+/** Atajos para el equipo: administrar el catálogo y ver las estadísticas de cualquier tienda. */
+function HerramientasAdmin({ n }: { n: NegocioDetalle }) {
+  const { perfil } = usePerfil()
+  if (!perfil.data?.roles.includes('admin')) return null
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-caja border border-dashed border-line p-3 text-sm">
+      <span className="font-bold text-muted">Admin:</span>
+      <Link to={`/mi-negocio/${n.id}/catalogo`} className="tap inline-flex items-center rounded-full bg-block px-3 font-bold">
+        🛠️ Catálogo
+      </Link>
+      <Link to={`/mi-negocio/${n.id}/estadisticas`} className="tap inline-flex items-center rounded-full bg-block px-3 font-bold">
+        📊 Estadísticas
+      </Link>
+    </div>
   )
 }
 
@@ -164,6 +171,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
           <CatalogoNegocio n={n} catalogo={catalogo.data} carrito={carrito} poner={poner} />
         )}
         {catalogo.data && catalogo.data.items.length === 0 && <SinCatalogo n={n} />}
+        <HerramientasAdmin n={n} />
 
         <section className="tarjeta mt-5 overflow-hidden" aria-labelledby="titulo-donde">
           <div className="flex items-start justify-between gap-3 p-4">

@@ -42,6 +42,14 @@ class BarrioCorto(BaseModel):
     nombre: str
 
 
+class ProductoEncontrado(BaseModel):
+    """Producto del catálogo que coincide con la búsqueda."""
+
+    nombre: str
+    precio: int | None
+    precio_oferta: int | None
+
+
 class NegocioResumen(BaseModel):
     id: UUID
     slug: str
@@ -54,6 +62,11 @@ class NegocioResumen(BaseModel):
     abierto_ahora: bool
     destacado: bool
     foto_url: str | None
+    ofertas: int = Field(default=0, description="Productos visibles con precio de oferta")
+    productos: list[ProductoEncontrado] = Field(
+        default_factory=list,
+        description="Hasta 3 productos del catálogo que coinciden con `q` (vacío sin búsqueda)",
+    )
 
 
 class ListaNegocios(BaseModel):

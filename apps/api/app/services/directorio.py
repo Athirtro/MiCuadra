@@ -17,6 +17,7 @@ from app.schemas.directorio import (
     ListaNegocios,
     NegocioDetalle,
     NegocioResumen,
+    ProductoEncontrado,
     Punto,
 )
 from app.services.horarios import ZONA_NEGOCIOS, Franja, esta_abierto
@@ -38,6 +39,41 @@ _DESDE = """
   left join barrios b on b.id = n.barrio_id
 """
 _ACTIVO = "n.estado = 'activo' and n.deleted_at is null"
+MAX_PRODUCTOS = 3  # productos que se muestran por tienda al buscar
+_TEXTO_NEGOCIO = "n.nombre || ' ' || coalesce(n.descripcion, '') || ' ' || c.nombre"
+_TEXTO_ITEM = "i.nombre || ' ' || coalesce(i.descripcion, '')"
+
+
+def _coincide(columna: str, i: int) -> str:
+    return f"normalizar({columna}) like '%' || normalizar(:q{i}) || '%'"
+
+
+def _productos_que_coinciden(
+    db: Session, ids: list[UUID], palabras: list[str]
+) -> dict[UUID, list[ProductoEncontrado]]:
+    """Por tienda, los productos visibles que tienen todas las palabras (ofertas y baratos primero)."""
+    if not ids or not palabras:
+        return {}
+    condiciones = " and ".join(_coincide(_TEXTO_ITEM, k) for k in range(len(palabras)))
+    filas = db.execute(
+        text(
+            "select negocio_id, nombre, precio, precio_oferta from ("
+            " select i.negocio_id, i.nombre, i.precio, i.precio_oferta, row_number() over ("
+            "  partition by i.negocio_id order by i.precio_oferta is null,"
+            "  coalesce(i.precio_oferta, i.precio) nulls last, i.nombre) as puesto"
+            f" from catalogo_items i where i.visible and i.negocio_id in :ids and {condiciones}"
+            ") t where puesto <= :max"
+        ).bindparams(bindparam("ids", expanding=True)),
+        {"ids": ids, "max": MAX_PRODUCTOS, **{f"q{k}": p for k, p in enumerate(palabras)}},
+    ).mappings()
+    productos: dict[UUID, list[ProductoEncontrado]] = defaultdict(list)
+    for f in filas:
+        productos[f["negocio_id"]].append(
+            ProductoEncontrado(
+                nombre=f["nombre"], precio=f["precio"], precio_oferta=f["precio_oferta"]
+            )
+        )
+    return productos
 
 
 def negocio_activo_existe(db: Session, negocio_id: UUID) -> bool:
@@ -124,6 +160,7 @@ def buscar_negocios(
     categoria: str | None = None,
     q: str | None = None,
     abierto_ahora: bool = False,
+    con_ofertas: bool = False,
     limit: int = 50,
     offset: int = 0,
 ) -> ListaNegocios:
@@ -137,13 +174,18 @@ def buscar_negocios(
     if categoria:
         filtros.append("c.slug = :categoria")
         params["categoria"] = categoria
-    for i, palabra in enumerate((q or "").split()[:5]):
+    if con_ofertas:
+        filtros.append("o.ofertas > 0")
+    palabras = (q or "").split()[:5]
+    for i, palabra in enumerate(palabras):
         # Cada palabra debe aparecer en nombre, descripción o categoría (sin tildes),
-        # o parecerse al nombre (errores de tipeo: "panaderia" ≈ "panadria").
+        # parecerse al nombre (errores de tipeo: "panaderia" ≈ "panadria")
+        # o estar en algún producto visible del catálogo ("cemento", "acetaminofén").
         filtros.append(
-            f"(normalizar(n.nombre || ' ' || coalesce(n.descripcion, '') || ' ' || c.nombre)"
-            f" like '%' || normalizar(:q{i}) || '%'"
-            f" or word_similarity(normalizar(:q{i}), normalizar(n.nombre)) >= 0.5)"
+            f"({_coincide(_TEXTO_NEGOCIO, i)}"
+            f" or word_similarity(normalizar(:q{i}), normalizar(n.nombre)) >= 0.5"
+            " or exists (select 1 from catalogo_items i where i.negocio_id = n.id and i.visible"
+            f" and {_coincide(_TEXTO_ITEM, i)}))"
         )
         params[f"q{i}"] = palabra
 
@@ -152,8 +194,10 @@ def buscar_negocios(
             text(
                 f"select {_COLUMNAS}, round(st_distance(n.ubicacion, p.g))::int as distancia_m,"
                 " (select url from negocio_fotos f where f.negocio_id = n.id"
-                "  order by f.orden limit 1) as foto_url"
+                "  order by f.orden limit 1) as foto_url, o.ofertas"
                 f" {_DESDE} cross join (select st_point(:lng, :lat, 4326)::geography as g) p"
+                " cross join lateral (select count(*)::int as ofertas from catalogo_items i"
+                "  where i.negocio_id = n.id and i.visible and i.precio_oferta is not null) o"
                 f" where {' and '.join(filtros)}"
                 " order by destacado desc, distancia_m, n.nombre limit :max"
             ),
@@ -164,6 +208,7 @@ def buscar_negocios(
     )
 
     franjas = _franjas_por_negocio(db, [f["id"] for f in filas])
+    productos = _productos_que_coinciden(db, [f["id"] for f in filas], palabras)
     items = []
     for f in filas:
         abierto = esta_abierto(franjas.get(f["id"], []), ahora, f["cerrado_hoy_fecha"])
@@ -182,6 +227,8 @@ def buscar_negocios(
                 abierto_ahora=abierto,
                 destacado=f["destacado"],
                 foto_url=f["foto_url"],
+                ofertas=f["ofertas"],
+                productos=productos.get(f["id"], []),
             )
         )
 

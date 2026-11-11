@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 TipoItem = Literal["producto", "servicio"]
 EstadoApartado = Literal["pendiente", "confirmado", "listo", "entregado", "cancelado"]
@@ -26,6 +26,9 @@ class Item(BaseModel):
     nombre: str
     descripcion: str | None
     precio: int | None = Field(description="Pesos COP; null = preguntar el precio")
+    precio_oferta: int | None = Field(
+        default=None, description="Precio rebajado (menor que `precio`); null = sin oferta"
+    )
     foto_url: str | None
     stock: int | None = Field(description="Unidades disponibles; null = no se controla")
     visible: bool
@@ -59,6 +62,7 @@ class ItemEntrada(BaseModel):
     nombre: str = Field(min_length=2, max_length=80)
     descripcion: str | None = Field(default=None, max_length=200)
     precio: int | None = Field(default=None, ge=0, le=10_000_000)
+    precio_oferta: int | None = Field(default=None, ge=0, le=10_000_000)
     foto_url: str | None = Field(default=None, max_length=300)
     stock: int | None = Field(default=None, ge=0, le=100_000)
     visible: bool = True
@@ -73,6 +77,14 @@ class ItemEntrada(BaseModel):
     @classmethod
     def descripcion_limpia(cls, v: str | None) -> str | None:
         return _limpio(v)
+
+    @model_validator(mode="after")
+    def oferta_menor(self) -> "ItemEntrada":
+        if self.precio_oferta is not None and (
+            self.precio is None or self.precio_oferta >= self.precio
+        ):
+            raise ValueError("El precio de oferta debe ser menor que el precio normal.")
+        return self
 
 
 class CambioStock(BaseModel):

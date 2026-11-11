@@ -96,6 +96,9 @@ export function Cuenta() {
                   </Link>
                 )}
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-green">
+                  <Link to={`/mi-negocio/${n.id}/estadisticas`} className="underline">
+                    📊 Estadísticas
+                  </Link>
                   <Link to={`/mi-negocio/${n.id}/catalogo`} className="underline">
                     Catálogo
                   </Link>

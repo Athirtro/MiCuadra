@@ -1,9 +1,10 @@
 """Cuenta del usuario autenticado: perfil y negocios que registra como dueño."""
 
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Path, Query, Response
 from sqlalchemy.orm import Session
 
 from app.auth import UsuarioActual, get_usuario_actual, requiere_rol
@@ -11,7 +12,9 @@ from app.config import Settings, get_settings
 from app.db import get_db
 from app.ratelimit import limite
 from app.schemas.cuenta import Foto, FotoEntrada, MiNegocio, NegocioEntrada, Perfil, PerfilEntrada
-from app.services import cuenta
+from app.schemas.estadisticas import Estadisticas
+from app.services import cuenta, estadisticas
+from app.services.horarios import ahora_utc
 
 router = APIRouter(tags=["cuenta"])
 
@@ -77,3 +80,16 @@ def borrar_foto(
     negocio_id: UUID, orden: Annotated[int, Path(ge=0, le=4)], usuario: Dueno, db: Db
 ) -> None:
     cuenta.borrar_foto(db, negocio_id, usuario.id, "admin" in usuario.roles, orden)
+
+
+@router.get("/mis-negocios/{negocio_id}/estadisticas", response_model=Estadisticas)
+def estadisticas_del_negocio(
+    negocio_id: UUID,
+    usuario: Dueno,
+    db: Db,
+    ahora: Annotated[datetime, Depends(ahora_utc)],
+    dias: Annotated[int, Query(ge=1, le=90, description="Días hacia atrás, contando hoy")] = 30,
+) -> Estadisticas:
+    return estadisticas.estadisticas_negocio(
+        db, negocio_id, usuario.id, "admin" in usuario.roles, ahora, dias
+    )

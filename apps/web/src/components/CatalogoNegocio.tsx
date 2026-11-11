@@ -3,13 +3,14 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { mensajeApartado, textoTotal } from '../lib/apartado'
 import { apiEnviar, type Apartado, type ApartadoEntrada, type Catalogo, type Item, type NegocioDetalle } from '../lib/api'
-import { resumenCarrito, type Carrito } from '../lib/carrito'
+import { precioFinal, resumenCarrito, type Carrito } from '../lib/carrito'
 import { registrarEvento } from '../lib/eventos'
 import { formatoCOP } from '../lib/formato'
 import { emojiCategoria, enlaceWhatsappTexto } from '../lib/negocio'
 import { usePerfil } from '../lib/sesion'
 import { guardarVolver } from '../lib/volver'
 import { Dialogo } from './Dialogo'
+import { Precio } from './Precio'
 
 type Poner = (itemId: string, cantidad: number, tope?: number | null) => void
 
@@ -89,7 +90,8 @@ function FilaItem({ i, n, cantidad, poner }: { i: Item; n: NegocioDetalle; canti
         <p className="font-bold leading-tight">{i.nombre}</p>
         {i.descripcion && <p className="mt-0.5 line-clamp-2 text-sm text-muted">{i.descripcion}</p>}
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
-          <span className="font-bold">{i.precio !== null ? formatoCOP(i.precio) : 'Pregunta el precio'}</span>
+          <Precio precio={i.precio} oferta={i.precio_oferta} />
+          {i.precio_oferta !== null && <span className="rounded-full bg-red/10 px-2 text-xs font-bold text-red">🔥 Oferta</span>}
           {i.tipo === 'servicio' && <span className="rounded bg-block px-1.5 text-xs font-bold">Servicio</span>}
           {agotado ? (
             <span className="font-bold text-red">Agotado</span>
@@ -227,7 +229,7 @@ export function DialogoCarrito({
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold">{item.nombre}</p>
                 <p className="text-sm text-muted">
-                  {item.precio !== null ? formatoCOP(item.precio * cantidad) : 'Precio por confirmar'}
+                  {item.precio !== null ? formatoCOP(precioFinal(item) * cantidad) : 'Precio por confirmar'}
                 </p>
               </div>
               <div className="flex items-center rounded-full border border-line" role="group" aria-label={`Cantidad de ${item.nombre}`}>
