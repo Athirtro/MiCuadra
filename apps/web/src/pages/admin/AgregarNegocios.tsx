@@ -251,8 +251,10 @@ function DesdeCsv() {
   const [archivo, setArchivo] = useState('')
   const [estado, setEstado] = useState<EstadoInicial>('activo')
   const [ubicando, setUbicando] = useState<number | null>(null)
-  // Filas que ubicó Google: su punto se guarda en la fila para que crear use el mismo que se revisó.
-  const [deGoogle, setDeGoogle] = useState<Map<number, string>>(new Map())
+  // Filas ubicadas por su dirección (Google o la nomenclatura): su punto se guarda en la fila para
+  // que crear use el mismo que se revisó.
+  type Ubicada = { metodo: 'google' | 'nomenclatura'; detalle: string }
+  const [automaticas, setAutomaticas] = useState<Map<number, Ubicada>>(new Map())
   const plantilla = `data:text/csv;charset=utf-8,${encodeURIComponent('\uFEFF' + PLANTILLA)}`
 
   async function elegir(e: ChangeEvent<HTMLInputElement>) {
@@ -263,7 +265,7 @@ function DesdeCsv() {
     setArchivo(f.name)
     setFilas(leido.filas)
     setIgnoradas(leido.ignoradas)
-    setDeGoogle(new Map())
+    setAutomaticas(new Map())
     lote.reset()
     if (leido.filas.length) revisar(leido.filas)
   }
@@ -275,7 +277,13 @@ function DesdeCsv() {
         onSuccess: (res) => {
           const auto = res.validas.filter((v) => v.ubicacion_automatica)
           if (!auto.length) return
-          setDeGoogle((m) => new Map([...m, ...auto.map((v) => [v.fila, v.direccion_google ?? ''] as const)]))
+          setAutomaticas(
+            (m) =>
+              new Map([
+                ...m,
+                ...auto.map((v) => [v.fila, { metodo: v.metodo_ubicacion ?? 'nomenclatura', detalle: v.detalle_ubicacion ?? '' }] as const),
+              ]),
+          )
           setFilas((actuales) =>
             actuales.map((f, i) => {
               const v = auto.find((x) => x.fila === i + 2)
@@ -293,7 +301,7 @@ function DesdeCsv() {
     setFilas(nuevas)
     setUbicando(null)
     // Si la ajustaron a mano, ya no es «de Google».
-    setDeGoogle((m) => new Map([...m].filter(([f]) => f !== fila)))
+    setAutomaticas((m) => new Map([...m].filter(([f]) => f !== fila)))
     revisar(nuevas)
   }
 
@@ -371,10 +379,12 @@ function DesdeCsv() {
                       <td className="p-2 font-mono">{v.whatsapp ?? '—'}</td>
                       <td className="p-2">{v.franjas ? `${v.franjas} franjas` : '—'}</td>
                       <td className="p-2">
-                        {deGoogle.has(v.fila) ? (
+                        {automaticas.has(v.fila) ? (
                           <span className="flex flex-col items-start gap-1">
-                            <span className="rounded-full bg-sun px-2 text-xs font-bold text-sun-ink">Ubicada por Google</span>
-                            {deGoogle.get(v.fila) && <span className="text-xs text-muted">{deGoogle.get(v.fila)}</span>}
+                            <span className="rounded-full bg-sun px-2 text-xs font-bold text-sun-ink">
+                              {automaticas.get(v.fila)?.metodo === 'google' ? 'Ubicada por Google' : 'Ubicación aproximada'}
+                            </span>
+                            {automaticas.get(v.fila)?.detalle && <span className="text-xs text-muted">{automaticas.get(v.fila)?.detalle}</span>}
                           </span>
                         ) : (
                           <span className="text-xs text-muted">Del archivo</span>

@@ -1,8 +1,9 @@
-"""Ubicar una dirección de Pereira con la Geocoding API de Google.
+"""Ubicar direcciones de Pereira para la carga por CSV del admin.
 
-Solo se usa en la carga por CSV del admin. Se aceptan resultados precisos (el número de la
-placa o una interpolación sobre la cuadra) y dentro de Pereira; si Google solo encuentra la
-calle o el barrio, se descarta para no poner pines a varias cuadras del negocio.
+Dos fuentes, en orden: la Geocoding API de Google (si hay `GOOGLE_GEOCODING_KEY` y facturación)
+y la nomenclatura sobre las calles de OpenStreetMap (`nomenclatura.py`, gratis y sin red).
+De Google solo se aceptan resultados precisos (placa o cuadra) dentro de Pereira; si solo
+encuentra la calle o el barrio, se descarta para no poner pines a varias cuadras del negocio.
 """
 
 import json
@@ -12,9 +13,12 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Literal
 
 from app.config import get_settings
 from app.schemas.directorio import Punto
+from app.services.nomenclatura import Nomenclatura
+from app.services.nomenclatura import cargar as cargar_nomenclatura
 
 log = logging.getLogger(__name__)
 
@@ -27,10 +31,12 @@ LIMITES = (4.6, 5.0, -76.0, -75.5)
 @dataclass(frozen=True)
 class Encontrado:
     punto: Punto
-    direccion: str  # como la entendió Google, para que el equipo confirme
+    detalle: str  # cómo la entendió Google o cómo se interpoló, para que el equipo confirme
+    metodo: Literal["google", "nomenclatura"] = "google"
 
 
-Geocodificador = Callable[[str, str | None], Encontrado | None]
+# (dirección, nombre del barrio, centro del barrio si se conoce)
+Geocodificador = Callable[[str, str | None, Punto | None], Encontrado | None]
 
 
 class GoogleNoDisponible(Exception):
@@ -47,7 +53,7 @@ def limpiar_direccion(direccion: str) -> str:
 def con_google(clave: str) -> Geocodificador:
     cache: dict[tuple[str, str | None], Encontrado | None] = {}
 
-    def buscar(direccion: str, barrio: str | None) -> Encontrado | None:
+    def buscar(direccion: str, barrio: str | None, cerca: Punto | None = None) -> Encontrado | None:
         llave = (direccion, barrio)
         if llave in cache:
             return cache[llave]
@@ -92,14 +98,46 @@ def con_google(clave: str) -> Geocodificador:
     return buscar
 
 
-_por_clave: dict[str, Geocodificador] = {}
+def con_nomenclatura(n: Nomenclatura) -> Geocodificador:
+    def buscar(direccion: str, barrio: str | None, cerca: Punto | None = None) -> Encontrado | None:
+        r = n.ubicar(limpiar_direccion(direccion), cerca)
+        return Encontrado(r[0], r[1], "nomenclatura") if r else None
+
+    return buscar
+
+
+def encadenar(google: Geocodificador | None, nomenclatura: Geocodificador | None) -> Geocodificador:
+    """Google primero (más preciso); si no encuentra o lo rechaza, la nomenclatura.
+
+    Solo si ninguno ubica y Google rechazó, se propaga el rechazo para avisarlo en la revisión.
+    """
+
+    def buscar(direccion: str, barrio: str | None, cerca: Punto | None = None) -> Encontrado | None:
+        rechazo: GoogleNoDisponible | None = None
+        if google:
+            try:
+                if r := google(direccion, barrio, cerca):
+                    return r
+            except GoogleNoDisponible as e:
+                rechazo = e
+        if nomenclatura and (r := nomenclatura(direccion, barrio, cerca)):
+            return r
+        if rechazo:
+            raise rechazo
+        return None
+
+    return buscar
+
+
+_por_clave: dict[str, Geocodificador | None] = {}
 
 
 def get_geocodificador() -> Geocodificador | None:
-    """Dependencia de FastAPI: el geocodificador si hay clave configurada (uno por clave, con caché)."""
+    """Dependencia de FastAPI: Google (si hay clave) seguido de la nomenclatura (si están las calles)."""
     clave = get_settings().google_geocoding_key.strip()
-    if not clave:
-        return None
     if clave not in _por_clave:
-        _por_clave[clave] = con_google(clave)
+        n = cargar_nomenclatura()
+        google = con_google(clave) if clave else None
+        local = con_nomenclatura(n) if n else None
+        _por_clave[clave] = encadenar(google, local) if (google or local) else None
     return _por_clave[clave]

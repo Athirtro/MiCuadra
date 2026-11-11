@@ -423,7 +423,7 @@ def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
     from app.schemas.directorio import Punto
     from app.services.geocodificar import Encontrado, GoogleNoDisponible, get_geocodificador
 
-    def falso(direccion: str, barrio: str | None) -> Encontrado | None:
+    def falso(direccion: str, barrio: str | None, cerca: Punto | None = None) -> Encontrado | None:
         if direccion == "Cr 26 # 70-16":
             return Encontrado(Punto(lat=4.80482, lng=-75.73751), "Cra. 26 #70-16, Pereira")
         if direccion == "Cl 1 # 1-01":
@@ -449,10 +449,11 @@ def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
         ]
         r = api.post(f"{V1}/admin/negocios/lote", json={"filas": filas}, headers=ADMIN).json()
         assert [
-            (v["fila"], v["ubicacion_automatica"], v["direccion_google"]) for v in r["validas"]
-        ] == [(2, True, "Cra. 26 #70-16, Pereira")]
+            (v["fila"], v["ubicacion_automatica"], v["metodo_ubicacion"], v["detalle_ubicacion"])
+            for v in r["validas"]
+        ] == [(2, True, "google", "Cra. 26 #70-16, Pereira")]
         errores = {e["fila"]: e["mensajes"] for e in r["errores"]}
-        assert errores[3] == ["Google no encontró esa dirección con precisión: ubícala en el mapa."]
+        assert errores[3] == ["No pudimos ubicar esa dirección con precisión: ubícala en el mapa."]
         # Sin dirección: se ven los dos problemas de una vez.
         assert "Falta la ubicación (latitud, longitud)." in errores[4]
         assert any("dirección" in m for m in errores[4])

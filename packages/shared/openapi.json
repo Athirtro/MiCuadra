@@ -3340,10 +3340,26 @@
           "ubicacion_automatica": {
             "type": "boolean",
             "title": "Ubicacion Automatica",
-            "description": "La ubicó Google por la dirección: conviene revisar el pin",
+            "description": "Se ubicó por la dirección: conviene revisar el pin",
             "default": false
           },
-          "direccion_google": {
+          "metodo_ubicacion": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "google",
+                  "nomenclatura"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metodo Ubicacion",
+            "description": "google = placa o cuadra; nomenclatura = aproximada por las calles"
+          },
+          "detalle_ubicacion": {
             "anyOf": [
               {
                 "type": "string"
@@ -3352,8 +3368,8 @@
                 "type": "null"
               }
             ],
-            "title": "Direccion Google",
-            "description": "Cómo entendió Google la dirección"
+            "title": "Detalle Ubicacion",
+            "description": "Cómo entendió Google la dirección o cómo se interpoló"
           }
         },
         "type": "object",

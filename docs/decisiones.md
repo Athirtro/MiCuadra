@@ -103,3 +103,19 @@ Formato: contexto → decisión → consecuencias. Las marcadas *(default SPEC)*
   precio se copian al apartado, así que editar el catálogo no cambia pedidos viejos. Va en su
   propia rama (`fase-1-catalogo`) y PR. No reemplaza los mandados de la Fase 2: un apartado es
   para recoger en la tienda.
+
+### ADR‑014 · Ubicar direcciones sin pagar: nomenclatura sobre OpenStreetMap
+- **Contexto:** la carga por CSV necesita coordenadas. La Geocoding API de Google exige
+  facturación y el equipo no la va a pagar; los geocodificadores gratuitos (Nominatim, Photon…)
+  usan OSM y en Pereira solo encuentran la calle, no la placa. El portal de datos abiertos de la
+  Alcaldía no publica calles con nomenclatura ni direcciones.
+- **Decisión:** el API ubica «Cl 71 # 26B-08» con las calles de OSM guardadas en
+  `apps/api/app/data/calles_pereira.json.gz` (≈80 KB, se actualiza con
+  `scripts/calles_osm.py`): busca la esquina, interpola entre las vías vecinas si la cruzada no
+  está en el mapa y avanza los metros de la placa, cerca del centro del barrio de la fila. Google
+  queda como primera opción solo si algún día hay `GOOGLE_GEOCODING_KEY` con facturación.
+- **Consecuencias:** precisión de una cuadra, más o menos; la revisión lo marca «Ubicación
+  aproximada» para revisar el pin. «Manzana y casa» y las direcciones sin calle cruzada se ubican
+  a mano. La copia actual cubre la zona de los barrios piloto (los servidores de Overpass no
+  respondieron a la descarga de toda la ciudad); hay que volver a correr el script al crecer.
+  Datos © colaboradores de OpenStreetMap (ODbL).

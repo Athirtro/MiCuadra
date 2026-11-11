@@ -139,3 +139,81 @@ def test_si_google_rechaza_se_avisa_y_no_se_guarda(monkeypatch: pytest.MonkeyPat
     with pytest.raises(geocodificar.GoogleNoDisponible):
         buscar("Cra 27 # 71-08", "Cuba")
     assert len(llamadas) == 2  # un rechazo no queda en caché: al arreglar la facturación funciona
+
+
+# ── Nomenclatura: cuadrícula inventada (calles horizontales, carreras verticales) ──
+
+
+def _cuadricula() -> "object":
+    from app.services.nomenclatura import Nomenclatura
+
+    # Calles 70, 71 y 72 de oeste a este; carreras 26, 26 Bis y 27 de sur a norte. Cada cuadra ≈ 110 m.
+    paso = 0.001
+    calles = [
+        (f"Calle {n}", [[4.800 + i * paso, -75.745], [4.800 + i * paso, -75.735]])
+        for i, n in enumerate([70, 71, 72])
+    ]
+    # La Carrera 26B no existe en el mapa (como pasa en OSM): hay que interpolarla.
+    carreras = [
+        (nombre, [[4.799, -75.744 + j * paso], [4.803, -75.744 + j * paso]])
+        for j, nombre in enumerate(["Carrera 26", "Carrera 26 Bis", "Carrera 27"])
+    ]
+    return Nomenclatura(calles + carreras)
+
+
+def test_nomenclatura_esquina_exacta_y_metros_de_la_placa() -> None:
+    n = _cuadricula()
+    punto, como = n.ubicar("Cra 26 # 71-00")  # type: ignore[attr-defined]
+    assert (punto.lat, punto.lng) == (4.801, -75.744)
+    assert como == "esquina de la carrera 26 con calle 71"
+    punto, como = n.ubicar("Cra 26 # 71-55")  # type: ignore[attr-defined]
+    # 55 m de una cuadra de ≈111 m hacia la Calle 72: casi a mitad de cuadra.
+    assert 4.8014 < punto.lat < 4.8016 and como.endswith("55 m adelante")
+
+
+def test_nomenclatura_interpola_la_carrera_que_falta() -> None:
+    from app.services.nomenclatura import numero, texto_numero
+
+    assert [numero(x) for x in ("26", "26 Bis", "26A", "26B")] == [26, 26.1, 26.2, 26.4]
+    assert [texto_numero(x) for x in (26, 26.1, 26.2, 26.4)] == ["26", "26 Bis", "26A", "26B"]
+    punto, como = _cuadricula().ubicar("Cl 71 # 26B-00")  # type: ignore[attr-defined]
+    assert como == "sobre la calle 71, entre la carrera 26 Bis y la 27"
+    assert punto.lat == 4.801 and -75.743 < punto.lng < -75.742
+
+
+def test_nomenclatura_no_inventa() -> None:
+    n = _cuadricula()
+    assert n.ubicar("Cl 99 # 26-10") is None  # type: ignore[attr-defined]  # la calle no está
+    assert n.ubicar("Cl 71 # 40-10") is None  # type: ignore[attr-defined]  # fuera de los cruces
+    assert n.ubicar("Mz 13 Casa 3") is None  # type: ignore[attr-defined]
+
+
+def test_las_calles_de_pereira_vienen_con_el_api() -> None:
+    from app.services.nomenclatura import cargar
+
+    n = cargar()
+    assert n is not None and len(n.tramos) > 200
+    punto, _ = n.ubicar("Cra 27 # 71-08")  # Cuba
+    assert 4.79 < punto.lat < 4.81 and -75.75 < punto.lng < -75.72
+
+
+def test_encadenado_google_y_nomenclatura() -> None:
+    from app.schemas.directorio import Punto
+    from app.services.geocodificar import Encontrado, GoogleNoDisponible, encadenar
+
+    def google_rechaza(d: str, b: str | None, c: Punto | None = None) -> Encontrado | None:
+        raise GoogleNoDisponible("REQUEST_DENIED")
+
+    def local(d: str, b: str | None, c: Punto | None = None) -> Encontrado | None:
+        return (
+            Encontrado(Punto(lat=4.8, lng=-75.7), "entre…", "nomenclatura")
+            if d == "Cl 71 # 26B-08"
+            else None
+        )
+
+    buscar = encadenar(google_rechaza, local)
+    r = buscar("Cl 71 # 26B-08", "Cuba", None)
+    assert r is not None and r.metodo == "nomenclatura"
+    with pytest.raises(GoogleNoDisponible):  # ninguno ubicó y Google rechazó: se avisa
+        buscar("Cl 1 # 1-01", None, None)
+    assert encadenar(None, local)("Cl 1 # 1-01", None, None) is None

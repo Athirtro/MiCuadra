@@ -1145,15 +1145,20 @@ export interface components {
             franjas: number;
             /**
              * Ubicacion Automatica
-             * @description La ubicó Google por la dirección: conviene revisar el pin
+             * @description Se ubicó por la dirección: conviene revisar el pin
              * @default false
              */
             ubicacion_automatica: boolean;
             /**
-             * Direccion Google
-             * @description Cómo entendió Google la dirección
+             * Metodo Ubicacion
+             * @description google = placa o cuadra; nomenclatura = aproximada por las calles
              */
-            direccion_google?: string | null;
+            metodo_ubicacion?: ("google" | "nomenclatura") | null;
+            /**
+             * Detalle Ubicacion
+             * @description Cómo entendió Google la dirección o cómo se interpoló
+             */
+            detalle_ubicacion?: string | null;
         };
         /** Foto */
         Foto: {

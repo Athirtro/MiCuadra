@@ -488,7 +488,8 @@ describe('Panel: filas ubicadas por Google', () => {
             whatsapp: null,
             franjas: 0,
             ubicacion_automatica: true,
-            direccion_google: 'Cra. 26 #70-16, Pereira',
+            metodo_ubicacion: 'google',
+            detalle_ubicacion: 'Cra. 26 #70-16, Pereira',
           },
         ],
         errores: [],
@@ -509,5 +510,37 @@ describe('Panel: filas ubicadas por Google', () => {
       filas: [{ nombre: 'Ferretería La Sierra', ubicacion: '4.804820, -75.737510' }],
       simular: false,
     })
+  })
+})
+
+describe('Panel: filas ubicadas por la nomenclatura', () => {
+  it('se marcan como aproximadas con cómo se interpolaron', async () => {
+    apiFalsa({
+      '/yo': { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] },
+      'POST /admin/negocios/lote': {
+        validas: [
+          {
+            fila: 2,
+            nombre: 'Palacio del Pandebono',
+            categoria: 'panaderia',
+            barrio: 'Cuba',
+            ubicacion: { lat: 4.803932, lng: -75.737936 },
+            whatsapp: null,
+            franjas: 0,
+            ubicacion_automatica: true,
+            metodo_ubicacion: 'nomenclatura',
+            detalle_ubicacion: 'sobre la calle 71, entre la carrera 26 Bis y la 27, 8 m adelante',
+          },
+        ],
+        errores: [],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+    const archivo = new File(['nombre,categoria,barrio,direccion\nPalacio del Pandebono,Panadería,Cuba,Cl 71 # 26B-08\n'], 'n.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+    expect(await screen.findByText('Ubicación aproximada')).toBeInTheDocument()
+    expect(screen.getByText('sobre la calle 71, entre la carrera 26 Bis y la 27, 8 m adelante')).toBeInTheDocument()
   })
 })

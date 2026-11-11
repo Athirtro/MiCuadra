@@ -131,6 +131,16 @@ def _categorias(db: Session) -> dict[str, str]:
     return mapa
 
 
+def _centros_de_barrios(db: Session) -> dict[str, Punto]:
+    """Nombre sin tildes → centro del barrio: ayuda a escoger el cruce correcto de la dirección."""
+    return {
+        _sin_tildes(nombre): Punto(lat=lat, lng=lng)
+        for nombre, lat, lng in db.execute(
+            text("select nombre, st_y(centroide::geometry), st_x(centroide::geometry) from barrios")
+        ).all()
+    }
+
+
 def _duplicado(db: Session, nombre: str, punto: Punto) -> bool:
     return (
         db.execute(
@@ -169,6 +179,7 @@ def cargar_lote(
     db: Session, lote: LoteEntrada, geocodificar: Geocodificador | None = None
 ) -> LoteResultado:
     categorias = _categorias(db)
+    centros = _centros_de_barrios(db)
     validas: list[tuple[FilaValida, NegocioCargaEntrada]] = []
     errores: list[ErrorFila] = []
     en_el_archivo: set[tuple[str, float, float]] = set()
@@ -182,7 +193,9 @@ def cargar_lote(
     if por_buscar and geocodificar:
         with ThreadPoolExecutor(max_workers=8) as hilos:
             futuros = {
-                i: hilos.submit(geocodificar, f.direccion, f.barrio or None)
+                i: hilos.submit(
+                    geocodificar, f.direccion, f.barrio or None, centros.get(_sin_tildes(f.barrio))
+                )
                 for i, f in por_buscar.items()
             }
             for i, fut in futuros.items():
@@ -222,6 +235,7 @@ def cargar_lote(
             elif _duplicado(db, entrada.nombre, entrada.ubicacion):
                 mensajes.append("Ya está en MiCuadra (mismo nombre en esa cuadra).")
             en_el_archivo.add(clave)
+        automatica = encontrado is not None and not fila.ubicacion
         if mensajes or entrada is None:
             errores.append(
                 ErrorFila(fila=i, nombre=fila.nombre or "(sin nombre)", mensajes=mensajes)
@@ -237,10 +251,9 @@ def cargar_lote(
                     ubicacion=entrada.ubicacion,
                     whatsapp=entrada.whatsapp,
                     franjas=len(entrada.horarios),
-                    ubicacion_automatica=encontrado is not None and not fila.ubicacion,
-                    direccion_google=encontrado.direccion
-                    if encontrado and not fila.ubicacion
-                    else None,
+                    ubicacion_automatica=automatica,
+                    metodo_ubicacion=encontrado.metodo if automatica and encontrado else None,
+                    detalle_ubicacion=encontrado.detalle if automatica and encontrado else None,
                 ),
                 entrada,
             )
@@ -300,7 +313,7 @@ def _fila_a_datos(
             " ubícala en el mapa."
         )
     elif con_google:
-        mensajes.append("Google no encontró esa dirección con precisión: ubícala en el mapa.")
+        mensajes.append("No pudimos ubicar esa dirección con precisión: ubícala en el mapa.")
     else:
         mensajes.append("Falta la ubicación (latitud, longitud).")
 
