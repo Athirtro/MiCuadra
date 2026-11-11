@@ -447,7 +447,7 @@ describe('Panel: ubicar filas del CSV', () => {
       '/barrios': BARRIOS,
       'POST /admin/negocios/lote': {
         validas: [],
-        errores: [{ fila: 2, nombre: 'Pastel Pan', mensajes: ['Falta la ubicación (latitud, longitud).'] }],
+        errores: [{ fila: 2, nombre: 'Pastel Pan', mensajes: ['Google no encontró esa dirección con precisión: ubícala en el mapa.'] }],
         creados: 0,
       },
     })

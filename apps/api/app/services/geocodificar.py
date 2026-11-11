@@ -33,6 +33,10 @@ class Encontrado:
 Geocodificador = Callable[[str, str | None], Encontrado | None]
 
 
+class GoogleNoDisponible(Exception):
+    """Google rechazó la consulta (clave, facturación o cuota): no es que no exista la dirección."""
+
+
 def limpiar_direccion(direccion: str) -> str:
     """Quita lo que confunde al buscador: notas entre paréntesis y el número de local."""
     d = re.sub(r"\([^)]*\)", " ", direccion)
@@ -79,9 +83,9 @@ def con_google(clave: str) -> Geocodificador:
                     resultado = Encontrado(Punto(lat=lat, lng=lng), c.get("formatted_address", ""))
                     break
         elif datos.get("status") not in ("ZERO_RESULTS",):
-            # REQUEST_DENIED, OVER_QUERY_LIMIT…: casi siempre la clave o la cuota.
+            # REQUEST_DENIED, OVER_QUERY_LIMIT…: casi siempre la clave, la facturación o la cuota.
             log.error("Geocoding respondió %s: %s", datos.get("status"), datos.get("error_message"))
-            return None
+            raise GoogleNoDisponible(str(datos.get("status")))
         cache[llave] = resultado
         return resultado
 

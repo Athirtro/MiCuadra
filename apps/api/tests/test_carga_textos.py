@@ -121,3 +121,21 @@ def test_google_solo_vale_si_es_preciso_y_en_pereira(monkeypatch: pytest.MonkeyP
     assert buscar("Cr 1 # 1-01", None) is None
     buscar("Cra 27 # 71-08", "Cuba")
     assert len(pedidos) == 3  # la repetida sale de la caché
+
+
+def test_si_google_rechaza_se_avisa_y_no_se_guarda(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services import geocodificar
+
+    llamadas: list[str] = []
+
+    def falso(url: str, timeout: float) -> object:
+        llamadas.append(url)
+        return _respuesta({"status": "REQUEST_DENIED", "error_message": "You must enable Billing"})
+
+    monkeypatch.setattr(geocodificar.urllib.request, "urlopen", falso)
+    buscar = geocodificar.con_google("clave")
+    with pytest.raises(geocodificar.GoogleNoDisponible):
+        buscar("Cra 27 # 71-08", "Cuba")
+    with pytest.raises(geocodificar.GoogleNoDisponible):
+        buscar("Cra 27 # 71-08", "Cuba")
+    assert len(llamadas) == 2  # un rechazo no queda en caché: al arreglar la facturación funciona

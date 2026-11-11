@@ -72,7 +72,8 @@ function SelectorEstado({ valor, onChange }: { valor: EstadoInicial; onChange: (
   )
 }
 
-const faltaUbicacion = (mensajes: string[]) => mensajes.some((m) => /ubicaci[oó]n/i.test(m))
+// «Falta la ubicación», «ubícala en el mapa», «No entendí la ubicación»…
+const faltaUbicacion = (mensajes: string[]) => mensajes.some((m) => /ub[ií]ca/i.test(m))
 
 function Errores({ r, alUbicar }: { r: LoteResultado; alUbicar?: (fila: number) => void }) {
   if (!r.errores.length) return null

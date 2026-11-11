@@ -28,7 +28,7 @@ from app.schemas.cuenta import HorarioEntrada
 from app.schemas.directorio import Punto
 from app.services.admin import buscar_negocio
 from app.services.cuenta import insertar_negocio, slugificar
-from app.services.geocodificar import Encontrado, Geocodificador
+from app.services.geocodificar import Encontrado, Geocodificador, GoogleNoDisponible
 
 # Mismo nombre a menos de esto = probablemente el mismo negocio.
 RADIO_DUPLICADO_M = 150
@@ -178,20 +178,31 @@ def cargar_lote(
         i: f for i, f in enumerate(lote.filas) if not f.ubicacion and f.direccion and geocodificar
     }
     encontrados: dict[int, Encontrado | None] = {}
+    rechazadas: set[int] = set()
     if por_buscar and geocodificar:
         with ThreadPoolExecutor(max_workers=8) as hilos:
             futuros = {
                 i: hilos.submit(geocodificar, f.direccion, f.barrio or None)
                 for i, f in por_buscar.items()
             }
-            encontrados = {i: fut.result() for i, fut in futuros.items()}
+            for i, fut in futuros.items():
+                try:
+                    encontrados[i] = fut.result()
+                except GoogleNoDisponible:
+                    rechazadas.add(i)
 
     for n, fila in enumerate(lote.filas):
         i = n + 2  # número de fila en el archivo: la 1 es el encabezado
         mensajes: list[str] = []
         encontrado = encontrados.get(n)
         datos, completa = _fila_a_datos(
-            fila, categorias, lote.estado, mensajes, encontrado, geocodificar is not None
+            fila,
+            categorias,
+            lote.estado,
+            mensajes,
+            encontrado,
+            geocodificar is not None,
+            n in rechazadas,
         )
         entrada: NegocioCargaEntrada | None = None
         try:
@@ -261,6 +272,7 @@ def _fila_a_datos(
     mensajes: list[str],
     encontrado: Encontrado | None,
     con_google: bool,
+    google_rechazo: bool = False,
 ) -> tuple[dict[str, object], bool]:
     """Convierte la fila de texto en datos para validar; anota en `mensajes` lo que no entienda.
 
@@ -282,6 +294,11 @@ def _fila_a_datos(
         ubicacion = encontrado.punto
     elif not fila.direccion:
         mensajes.append("Falta la ubicación (latitud, longitud).")
+    elif google_rechazo:
+        mensajes.append(
+            "Google rechazó la consulta (revisa la facturación y la clave en Google Cloud):"
+            " ubícala en el mapa."
+        )
     elif con_google:
         mensajes.append("Google no encontró esa dirección con precisión: ubícala en el mapa.")
     else:

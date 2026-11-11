@@ -421,11 +421,13 @@ def test_lote_simula_explica_errores_y_crea_todo_o_nada(api: TestClient) -> None
 
 def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
     from app.schemas.directorio import Punto
-    from app.services.geocodificar import Encontrado, get_geocodificador
+    from app.services.geocodificar import Encontrado, GoogleNoDisponible, get_geocodificador
 
     def falso(direccion: str, barrio: str | None) -> Encontrado | None:
         if direccion == "Cr 26 # 70-16":
             return Encontrado(Punto(lat=4.80482, lng=-75.73751), "Cra. 26 #70-16, Pereira")
+        if direccion == "Cl 1 # 1-01":
+            raise GoogleNoDisponible("REQUEST_DENIED")
         return None
 
     api.app.dependency_overrides[get_geocodificador] = lambda: falso  # type: ignore[attr-defined]
@@ -443,6 +445,7 @@ def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
                 "direccion": "Cl 71 # 26B-08",
             },
             {"nombre": "Real Sin Dirección", "categoria": "Tienda"},
+            {"nombre": "Real Rechazada", "categoria": "Tienda", "direccion": "Cl 1 # 1-01"},
         ]
         r = api.post(f"{V1}/admin/negocios/lote", json={"filas": filas}, headers=ADMIN).json()
         assert [
@@ -453,5 +456,9 @@ def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
         # Sin dirección: se ven los dos problemas de una vez.
         assert "Falta la ubicación (latitud, longitud)." in errores[4]
         assert any("dirección" in m for m in errores[4])
+        assert errores[5] == [
+            "Google rechazó la consulta (revisa la facturación y la clave en Google Cloud):"
+            " ubícala en el mapa."
+        ]
     finally:
         api.app.dependency_overrides.pop(get_geocodificador, None)  # type: ignore[attr-defined]
