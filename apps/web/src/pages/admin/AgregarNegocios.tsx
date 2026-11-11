@@ -398,7 +398,9 @@ function DesdeCsv() {
             onClick={() => lote.mutate({ filas, estado, simular: false })}
             className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
           >
-            {r.errores.length ? 'Corrige las filas marcadas y vuelve a subir el archivo' : `Agregar ${r.validas.length} negocios`}
+            {r.errores.length
+              ? 'Ubica o corrige las filas marcadas para continuar'
+              : `Agregar ${r.validas.length} ${r.validas.length === 1 ? 'negocio' : 'negocios'}`}
           </button>
         </>
       )}

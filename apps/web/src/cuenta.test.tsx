@@ -434,7 +434,7 @@ describe('Panel: agregar negocios', () => {
         simular: true,
       },
     })
-    expect(screen.getByRole('button', { name: /Corrige las filas marcadas/ })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /Ubica o corrige las filas marcadas/ })).toBeDisabled()
   })
 })
 
@@ -502,7 +502,7 @@ describe('Panel: filas ubicadas por Google', () => {
 
     expect(await screen.findByText('Ubicada por Google')).toBeInTheDocument()
     expect(screen.getByText('Cra. 26 #70-16, Pereira')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Agregar 1 negocios' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar 1 negocio' }))
 
     await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
     expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]?.cuerpo).toMatchObject({
