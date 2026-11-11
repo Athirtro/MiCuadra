@@ -417,3 +417,41 @@ def test_lote_simula_explica_errores_y_crea_todo_o_nada(api: TestClient) -> None
     # Subir el mismo archivo otra vez no duplica.
     r = api.post(url, json={"filas": [buena]}, headers=ADMIN).json()
     assert r["errores"][0]["mensajes"] == ["Ya está en MiCuadra (mismo nombre en esa cuadra)."]
+
+
+def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
+    from app.schemas.directorio import Punto
+    from app.services.geocodificar import Encontrado, get_geocodificador
+
+    def falso(direccion: str, barrio: str | None) -> Encontrado | None:
+        if direccion == "Cr 26 # 70-16":
+            return Encontrado(Punto(lat=4.80482, lng=-75.73751), "Cra. 26 #70-16, Pereira")
+        return None
+
+    api.app.dependency_overrides[get_geocodificador] = lambda: falso  # type: ignore[attr-defined]
+    try:
+        filas = [
+            {
+                "nombre": "Real Ferretería La Sierra",
+                "categoria": "Ferretería",
+                "barrio": "Cuba",
+                "direccion": "Cr 26 # 70-16",
+            },
+            {
+                "nombre": "Real Palacio del Pandebono",
+                "categoria": "Panadería",
+                "direccion": "Cl 71 # 26B-08",
+            },
+            {"nombre": "Real Sin Dirección", "categoria": "Tienda"},
+        ]
+        r = api.post(f"{V1}/admin/negocios/lote", json={"filas": filas}, headers=ADMIN).json()
+        assert [
+            (v["fila"], v["ubicacion_automatica"], v["direccion_google"]) for v in r["validas"]
+        ] == [(2, True, "Cra. 26 #70-16, Pereira")]
+        errores = {e["fila"]: e["mensajes"] for e in r["errores"]}
+        assert errores[3] == ["Google no encontró esa dirección con precisión: ubícala en el mapa."]
+        # Sin dirección: se ven los dos problemas de una vez.
+        assert "Falta la ubicación (latitud, longitud)." in errores[4]
+        assert any("dirección" in m for m in errores[4])
+    finally:
+        api.app.dependency_overrides.pop(get_geocodificador, None)  # type: ignore[attr-defined]

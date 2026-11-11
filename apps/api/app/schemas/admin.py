@@ -159,6 +159,12 @@ class FilaValida(BaseModel):
     ubicacion: Punto
     whatsapp: str | None
     franjas: int = Field(description="Franjas de horario reconocidas")
+    ubicacion_automatica: bool = Field(
+        default=False, description="La ubicó Google por la dirección: conviene revisar el pin"
+    )
+    direccion_google: str | None = Field(
+        default=None, description="Cómo entendió Google la dirección"
+    )
 
 
 class ErrorFila(BaseModel):

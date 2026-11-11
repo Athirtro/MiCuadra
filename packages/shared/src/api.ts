@@ -542,6 +542,8 @@ export interface paths {
         /**
          * Cargar Lote
          * @description Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna.
+         *
+         *     Las filas con dirección y sin coordenadas se ubican con Google si hay `GOOGLE_GEOCODING_KEY`.
          */
         post: operations["cargar_lote_api_v1_admin_negocios_lote_post"];
         delete?: never;
@@ -1141,6 +1143,17 @@ export interface components {
              * @description Franjas de horario reconocidas
              */
             franjas: number;
+            /**
+             * Ubicacion Automatica
+             * @description La ubicó Google por la dirección: conviene revisar el pin
+             * @default false
+             */
+            ubicacion_automatica: boolean;
+            /**
+             * Direccion Google
+             * @description Cómo entendió Google la dirección
+             */
+            direccion_google?: string | null;
         };
         /** Foto */
         Foto: {

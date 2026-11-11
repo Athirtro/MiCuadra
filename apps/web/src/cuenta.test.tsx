@@ -470,3 +470,44 @@ describe('Panel: ubicar filas del CSV', () => {
     })
   })
 })
+
+describe('Panel: filas ubicadas por Google', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] }
+
+  it('marca la fila y crea con el mismo punto que se revisó', async () => {
+    const { posts } = apiFalsa({
+      '/yo': ADMIN,
+      'POST /admin/negocios/lote': {
+        validas: [
+          {
+            fila: 2,
+            nombre: 'Ferretería La Sierra',
+            categoria: 'ferreteria',
+            barrio: 'Cuba',
+            ubicacion: { lat: 4.80482, lng: -75.73751 },
+            whatsapp: null,
+            franjas: 0,
+            ubicacion_automatica: true,
+            direccion_google: 'Cra. 26 #70-16, Pereira',
+          },
+        ],
+        errores: [],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+    const archivo = new File(['nombre,categoria,barrio,direccion\nFerretería La Sierra,Ferretería,Cuba,Cr 26 # 70-16\n'], 'n.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+
+    expect(await screen.findByText('Ubicada por Google')).toBeInTheDocument()
+    expect(screen.getByText('Cra. 26 #70-16, Pereira')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar 1 negocios' }))
+
+    await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
+    expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]?.cuerpo).toMatchObject({
+      filas: [{ nombre: 'Ferretería La Sierra', ubicacion: '4.804820, -75.737510' }],
+      simular: false,
+    })
+  })
+})

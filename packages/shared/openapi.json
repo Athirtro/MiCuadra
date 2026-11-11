@@ -1746,7 +1746,7 @@
           "admin"
         ],
         "summary": "Cargar Lote",
-        "description": "Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna.",
+        "description": "Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna.\n\nLas filas con dirección y sin coordenadas se ubican con Google si hay `GOOGLE_GEOCODING_KEY`.",
         "operationId": "cargar_lote_api_v1_admin_negocios_lote_post",
         "requestBody": {
           "content": {
@@ -3336,6 +3336,24 @@
             "type": "integer",
             "title": "Franjas",
             "description": "Franjas de horario reconocidas"
+          },
+          "ubicacion_automatica": {
+            "type": "boolean",
+            "title": "Ubicacion Automatica",
+            "description": "La ubicó Google por la dirección: conviene revisar el pin",
+            "default": false
+          },
+          "direccion_google": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion Google",
+            "description": "Cómo entendió Google la dirección"
           }
         },
         "type": "object",

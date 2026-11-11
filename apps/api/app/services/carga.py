@@ -7,6 +7,7 @@ vivan en un solo lugar. El lote se crea completo o no se crea: con un error no e
 
 import re
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor
 from uuid import UUID
 
 from pydantic import ValidationError
@@ -27,6 +28,7 @@ from app.schemas.cuenta import HorarioEntrada
 from app.schemas.directorio import Punto
 from app.services.admin import buscar_negocio
 from app.services.cuenta import insertar_negocio, slugificar
+from app.services.geocodificar import Encontrado, Geocodificador
 
 # Mismo nombre a menos de esto = probablemente el mismo negocio.
 RADIO_DUPLICADO_M = 150
@@ -163,21 +165,41 @@ def _mensajes(error: ValidationError) -> list[str]:
     return vistos
 
 
-def cargar_lote(db: Session, lote: LoteEntrada) -> LoteResultado:
+def cargar_lote(
+    db: Session, lote: LoteEntrada, geocodificar: Geocodificador | None = None
+) -> LoteResultado:
     categorias = _categorias(db)
     validas: list[tuple[FilaValida, NegocioCargaEntrada]] = []
     errores: list[ErrorFila] = []
     en_el_archivo: set[tuple[str, float, float]] = set()
 
-    for i, fila in enumerate(lote.filas, start=2):  # la fila 1 es el encabezado
+    # Las filas con dirección pero sin coordenadas se buscan en Google, varias a la vez.
+    por_buscar = {
+        i: f for i, f in enumerate(lote.filas) if not f.ubicacion and f.direccion and geocodificar
+    }
+    encontrados: dict[int, Encontrado | None] = {}
+    if por_buscar and geocodificar:
+        with ThreadPoolExecutor(max_workers=8) as hilos:
+            futuros = {
+                i: hilos.submit(geocodificar, f.direccion, f.barrio or None)
+                for i, f in por_buscar.items()
+            }
+            encontrados = {i: fut.result() for i, fut in futuros.items()}
+
+    for n, fila in enumerate(lote.filas):
+        i = n + 2  # número de fila en el archivo: la 1 es el encabezado
         mensajes: list[str] = []
-        datos = _fila_a_datos(fila, categorias, lote.estado, mensajes)
+        encontrado = encontrados.get(n)
+        datos, completa = _fila_a_datos(
+            fila, categorias, lote.estado, mensajes, encontrado, geocodificar is not None
+        )
         entrada: NegocioCargaEntrada | None = None
-        if datos is not None:
-            try:
-                entrada = NegocioCargaEntrada.model_validate(datos)
-            except ValidationError as e:
-                mensajes += _mensajes(e)
+        try:
+            entrada = NegocioCargaEntrada.model_validate(datos)
+        except ValidationError as e:
+            mensajes += _mensajes(e)
+        if not completa:
+            entrada = None
         if entrada is not None and not mensajes:
             clave = (
                 slugificar(entrada.nombre),
@@ -204,6 +226,10 @@ def cargar_lote(db: Session, lote: LoteEntrada) -> LoteResultado:
                     ubicacion=entrada.ubicacion,
                     whatsapp=entrada.whatsapp,
                     franjas=len(entrada.horarios),
+                    ubicacion_automatica=encontrado is not None and not fila.ubicacion,
+                    direccion_google=encontrado.direccion
+                    if encontrado and not fila.ubicacion
+                    else None,
                 ),
                 entrada,
             )
@@ -222,10 +248,24 @@ def cargar_lote(db: Session, lote: LoteEntrada) -> LoteResultado:
     return LoteResultado(validas=[v for v, _ in validas], errores=errores, creados=creados)
 
 
+# Mientras falte la categoría o la ubicación, la fila se valida con estos valores de relleno para
+# mostrar de una vez sus demás errores (dirección, WhatsApp…); nunca se crea con ellos.
+_RELLENO_CATEGORIA = "tienda"
+_RELLENO_UBICACION = Punto(lat=4.8133, lng=-75.6961)
+
+
 def _fila_a_datos(
-    fila: FilaCsv, categorias: dict[str, str], estado: str, mensajes: list[str]
-) -> dict[str, object] | None:
-    """Convierte la fila de texto en datos para validar; anota en `mensajes` lo que no entienda."""
+    fila: FilaCsv,
+    categorias: dict[str, str],
+    estado: str,
+    mensajes: list[str],
+    encontrado: Encontrado | None,
+    con_google: bool,
+) -> tuple[dict[str, object], bool]:
+    """Convierte la fila de texto en datos para validar; anota en `mensajes` lo que no entienda.
+
+    Devuelve los datos y si la fila está completa (categoría y ubicación reales).
+    """
     categoria = categorias.get(_sin_tildes(fila.categoria)) if fila.categoria else None
     if fila.categoria and categoria is None:
         mensajes.append(f"No existe la categoría «{fila.categoria}».")
@@ -233,13 +273,19 @@ def _fila_a_datos(
         mensajes.append(_MENSAJES["categoria"])
 
     ubicacion: Punto | None = None
-    if not fila.ubicacion:
-        mensajes.append("Falta la ubicación (latitud, longitud).")
-    else:
+    if fila.ubicacion:
         try:
             ubicacion = interpretar_ubicacion(fila.ubicacion)
         except ValueError as e:
             mensajes.append(str(e))
+    elif encontrado is not None:
+        ubicacion = encontrado.punto
+    elif not fila.direccion:
+        mensajes.append("Falta la ubicación (latitud, longitud).")
+    elif con_google:
+        mensajes.append("Google no encontró esa dirección con precisión: ubícala en el mapa.")
+    else:
+        mensajes.append("Falta la ubicación (latitud, longitud).")
 
     horarios: list[HorarioEntrada] = []
     if fila.horario:
@@ -252,20 +298,19 @@ def _fila_a_datos(
         except ValueError as e:
             mensajes.append(str(e))
 
-    if categoria is None or ubicacion is None:
-        return None
     whatsapp = re.sub(r"\D", "", fila.whatsapp)
     if whatsapp.startswith("57") and len(whatsapp) == 12:
         whatsapp = whatsapp[2:]
-    return {
+    datos: dict[str, object] = {
         "nombre": fila.nombre,
-        "categoria": categoria,
+        "categoria": categoria or _RELLENO_CATEGORIA,
         "barrio": fila.barrio or None,
         "direccion_texto": fila.direccion,
-        "ubicacion": ubicacion,
+        "ubicacion": ubicacion or _RELLENO_UBICACION,
         "whatsapp": whatsapp or None,
         "telefono": fila.telefono or None,
         "descripcion": fila.descripcion or None,
         "horarios": horarios,
         "estado": estado,
     }
+    return datos, categoria is not None and ubicacion is not None

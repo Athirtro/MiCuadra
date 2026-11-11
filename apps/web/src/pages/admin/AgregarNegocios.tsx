@@ -250,6 +250,8 @@ function DesdeCsv() {
   const [archivo, setArchivo] = useState('')
   const [estado, setEstado] = useState<EstadoInicial>('activo')
   const [ubicando, setUbicando] = useState<number | null>(null)
+  // Filas que ubicó Google: su punto se guarda en la fila para que crear use el mismo que se revisó.
+  const [deGoogle, setDeGoogle] = useState<Map<number, string>>(new Map())
   const plantilla = `data:text/csv;charset=utf-8,${encodeURIComponent('\uFEFF' + PLANTILLA)}`
 
   async function elegir(e: ChangeEvent<HTMLInputElement>) {
@@ -260,8 +262,28 @@ function DesdeCsv() {
     setArchivo(f.name)
     setFilas(leido.filas)
     setIgnoradas(leido.ignoradas)
+    setDeGoogle(new Map())
     lote.reset()
-    if (leido.filas.length) lote.mutate({ filas: leido.filas, estado, simular: true })
+    if (leido.filas.length) revisar(leido.filas)
+  }
+
+  function revisar(nuevas: FilaCsv[]) {
+    lote.mutate(
+      { filas: nuevas, estado, simular: true },
+      {
+        onSuccess: (res) => {
+          const auto = res.validas.filter((v) => v.ubicacion_automatica)
+          if (!auto.length) return
+          setDeGoogle((m) => new Map([...m, ...auto.map((v) => [v.fila, v.direccion_google ?? ''] as const)]))
+          setFilas((actuales) =>
+            actuales.map((f, i) => {
+              const v = auto.find((x) => x.fila === i + 2)
+              return v ? { ...f, ubicacion: `${v.ubicacion.lat.toFixed(6)}, ${v.ubicacion.lng.toFixed(6)}` } : f
+            }),
+          )
+        },
+      },
+    )
   }
 
   // Pone la ubicación elegida en la fila y vuelve a revisar todo el archivo.
@@ -269,7 +291,9 @@ function DesdeCsv() {
     const nuevas = filas.map((f, i) => (i === fila - 2 ? { ...f, ubicacion: `${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}` } : f))
     setFilas(nuevas)
     setUbicando(null)
-    lote.mutate({ filas: nuevas, estado, simular: true })
+    // Si la ajustaron a mano, ya no es «de Google».
+    setDeGoogle((m) => new Map([...m].filter(([f]) => f !== fila)))
+    revisar(nuevas)
   }
 
   const r = lote.data
@@ -285,8 +309,9 @@ function DesdeCsv() {
           y llénala en Excel o Google Sheets (una fila por negocio).
         </li>
         <li>
-          En <strong>ubicacion</strong> pega «latitud, longitud»: en Google Maps, mantén presionado el punto y copia los números
-          (también sirve el enlace).
+          La columna <strong>ubicacion</strong> puede ir vacía: la buscamos con la dirección y el barrio, y la que no
+          encontremos con precisión la ubicas en el mapa. Si ya tienes las coordenadas, pega «latitud, longitud» (en Google
+          Maps, mantén presionado el punto y copia los números).
         </li>
         <li>Guárdala como CSV y súbela aquí. Primero la revisamos; no se crea nada hasta que confirmes.</li>
       </ol>
@@ -330,6 +355,7 @@ function DesdeCsv() {
                     <th className="p-2">Barrio</th>
                     <th className="p-2">WhatsApp</th>
                     <th className="p-2">Horario</th>
+                    <th className="p-2">Ubicación</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
@@ -343,6 +369,19 @@ function DesdeCsv() {
                       <td className="p-2">{v.barrio ?? '—'}</td>
                       <td className="p-2 font-mono">{v.whatsapp ?? '—'}</td>
                       <td className="p-2">{v.franjas ? `${v.franjas} franjas` : '—'}</td>
+                      <td className="p-2">
+                        {deGoogle.has(v.fila) ? (
+                          <span className="flex flex-col items-start gap-1">
+                            <span className="rounded-full bg-sun px-2 text-xs font-bold text-sun-ink">Ubicada por Google</span>
+                            {deGoogle.get(v.fila) && <span className="text-xs text-muted">{deGoogle.get(v.fila)}</span>}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted">Del archivo</span>
+                        )}
+                        <button type="button" onClick={() => setUbicando(v.fila)} className="mt-1 block text-xs font-bold text-green underline">
+                          Ver o ajustar el pin
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -385,7 +424,10 @@ function UbicarFila({
   const barrios = useQuery({ queryKey: ['barrios'], queryFn: () => apiGet<Barrio[]>('/barrios'), staleTime: Infinity })
   const normal = (t = '') => t.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
   const delBarrio = barrios.data?.find((b) => datos.barrio && normal(b.nombre) === normal(datos.barrio))?.centroide
-  const [punto, setPunto] = useState<Punto | null>(null)
+  const [punto, setPunto] = useState<Punto | null>(() => {
+    const m = datos.ubicacion?.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/)
+    return m ? { lat: Number(m[1]), lng: Number(m[2]) } : null
+  })
   return (
     <Dialogo titulo={`Ubicar ${datos.nombre ?? 'negocio'}`} alCerrar={alCerrar}>
       <div className="flex flex-col gap-3">

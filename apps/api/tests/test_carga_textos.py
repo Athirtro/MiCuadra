@@ -54,3 +54,70 @@ def test_ubicacion_en_varios_formatos(texto: str) -> None:
 def test_ubicacion_ilegible() -> None:
     with pytest.raises(ValueError, match="latitud, longitud"):
         interpretar_ubicacion("Calle 71 # 26B-08")
+
+
+# ── Google Geocoding (sin red: se simula la respuesta) ──
+
+
+def _respuesta(cuerpo: dict[str, object]) -> object:
+    import io
+    import json
+
+    return io.BytesIO(json.dumps(cuerpo).encode())
+
+
+def test_limpia_la_direccion_antes_de_buscar() -> None:
+    from app.services.geocodificar import limpiar_direccion
+
+    assert limpiar_direccion("Cl 69 # 25-46 L-2") == "Cl 69 # 25-46"
+    assert limpiar_direccion("Cl 72 # 26B-07 (Intercambiador de Cuba)") == "Cl 72 # 26B-07"
+
+
+def test_google_solo_vale_si_es_preciso_y_en_pereira(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services import geocodificar
+
+    respuestas = {
+        "Cra 27 # 71-08": {
+            "status": "OK",
+            "results": [
+                {
+                    "formatted_address": "Cra. 27 #71-08, Pereira, Risaralda",
+                    "geometry": {
+                        "location": {"lat": 4.8037, "lng": -75.7379},
+                        "location_type": "ROOFTOP",
+                    },
+                }
+            ],
+        },
+        # Solo encontró la calle: se descarta.
+        "Cl 71 # 26B-08": {
+            "status": "OK",
+            "results": [
+                {
+                    "geometry": {
+                        "location": {"lat": 4.80, "lng": -75.74},
+                        "location_type": "GEOMETRIC_CENTER",
+                    }
+                }
+            ],
+        },
+        "Cr 1 # 1-01": {"status": "ZERO_RESULTS", "results": []},
+    }
+    pedidos: list[str] = []
+
+    def falso(url: str, timeout: float) -> object:
+        pedidos.append(url)
+        for direccion, cuerpo in respuestas.items():
+            if direccion.replace(" ", "+").replace("#", "%23") in url:
+                return _respuesta(cuerpo)
+        raise AssertionError(url)
+
+    monkeypatch.setattr(geocodificar.urllib.request, "urlopen", falso)
+    buscar = geocodificar.con_google("clave-de-prueba")
+    e = buscar("Cra 27 # 71-08", "Cuba")
+    assert e is not None and (e.punto.lat, e.punto.lng) == (4.8037, -75.7379)
+    assert "components=country%3ACO%7Clocality%3APereira" in pedidos[0]
+    assert buscar("Cl 71 # 26B-08", "Cuba") is None
+    assert buscar("Cr 1 # 1-01", None) is None
+    buscar("Cra 27 # 71-08", "Cuba")
+    assert len(pedidos) == 3  # la repetida sale de la caché
