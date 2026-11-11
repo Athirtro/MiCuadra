@@ -260,7 +260,7 @@ def cargar_lote(
         )
 
     creados = 0
-    if not lote.simular and not errores:
+    if not lote.simular and (lote.solo_listas or not errores):
         ids: list[UUID] = [
             insertar_negocio(
                 db, e, whatsapp=e.whatsapp, dueno_id=None, estado=e.estado, por_admin=True

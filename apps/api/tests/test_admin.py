@@ -463,3 +463,25 @@ def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
         ]
     finally:
         api.app.dependency_overrides.pop(get_geocodificador, None)  # type: ignore[attr-defined]
+
+
+def test_lote_crea_solo_las_listas_si_se_pide(api: TestClient) -> None:
+    filas = [
+        {
+            "nombre": "Real Lista",
+            "categoria": "Tienda",
+            "direccion": "Cl 1 # 1-01",
+            "ubicacion": CUBA,
+        },
+        {"nombre": "Real Sin Ubicar", "categoria": "Tienda", "direccion": "Mz 4 Casa 9"},
+    ]
+    url = f"{V1}/admin/negocios/lote"
+    r = api.post(url, json={"filas": filas, "simular": False}, headers=ADMIN).json()
+    assert r["creados"] == 0  # por defecto, todo o nada
+
+    r = api.post(
+        url, json={"filas": filas, "simular": False, "solo_listas": True}, headers=ADMIN
+    ).json()
+    assert r["creados"] == 1 and [e["fila"] for e in r["errores"]] == [3]
+    nombres = [n["nombre"] for n in api.get(f"{V1}/admin/negocios?q=Real", headers=ADMIN).json()]
+    assert "Real Lista" in nombres and "Real Sin Ubicar" not in nombres

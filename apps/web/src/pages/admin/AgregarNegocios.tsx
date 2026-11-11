@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { apiEnviar, apiGet, type Barrio, type Categoria, type LoteEntrada, type LoteResultado, type Punto } from '../../lib/api'
-import { filasDesdeCsv, PLANTILLA, type FilaCsv } from '../../lib/csv'
+import { csvDePendientes, filasDesdeCsv, PLANTILLA, type FilaCsv } from '../../lib/csv'
 import { emojiCategoria } from '../../lib/negocio'
 import { Dialogo } from '../../components/Dialogo'
 import { Filtro, useToken } from './Admin'
@@ -20,7 +20,7 @@ function useLote() {
   const token = useToken()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (lote: { filas: FilaCsv[]; estado: EstadoInicial; simular: boolean }) =>
+    mutationFn: (lote: { filas: FilaCsv[]; estado: EstadoInicial; simular: boolean; solo_listas?: boolean }) =>
       apiEnviar<LoteResultado>('POST', '/admin/negocios/lote', lote, token),
     onSuccess: (r) => {
       if (r.creados) void queryClient.invalidateQueries({ queryKey: ['admin'] })
@@ -339,12 +339,27 @@ function DesdeCsv() {
       )}
 
       {r?.creados ? (
-        <p role="status" className="entra rounded-caja bg-green/15 p-4 font-bold text-green">
-          ✓ Se agregaron {r.creados} negocios.{' '}
-          <Link to="/admin/negocios" className="underline">
-            Verlos
-          </Link>
-        </p>
+        <div role="status" className="entra flex flex-col gap-2 rounded-caja bg-green/15 p-4">
+          <p className="font-bold text-green">
+            ✓ Se {r.creados === 1 ? 'agregó 1 negocio' : `agregaron ${r.creados} negocios`}.{' '}
+            <Link to="/admin/negocios" className="underline">
+              Verlos
+            </Link>
+          </p>
+          {r.errores.length > 0 && (
+            <p className="text-sm">
+              {r.errores.length === 1 ? 'Quedó 1 fila' : `Quedaron ${r.errores.length} filas`} sin agregar.{' '}
+              <a
+                href={`data:text/csv;charset=utf-8,${encodeURIComponent('\uFEFF' + csvDePendientes(filas, r.errores))}`}
+                download="negocios-pendientes.csv"
+                className="font-bold text-green underline"
+              >
+                Descarga las pendientes
+              </a>{' '}
+              con el motivo de cada una, complétalas y vuelve a subirlas.
+            </p>
+          )}
+        </div>
       ) : null}
 
       {revisado && (
@@ -405,14 +420,19 @@ function DesdeCsv() {
           </p>
           <button
             type="button"
-            disabled={r.errores.length > 0 || r.validas.length === 0 || lote.isPending}
-            onClick={() => lote.mutate({ filas, estado, simular: false })}
+            disabled={r.validas.length === 0 || lote.isPending}
+            onClick={() => lote.mutate({ filas, estado, simular: false, solo_listas: true })}
             className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
           >
-            {r.errores.length
-              ? 'Ubica o corrige las filas marcadas para continuar'
+            {r.validas.length === 0
+              ? 'Ninguna fila está lista todavía'
               : `Agregar ${r.validas.length} ${r.validas.length === 1 ? 'negocio' : 'negocios'}`}
           </button>
+          {r.errores.length > 0 && r.validas.length > 0 && (
+            <p className="-mt-2 text-center text-sm text-muted">
+              Las {r.errores.length} filas marcadas quedan para después: al terminar puedes descargarlas para completarlas.
+            </p>
+          )}
         </>
       )}
       {ubicando !== null && filas[ubicando - 2] && (

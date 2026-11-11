@@ -102,3 +102,15 @@ export function filasDesdeCsv(texto: string): { filas: FilaCsv[]; ignoradas: str
   })
   return { filas, ignoradas }
 }
+
+const celda = (v: string) => (/[",;\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
+
+/** CSV con las filas que no entraron y el motivo, para completarlas y volver a subirlas. */
+export function csvDePendientes(filas: FilaCsv[], errores: { fila: number; mensajes: string[] }[]): string {
+  const lineas = [[...COLUMNAS, 'motivo'].join(',')]
+  for (const e of errores) {
+    const f = filas[e.fila - 2] ?? {}
+    lineas.push([...COLUMNAS.map((c) => celda(f[c] ?? '')), celda(e.mensajes.join(' '))].join(','))
+  }
+  return lineas.join('\n')
+}

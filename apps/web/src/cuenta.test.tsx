@@ -434,7 +434,10 @@ describe('Panel: agregar negocios', () => {
         simular: true,
       },
     })
-    expect(screen.getByRole('button', { name: /Ubica o corrige las filas marcadas/ })).toBeDisabled()
+    // Se puede agregar lo que está listo; lo demás queda para después.
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar 1 negocio' }))
+    await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
+    expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]?.cuerpo).toMatchObject({ simular: false, solo_listas: true })
   })
 })
 

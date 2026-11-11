@@ -149,6 +149,10 @@ class LoteEntrada(BaseModel):
     filas: list[FilaCsv] = Field(min_length=1, max_length=300)
     estado: Literal["activo", "pendiente"] = "activo"
     simular: bool = Field(default=True, description="true = solo revisa, no crea nada")
+    solo_listas: bool = Field(
+        default=False,
+        description="true = crea las filas listas aunque otras tengan errores (quedan para después)",
+    )
 
 
 class FilaValida(BaseModel):

@@ -21,3 +21,15 @@ describe('csv', () => {
     expect(filas[0]).toMatchObject({ nombre: 'Panadería Ejemplo', horario: 'lun-sab 6:00-20:00; dom 7:00-13:00' })
   })
 })
+
+describe('pendientes', () => {
+  it('arma el CSV de las filas que no entraron con su motivo', async () => {
+    const { csvDePendientes } = await import('./csv')
+    const filas = [{ nombre: 'Lista' }, { nombre: 'Tienda, la de la esquina', direccion: 'Mz 4 Casa 9' }]
+    const texto = csvDePendientes(filas, [{ fila: 3, mensajes: ['Falta la ubicación.', 'Revisa "x".'] }])
+    const [enc, fila] = texto.split('\n')
+    expect(enc?.endsWith(',horario,motivo')).toBe(true)
+    expect(fila).toBe('"Tienda, la de la esquina",,,Mz 4 Casa 9,,,,,,"Falta la ubicación. Revisa ""x""."')
+    expect(leerCsv(texto)[1]?.[0]).toBe('Tienda, la de la esquina')
+  })
+})

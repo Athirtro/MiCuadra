@@ -9,6 +9,7 @@ encuentra la calle o el barrio, se descarta para no poner pines a varias cuadras
 import json
 import logging
 import re
+import time
 import urllib.parse
 import urllib.request
 from collections.abc import Callable
@@ -106,24 +107,33 @@ def con_nomenclatura(n: Nomenclatura) -> Geocodificador:
     return buscar
 
 
-def encadenar(google: Geocodificador | None, nomenclatura: Geocodificador | None) -> Geocodificador:
-    """Google primero (más preciso); si no encuentra o lo rechaza, la nomenclatura.
+PAUSA_GOOGLE_S = (
+    600  # si Google rechaza (clave o facturación), no se le vuelve a preguntar en 10 min
+)
 
-    Solo si ninguno ubica y Google rechazó, se propaga el rechazo para avisarlo en la revisión.
+
+def encadenar(
+    google: Geocodificador | None,
+    nomenclatura: Geocodificador | None,
+    reloj: Callable[[], float] = time.monotonic,
+) -> Geocodificador:
+    """Google primero (más preciso) y, si no encuentra o lo rechaza, la nomenclatura.
+
+    Un rechazo de Google no llega a la revisión: se anota en el registro, se deja de consultar a
+    Google un rato (para no demorar cada fila) y se sigue con la nomenclatura.
     """
+    pausado_hasta = [0.0]
 
     def buscar(direccion: str, barrio: str | None, cerca: Punto | None = None) -> Encontrado | None:
-        rechazo: GoogleNoDisponible | None = None
-        if google:
+        if google and reloj() >= pausado_hasta[0]:
             try:
                 if r := google(direccion, barrio, cerca):
                     return r
-            except GoogleNoDisponible as e:
-                rechazo = e
-        if nomenclatura and (r := nomenclatura(direccion, barrio, cerca)):
-            return r
-        if rechazo:
-            raise rechazo
+            except GoogleNoDisponible:
+                pausado_hasta[0] = reloj() + PAUSA_GOOGLE_S
+                log.warning("Google no disponible: se usa la nomenclatura por %s s", PAUSA_GOOGLE_S)
+        if nomenclatura:
+            return nomenclatura(direccion, barrio, cerca)
         return None
 
     return buscar

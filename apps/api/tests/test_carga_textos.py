@@ -199,21 +199,27 @@ def test_las_calles_de_pereira_vienen_con_el_api() -> None:
 
 def test_encadenado_google_y_nomenclatura() -> None:
     from app.schemas.directorio import Punto
-    from app.services.geocodificar import Encontrado, GoogleNoDisponible, encadenar
+    from app.services.geocodificar import PAUSA_GOOGLE_S, Encontrado, GoogleNoDisponible, encadenar
+
+    llamadas_google: list[str] = []
+    ahora = [1000.0]
 
     def google_rechaza(d: str, b: str | None, c: Punto | None = None) -> Encontrado | None:
+        llamadas_google.append(d)
         raise GoogleNoDisponible("REQUEST_DENIED")
 
     def local(d: str, b: str | None, c: Punto | None = None) -> Encontrado | None:
-        return (
-            Encontrado(Punto(lat=4.8, lng=-75.7), "entre…", "nomenclatura")
-            if d == "Cl 71 # 26B-08"
-            else None
-        )
+        if d == "Cl 71 # 26B-08":
+            return Encontrado(Punto(lat=4.8, lng=-75.7), "entre…", "nomenclatura")
+        return None
 
-    buscar = encadenar(google_rechaza, local)
+    buscar = encadenar(google_rechaza, local, reloj=lambda: ahora[0])
     r = buscar("Cl 71 # 26B-08", "Cuba", None)
     assert r is not None and r.metodo == "nomenclatura"
-    with pytest.raises(GoogleNoDisponible):  # ninguno ubicó y Google rechazó: se avisa
-        buscar("Cl 1 # 1-01", None, None)
+    # El rechazo no llega a la revisión, y Google queda en pausa: no se le vuelve a preguntar.
+    assert buscar("Cl 1 # 1-01", None, None) is None
+    assert llamadas_google == ["Cl 71 # 26B-08"]
+    ahora[0] += PAUSA_GOOGLE_S + 1
+    buscar("Cl 1 # 1-01", None, None)
+    assert len(llamadas_google) == 2
     assert encadenar(None, local)("Cl 1 # 1-01", None, None) is None
