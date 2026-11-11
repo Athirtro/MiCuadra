@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { apiEnviar, apiGet, type Barrio, type Categoria, type LoteEntrada, type LoteResultado, type Punto } from '../../lib/api'
 import { filasDesdeCsv, PLANTILLA, type FilaCsv } from '../../lib/csv'
 import { emojiCategoria } from '../../lib/negocio'
+import { Dialogo } from '../../components/Dialogo'
 import { Filtro, useToken } from './Admin'
 
 const SelectorUbicacion = lazy(() => import('../../components/MapaBarrio').then((m) => ({ default: m.SelectorUbicacion })))
@@ -71,7 +72,9 @@ function SelectorEstado({ valor, onChange }: { valor: EstadoInicial; onChange: (
   )
 }
 
-function Errores({ r }: { r: LoteResultado }) {
+const faltaUbicacion = (mensajes: string[]) => mensajes.some((m) => /ubicaci[oó]n/i.test(m))
+
+function Errores({ r, alUbicar }: { r: LoteResultado; alUbicar?: (fila: number) => void }) {
   if (!r.errores.length) return null
   return (
     <div role="alert" className="tarjeta border-red/40 p-4">
@@ -89,6 +92,15 @@ function Errores({ r }: { r: LoteResultado }) {
                 <li key={m}>{m}</li>
               ))}
             </ul>
+            {alUbicar && faltaUbicacion(e.mensajes) && (
+              <button
+                type="button"
+                onClick={() => alUbicar(e.fila)}
+                className="tap mt-1 inline-flex items-center gap-1 rounded-full bg-green px-4 text-sm font-bold text-green-ink"
+              >
+                📍 Ubicar en el mapa
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -237,7 +249,8 @@ function DesdeCsv() {
   const [ignoradas, setIgnoradas] = useState<string[]>([])
   const [archivo, setArchivo] = useState('')
   const [estado, setEstado] = useState<EstadoInicial>('activo')
-  const plantilla = `data:text/csv;charset=utf-8,${encodeURIComponent('﻿' + PLANTILLA)}`
+  const [ubicando, setUbicando] = useState<number | null>(null)
+  const plantilla = `data:text/csv;charset=utf-8,${encodeURIComponent('\uFEFF' + PLANTILLA)}`
 
   async function elegir(e: ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -249,6 +262,14 @@ function DesdeCsv() {
     setIgnoradas(leido.ignoradas)
     lote.reset()
     if (leido.filas.length) lote.mutate({ filas: leido.filas, estado, simular: true })
+  }
+
+  // Pone la ubicación elegida en la fila y vuelve a revisar todo el archivo.
+  function ubicar(fila: number, punto: Punto) {
+    const nuevas = filas.map((f, i) => (i === fila - 2 ? { ...f, ubicacion: `${punto.lat.toFixed(6)}, ${punto.lng.toFixed(6)}` } : f))
+    setFilas(nuevas)
+    setUbicando(null)
+    lote.mutate({ filas: nuevas, estado, simular: true })
   }
 
   const r = lote.data
@@ -294,7 +315,7 @@ function DesdeCsv() {
 
       {revisado && (
         <>
-          <Errores r={r} />
+          <Errores r={r} alUbicar={setUbicando} />
           {r.validas.length > 0 && (
             <div className="tarjeta overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -342,6 +363,60 @@ function DesdeCsv() {
           </button>
         </>
       )}
+      {ubicando !== null && filas[ubicando - 2] && (
+        <UbicarFila fila={ubicando} datos={filas[ubicando - 2] as FilaCsv} alGuardar={(p) => ubicar(ubicando, p)} alCerrar={() => setUbicando(null)} />
+      )}
     </div>
+  )
+}
+
+/** Mapa para poner el pin de una fila del CSV que no traía ubicación (o la traía mal). */
+function UbicarFila({
+  fila,
+  datos,
+  alGuardar,
+  alCerrar,
+}: {
+  fila: number
+  datos: FilaCsv
+  alGuardar: (p: Punto) => void
+  alCerrar: () => void
+}) {
+  const barrios = useQuery({ queryKey: ['barrios'], queryFn: () => apiGet<Barrio[]>('/barrios'), staleTime: Infinity })
+  const normal = (t = '') => t.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  const delBarrio = barrios.data?.find((b) => datos.barrio && normal(b.nombre) === normal(datos.barrio))?.centroide
+  const [punto, setPunto] = useState<Punto | null>(null)
+  return (
+    <Dialogo titulo={`Ubicar ${datos.nombre ?? 'negocio'}`} alCerrar={alCerrar}>
+      <div className="flex flex-col gap-3">
+        <div>
+          <p className="text-sm text-muted">Fila {fila}</p>
+          <h2 className="text-xl font-black">{datos.nombre || '(sin nombre)'}</h2>
+          <p className="text-sm">
+            {datos.direccion || 'Sin dirección'}
+            {datos.barrio && ` · ${datos.barrio}`}
+          </p>
+        </div>
+        <p className="text-sm text-muted">Toca el mapa o mueve el pin justo donde está la puerta.</p>
+        <Suspense fallback={<div className="esqueleto h-72 rounded-caja" />}>
+          <SelectorUbicacion
+            punto={punto ?? delBarrio ?? CENTRO_PEREIRA}
+            alCambiar={setPunto}
+            emoji={emojiCategoria(normal(datos.categoria).replace(/\s+/g, '-'))}
+          />
+        </Suspense>
+        <button
+          type="button"
+          disabled={!punto}
+          onClick={() => punto && alGuardar(punto)}
+          className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+        >
+          {punto ? 'Guardar ubicación' : 'Primero pon el pin'}
+        </button>
+        <button type="button" onClick={alCerrar} className="tap font-bold text-muted">
+          Cancelar
+        </button>
+      </div>
+    </Dialogo>
   )
 }

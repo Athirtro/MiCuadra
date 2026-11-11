@@ -437,3 +437,36 @@ describe('Panel: agregar negocios', () => {
     expect(screen.getByRole('button', { name: /Corrige las filas marcadas/ })).toBeDisabled()
   })
 })
+
+describe('Panel: ubicar filas del CSV', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] }
+
+  it('las filas sin ubicación se ubican en el mapa y el archivo se vuelve a revisar', async () => {
+    const { posts } = apiFalsa({
+      '/yo': ADMIN,
+      '/barrios': BARRIOS,
+      'POST /admin/negocios/lote': {
+        validas: [],
+        errores: [{ fila: 2, nombre: 'Pastel Pan', mensajes: ['Falta la ubicación (latitud, longitud).'] }],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+    const archivo = new File(['nombre,categoria,barrio,direccion\nPastel Pan,Panadería,Cuba,Cra 27 # 71-08\n'], 'n.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ubicar en el mapa/ }))
+    expect(await screen.findByRole('heading', { name: 'Pastel Pan' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Primero pon el pin' })).toBeDisabled()
+    fireEvent.click(await screen.findByRole('button', { name: 'Mover pin' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar ubicación' }))
+
+    await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
+    const segunda = posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]
+    expect(segunda?.cuerpo).toMatchObject({
+      filas: [{ nombre: 'Pastel Pan', ubicacion: '4.798500, -75.730500' }],
+      simular: true,
+    })
+  })
+})
