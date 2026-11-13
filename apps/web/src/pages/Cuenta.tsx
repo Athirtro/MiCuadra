@@ -1,7 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { apiGet, type MiNegocio } from '../lib/api'
 import { usePerfil, useSesion } from '../lib/sesion'
+import { guardarTema, leerTema, type Tema } from '../lib/tema'
+import { leerVolver, olvidarVolver } from '../lib/volver'
 
 const ESTADOS: Record<MiNegocio['estado'], { texto: string; clase: string }> = {
   pendiente: { texto: 'En revisión', clase: 'bg-sun text-sun-ink' },
@@ -38,6 +41,9 @@ export function Cuenta() {
   const p = perfil.data
   if (!p) return <Cargando />
   if (!p.perfil_completo) return <Navigate to="/bienvenida" replace />
+  // Venía de apartar sin cuenta: vuelve al perfil con su carrito.
+  const volver = leerVolver()
+  if (volver) return <Volver a={volver} />
 
   return (
     <section className="mx-auto flex max-w-md flex-col gap-6 px-4 py-8">
@@ -80,7 +86,25 @@ export function Cuenta() {
                 {n.estado === 'rechazado' && n.motivo_rechazo && (
                   <p className="mt-2 text-sm">Motivo: {n.motivo_rechazo}</p>
                 )}
-                <div className="mt-2 flex flex-wrap gap-x-4 text-sm font-bold text-green">
+                {n.apartados_pendientes > 0 && (
+                  <Link
+                    to={`/mi-negocio/${n.id}/apartados`}
+                    className="mt-2 flex items-center justify-between rounded-lg bg-sun px-3 py-2 text-sm font-bold text-sun-ink"
+                  >
+                    🛒 {n.apartados_pendientes} {n.apartados_pendientes === 1 ? 'apartado' : 'apartados'} por confirmar
+                    <span aria-hidden="true">›</span>
+                  </Link>
+                )}
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-green">
+                  <Link to={`/mi-negocio/${n.id}/estadisticas`} className="underline">
+                    📊 Estadísticas
+                  </Link>
+                  <Link to={`/mi-negocio/${n.id}/catalogo`} className="underline">
+                    Catálogo
+                  </Link>
+                  <Link to={`/mi-negocio/${n.id}/apartados`} className="underline">
+                    Apartados
+                  </Link>
                   <Link to={`/mi-negocio/${n.id}/fotos`} className="underline">
                     Fotos
                   </Link>
@@ -110,11 +134,20 @@ export function Cuenta() {
         </div>
       )}
 
+      <Link to="/mis-apartados" className="tarjeta flex items-center justify-between p-4 font-bold">
+        <span>🛒 Mis apartados</span>
+        <span aria-hidden="true" className="text-muted">
+          ›
+        </span>
+      </Link>
+
       {p.roles.includes('admin') && (
         <Link to="/admin" className="tap flex items-center justify-center rounded-caja bg-ink px-4 font-bold text-bg">
           Panel de administración
         </Link>
       )}
+
+      <Apariencia />
 
       <div className="flex flex-wrap gap-2">
         <Link to="/" className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold">
@@ -133,5 +166,45 @@ export function Cargando() {
     <p role="status" className="mx-auto max-w-md px-4 py-10 text-muted">
       Cargando…
     </p>
+  )
+}
+
+/** Vuelve a la página guardada antes de entrar y la olvida. */
+function Volver({ a }: { a: string }) {
+  useEffect(olvidarVolver, [])
+  return <Navigate to={a} replace />
+}
+
+const TEMAS: { valor: Tema; texto: string }[] = [
+  { valor: 'claro', texto: '☀️ Claro' },
+  { valor: 'oscuro', texto: '🌙 Oscuro' },
+  { valor: 'auto', texto: 'Como el celular' },
+]
+
+function Apariencia() {
+  const [tema, setTema] = useState<Tema>(leerTema)
+  return (
+    <div className="flex flex-col gap-2">
+      <h2 id="titulo-apariencia" className="text-lg font-black">
+        Apariencia
+      </h2>
+      <div className="grid grid-cols-3 gap-1 rounded-caja bg-block p-1" role="radiogroup" aria-labelledby="titulo-apariencia">
+        {TEMAS.map((t) => (
+          <button
+            key={t.valor}
+            type="button"
+            role="radio"
+            aria-checked={tema === t.valor}
+            onClick={() => {
+              guardarTema(t.valor)
+              setTema(t.valor)
+            }}
+            className={`tap rounded-[10px] text-sm font-bold ${tema === t.valor ? 'bg-surface shadow-1' : 'text-muted'}`}
+          >
+            {t.texto}
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }

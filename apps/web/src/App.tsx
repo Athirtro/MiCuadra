@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Link, Navigate, NavLink, Route, Routes } from 'react-router'
+import { AvisoDespertando } from './components/AvisoDespertando'
+import { BotonVolver, NavInferior } from './components/Navegacion'
 import { registrarSesion } from './lib/eventos'
 import { usePerfil } from './lib/sesion'
 import { authDisponible } from './lib/supabase'
@@ -19,6 +21,14 @@ const Metricas = lazy(() => import('./pages/admin/Metricas').then((m) => ({ defa
 const NegociosAdmin = lazy(() => import('./pages/admin/Negocios').then((m) => ({ default: m.Negocios })))
 const ListaEsperaAdmin = lazy(() => import('./pages/admin/ListaEspera').then((m) => ({ default: m.ListaEsperaAdmin })))
 const Reportes = lazy(() => import('./pages/admin/Reportes').then((m) => ({ default: m.Reportes })))
+const AgregarNegocios = lazy(() => import('./pages/admin/AgregarNegocios').then((m) => ({ default: m.AgregarNegocios })))
+// Paneles del dueño y del vecino: solo los descarga quien los usa.
+const EstadisticasNegocio = lazy(() =>
+  import('./pages/EstadisticasNegocio').then((m) => ({ default: m.EstadisticasNegocio })),
+)
+const CatalogoDueno = lazy(() => import('./pages/CatalogoDueno').then((m) => ({ default: m.CatalogoDueno })))
+const ApartadosDueno = lazy(() => import('./pages/ApartadosDueno').then((m) => ({ default: m.ApartadosDueno })))
+const MisApartados = lazy(() => import('./pages/MisApartados').then((m) => ({ default: m.MisApartados })))
 
 export function App() {
   useEffect(registrarSesion, [])
@@ -27,10 +37,13 @@ export function App() {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-[1100] border-b border-line bg-surface/90 backdrop-blur-md">
         <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-          <Link to="/" className="tap flex items-center gap-2 font-display text-xl font-black">
-            <img src="/icono.svg" alt="" width={28} height={28} />
-            MiCuadra
-          </Link>
+          <div className="flex items-center gap-1">
+            <BotonVolver />
+            <Link to="/" className="tap flex items-center gap-2 font-display text-xl font-black">
+              <img src="/icono.svg" alt="" width={28} height={28} />
+              MiCuadra
+            </Link>
+          </div>
           <div className="flex items-center gap-1">
             <NavLink
               to="/conoce"
@@ -38,11 +51,13 @@ export function App() {
             >
               Conoce MiCuadra
             </NavLink>
-            {authDisponible && <BotonCuenta />}
+            {/* En el celular la cuenta está en el menú inferior. */}
+            <div className="max-md:hidden">{authDisponible && <BotonCuenta />}</div>
           </div>
         </nav>
       </header>
-      <main className="flex-1">
+      <AvisoDespertando />
+      <main className="flex-1 pb-[var(--nav)]">
         <Suspense fallback={<p className="p-4 text-muted">Cargando…</p>}>
         <Routes>
           <Route path="/" element={<Mapa />} />
@@ -52,12 +67,17 @@ export function App() {
           <Route path="/cuenta" element={<Cuenta />} />
           <Route path="/bienvenida" element={<Bienvenida />} />
           <Route path="/mi-negocio/nuevo" element={<RegistrarNegocio />} />
-            <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
+          <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
+          <Route path="/mi-negocio/:id/catalogo" element={<CatalogoDueno />} />
+          <Route path="/mi-negocio/:id/estadisticas" element={<EstadisticasNegocio />} />
+          <Route path="/mi-negocio/:id/apartados" element={<ApartadosDueno />} />
+          <Route path="/mis-apartados" element={<MisApartados />} />
           <Route path="/privacidad" element={<Privacidad />} />
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Navigate to="metricas" replace />} />
             <Route path="metricas" element={<Metricas />} />
             <Route path="negocios" element={<NegociosAdmin />} />
+            <Route path="negocios/agregar" element={<AgregarNegocios />} />
             <Route path="lista-espera" element={<ListaEsperaAdmin />} />
             <Route path="reportes" element={<Reportes />} />
           </Route>
@@ -65,6 +85,7 @@ export function App() {
         </Routes>
         </Suspense>
       </main>
+      <NavInferior />
     </div>
   )
 }

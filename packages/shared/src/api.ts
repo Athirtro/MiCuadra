@@ -117,6 +117,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mis-negocios/{negocio_id}/estadisticas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Estadisticas Del Negocio */
+        get: operations["estadisticas_del_negocio_api_v1_mis_negocios__negocio_id__estadisticas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categorias": {
         parameters: {
             query?: never;
@@ -196,6 +213,233 @@ export interface paths {
         get: operations["mandados_disponibles_api_v1_negocios__negocio_id__mandados_disponibles_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/negocios/{id_o_slug}/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogo Publico
+         * @description Productos y servicios visibles de un negocio activo.
+         */
+        get: operations["catalogo_publico_api_v1_negocios__id_o_slug__catalogo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mi Catalogo
+         * @description Todo el catálogo, incluidos los ítems ocultos.
+         */
+        get: operations["mi_catalogo_api_v1_mis_negocios__negocio_id__catalogo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/secciones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Crear Seccion */
+        post: operations["crear_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/secciones/{seccion_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Editar Seccion */
+        put: operations["editar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__put"];
+        post?: never;
+        /** Borrar Seccion */
+        delete: operations["borrar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Crear Item
+         * @description Producto o servicio nuevo. La foto (opcional) la sube la web a `negocio-fotos/{id}/catalogo/`.
+         */
+        post: operations["crear_item_api_v1_mis_negocios__negocio_id__catalogo_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Editar Item */
+        put: operations["editar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__put"];
+        post?: never;
+        /** Borrar Item */
+        delete: operations["borrar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/catalogo/items/{item_id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ajustar Stock
+         * @description Suma o resta unidades sin abrir el formulario (llegó mercancía, se vendió en la tienda).
+         */
+        post: operations["ajustar_stock_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__stock_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/apartados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Apartados Del Negocio
+         * @description Apartados que recibió el negocio; `abiertos` = pendientes, confirmados y listos.
+         */
+        get: operations["apartados_del_negocio_api_v1_mis_negocios__negocio_id__apartados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-negocios/{negocio_id}/apartados/{apartado_id}/estado": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cambiar Estado Apartado
+         * @description Confirmar descuenta el stock; cancelar un apartado confirmado lo devuelve.
+         */
+        post: operations["cambiar_estado_apartado_api_v1_mis_negocios__negocio_id__apartados__apartado_id__estado_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/negocios/{negocio_id}/apartados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apartar
+         * @description El vecino aparta lo de su carrito. Se paga en la tienda al recoger.
+         */
+        post: operations["apartar_api_v1_negocios__negocio_id__apartados_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-apartados": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Mis Apartados */
+        get: operations["mis_apartados_api_v1_mis_apartados_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mis-apartados/{apartado_id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancelar Apartado */
+        post: operations["cancelar_apartado_api_v1_mis_apartados__apartado_id__cancelar_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -292,7 +536,33 @@ export interface paths {
          */
         get: operations["negocios_api_v1_admin_negocios_get"];
         put?: never;
-        post?: never;
+        /**
+         * Crear Negocio
+         * @description El equipo carga un negocio que visitó (sin dueño todavía; el dueño lo reclama después).
+         */
+        post: operations["crear_negocio_api_v1_admin_negocios_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/negocios/lote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cargar Lote
+         * @description Carga por CSV. Con `simular` solo revisa; si alguna fila tiene errores no se crea ninguna.
+         *
+         *     Las filas con dirección y sin coordenadas se ubican con Google si hay `GOOGLE_GEOCODING_KEY`.
+         */
+        post: operations["cargar_lote_api_v1_admin_negocios_lote_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -518,6 +788,80 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Apartado */
+        Apartado: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Codigo
+             * @description Código corto para decirlo por WhatsApp
+             */
+            codigo: string;
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "pendiente" | "confirmado" | "listo" | "entregado" | "cancelado";
+            negocio: components["schemas"]["NegocioDelApartado"];
+            /** @description Solo lo ve el negocio, para saber a quién entregarle */
+            vecino?: components["schemas"]["VecinoDelApartado"] | null;
+            /** Items */
+            items: components["schemas"]["ApartadoItem"][];
+            /** Nota */
+            nota: string | null;
+            /**
+             * Total
+             * @description Suma de los ítems con precio, en pesos COP
+             */
+            total: number;
+            /** Hay Sin Precio */
+            hay_sin_precio: boolean;
+            /** Motivo Cancelacion */
+            motivo_cancelacion: string | null;
+            /** Cancelado Por */
+            cancelado_por: ("vecino" | "negocio") | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ApartadoEntrada */
+        ApartadoEntrada: {
+            /** Items */
+            items: components["schemas"]["ApartadoItemEntrada"][];
+            /** Nota */
+            nota?: string | null;
+        };
+        /** ApartadoItem */
+        ApartadoItem: {
+            /** Item Id */
+            item_id: string | null;
+            /** Nombre */
+            nombre: string;
+            /** Precio */
+            precio: number | null;
+            /** Cantidad */
+            cantidad: number;
+        };
+        /** ApartadoItemEntrada */
+        ApartadoItemEntrada: {
+            /**
+             * Item Id
+             * Format: uuid
+             */
+            item_id: string;
+            /** Cantidad */
+            cantidad: number;
+        };
         /** Barrio */
         Barrio: {
             /**
@@ -546,6 +890,16 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /** CambioEstadoApartado */
+        CambioEstadoApartado: {
+            /**
+             * Estado
+             * @enum {string}
+             */
+            estado: "confirmado" | "listo" | "entregado" | "cancelado";
+            /** Motivo */
+            motivo?: string | null;
+        };
         /** CambioEstadoNegocio */
         CambioEstadoNegocio: {
             /**
@@ -568,6 +922,29 @@ export interface components {
              * @enum {string}
              */
             estado: "abierta" | "resuelta" | "descartada";
+        };
+        /**
+         * CambioStock
+         * @description Ajuste rápido desde el panel: suma o resta unidades (no baja de 0).
+         */
+        CambioStock: {
+            /** Delta */
+            delta: number;
+        };
+        /** Cancelacion */
+        Cancelacion: {
+            /** Motivo */
+            motivo?: string | null;
+        };
+        /** Catalogo */
+        Catalogo: {
+            /** Secciones */
+            secciones: components["schemas"]["Seccion"][];
+            /**
+             * Items
+             * @description Ordenados por sección y orden
+             */
+            items: components["schemas"]["Item"][];
         };
         /** Categoria */
         Categoria: {
@@ -619,6 +996,23 @@ export interface components {
             detalle: string | null;
             /** Serie */
             serie: components["schemas"]["PuntoSerie"][];
+        };
+        /** Dia */
+        Dia: {
+            /**
+             * Fecha
+             * Format: date
+             */
+            fecha: string;
+            /** Vistas */
+            vistas: number;
+            /**
+             * Contactos
+             * @description WhatsApp + Cómo llegar
+             */
+            contactos: number;
+            /** Apartados */
+            apartados: number;
         };
         /**
          * Disponibilidad
@@ -681,6 +1075,33 @@ export interface components {
             /** Notas */
             notas?: string | null;
         };
+        /** ErrorFila */
+        ErrorFila: {
+            /** Fila */
+            fila: number;
+            /** Nombre */
+            nombre: string;
+            /** Mensajes */
+            mensajes: string[];
+        };
+        /** Estadisticas */
+        Estadisticas: {
+            /** Dias */
+            dias: number;
+            totales: components["schemas"]["Totales"];
+            /** @description Los mismos números del periodo anterior, para comparar */
+            anteriores: components["schemas"]["Totales"];
+            /**
+             * Por Dia
+             * @description Un día por fila, del más viejo al de hoy (hora de Bogotá)
+             */
+            por_dia: components["schemas"]["Dia"][];
+            /**
+             * Mas Apartados
+             * @description Hasta 5 productos con más unidades
+             */
+            mas_apartados: components["schemas"]["ProductoTop"][];
+        };
         /** EventoEntrada */
         EventoEntrada: {
             /**
@@ -700,12 +1121,111 @@ export interface components {
                 [key: string]: string | number | boolean | null;
             };
         };
+        /**
+         * FilaCsv
+         * @description Una fila de la plantilla, tal cual viene del archivo (todo texto).
+         */
+        FilaCsv: {
+            /**
+             * Nombre
+             * @default
+             */
+            nombre: string;
+            /**
+             * Categoria
+             * @default
+             */
+            categoria: string;
+            /**
+             * Barrio
+             * @default
+             */
+            barrio: string;
+            /**
+             * Direccion
+             * @default
+             */
+            direccion: string;
+            /**
+             * Ubicacion
+             * @description «lat, lng» o un enlace de Google Maps
+             * @default
+             */
+            ubicacion: string;
+            /**
+             * Whatsapp
+             * @default
+             */
+            whatsapp: string;
+            /**
+             * Telefono
+             * @default
+             */
+            telefono: string;
+            /**
+             * Descripcion
+             * @default
+             */
+            descripcion: string;
+            /**
+             * Horario
+             * @description Ej.: «lun-sab 7:00-19:00; dom 8:00-13:00»
+             * @default
+             */
+            horario: string;
+        };
+        /** FilaValida */
+        FilaValida: {
+            /**
+             * Fila
+             * @description Número de fila en el archivo (la 1 es el encabezado)
+             */
+            fila: number;
+            /** Nombre */
+            nombre: string;
+            /** Categoria */
+            categoria: string;
+            /** Barrio */
+            barrio: string | null;
+            ubicacion: components["schemas"]["Punto"];
+            /** Whatsapp */
+            whatsapp: string | null;
+            /**
+             * Franjas
+             * @description Franjas de horario reconocidas
+             */
+            franjas: number;
+            /**
+             * Ubicacion Automatica
+             * @description Se ubicó por la dirección: conviene revisar el pin
+             * @default false
+             */
+            ubicacion_automatica: boolean;
+            /**
+             * Metodo Ubicacion
+             * @description google = placa o cuadra; nomenclatura = aproximada por las calles
+             */
+            metodo_ubicacion?: ("google" | "nomenclatura") | null;
+            /**
+             * Detalle Ubicacion
+             * @description Cómo entendió Google la dirección o cómo se interpoló
+             */
+            detalle_ubicacion?: string | null;
+        };
         /** Foto */
         Foto: {
             /** Orden */
             orden: number;
             /** Url */
             url: string;
+        };
+        /** FotoBorrada */
+        FotoBorrada: {
+            /**
+             * Foto Url
+             * @description Foto que la web debe quitar del almacenamiento
+             */
+            foto_url: string | null;
         };
         /** FotoEntrada */
         FotoEntrada: {
@@ -824,6 +1344,79 @@ export interface components {
              */
             created_at: string;
         };
+        /** Item */
+        Item: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Seccion Id */
+            seccion_id: string | null;
+            /**
+             * Tipo
+             * @enum {string}
+             */
+            tipo: "producto" | "servicio";
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion: string | null;
+            /**
+             * Precio
+             * @description Pesos COP; null = preguntar el precio
+             */
+            precio: number | null;
+            /**
+             * Precio Oferta
+             * @description Precio rebajado (menor que `precio`); null = sin oferta
+             */
+            precio_oferta?: number | null;
+            /** Foto Url */
+            foto_url: string | null;
+            /**
+             * Stock
+             * @description Unidades disponibles; null = no se controla
+             */
+            stock: number | null;
+            /** Visible */
+            visible: boolean;
+            /** Orden */
+            orden: number;
+        };
+        /** ItemEntrada */
+        ItemEntrada: {
+            /** Seccion Id */
+            seccion_id?: string | null;
+            /**
+             * Tipo
+             * @default producto
+             * @enum {string}
+             */
+            tipo: "producto" | "servicio";
+            /** Nombre */
+            nombre: string;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Precio */
+            precio?: number | null;
+            /** Precio Oferta */
+            precio_oferta?: number | null;
+            /** Foto Url */
+            foto_url?: string | null;
+            /** Stock */
+            stock?: number | null;
+            /**
+             * Visible
+             * @default true
+             */
+            visible: boolean;
+            /**
+             * Orden
+             * @default 0
+             */
+            orden: number;
+        };
         /** ListaEsperaEntrada */
         ListaEsperaEntrada: {
             /**
@@ -876,6 +1469,41 @@ export interface components {
             /** Siguiente Cursor */
             siguiente_cursor: string | null;
         };
+        /** LoteEntrada */
+        LoteEntrada: {
+            /** Filas */
+            filas: components["schemas"]["FilaCsv"][];
+            /**
+             * Estado
+             * @default activo
+             * @enum {string}
+             */
+            estado: "activo" | "pendiente";
+            /**
+             * Simular
+             * @description true = solo revisa, no crea nada
+             * @default true
+             */
+            simular: boolean;
+            /**
+             * Solo Listas
+             * @description true = crea las filas listas aunque otras tengan errores (quedan para después)
+             * @default false
+             */
+            solo_listas: boolean;
+        };
+        /** LoteResultado */
+        LoteResultado: {
+            /** Validas */
+            validas: components["schemas"]["FilaValida"][];
+            /** Errores */
+            errores: components["schemas"]["ErrorFila"][];
+            /**
+             * Creados
+             * @description 0 si se simuló o si hubo errores: se crean todos o ninguno
+             */
+            creados: number;
+        };
         /** Meta */
         Meta: {
             /** Valor */
@@ -910,6 +1538,12 @@ export interface components {
             /** Categoria */
             categoria: string;
             barrio: components["schemas"]["BarrioCorto"] | null;
+            /**
+             * Apartados Pendientes
+             * @description Apartados por confirmar
+             * @default 0
+             */
+            apartados_pendientes: number;
         };
         /** NegocioAdmin */
         NegocioAdmin: {
@@ -948,6 +1582,55 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * NegocioCargaEntrada
+         * @description Negocio que carga el equipo: el WhatsApp va solo si el dueño dio permiso.
+         */
+        NegocioCargaEntrada: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Categoria
+             * @description Slug de la categoría
+             */
+            categoria: string;
+            /** Telefono */
+            telefono?: string | null;
+            /** Descripcion */
+            descripcion?: string | null;
+            /** Direccion Texto */
+            direccion_texto: string;
+            /**
+             * Barrio
+             * @description Nombre del barrio como lo escribe el dueño; si no existe se crea
+             */
+            barrio?: string | null;
+            ubicacion: components["schemas"]["Punto"];
+            /** Horarios */
+            horarios?: components["schemas"]["HorarioEntrada"][];
+            /** Whatsapp */
+            whatsapp?: string | null;
+            /**
+             * Estado
+             * @default activo
+             * @enum {string}
+             */
+            estado: "activo" | "pendiente";
+        };
+        /** NegocioDelApartado */
+        NegocioDelApartado: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Slug */
+            slug: string;
+            /** Nombre */
+            nombre: string;
+            /** Whatsapp */
+            whatsapp: string | null;
+        };
         /** NegocioDetalle */
         NegocioDetalle: {
             /**
@@ -982,7 +1665,10 @@ export interface components {
             destacado: boolean;
             mandados: components["schemas"]["Disponibilidad"];
         };
-        /** NegocioEntrada */
+        /**
+         * NegocioEntrada
+         * @description Registro del dueño: el WhatsApp es obligatorio (es como lo contactan los vecinos).
+         */
         NegocioEntrada: {
             /** Nombre */
             nombre: string;
@@ -991,8 +1677,6 @@ export interface components {
              * @description Slug de la categoría
              */
             categoria: string;
-            /** Whatsapp */
-            whatsapp: string;
             /** Telefono */
             telefono?: string | null;
             /** Descripcion */
@@ -1007,6 +1691,8 @@ export interface components {
             ubicacion: components["schemas"]["Punto"];
             /** Horarios */
             horarios?: components["schemas"]["HorarioEntrada"][];
+            /** Whatsapp */
+            whatsapp: string;
         };
         /** NegocioResumen */
         NegocioResumen: {
@@ -1035,6 +1721,17 @@ export interface components {
             destacado: boolean;
             /** Foto Url */
             foto_url: string | null;
+            /**
+             * Ofertas
+             * @description Productos visibles con precio de oferta
+             * @default 0
+             */
+            ofertas: number;
+            /**
+             * Productos
+             * @description Hasta 3 productos del catálogo que coinciden con `q` (vacío sin búsqueda)
+             */
+            productos?: components["schemas"]["ProductoEncontrado"][];
         };
         /** Perfil */
         Perfil: {
@@ -1086,6 +1783,25 @@ export interface components {
              * @constant
              */
             acepta_datos: true;
+        };
+        /**
+         * ProductoEncontrado
+         * @description Producto del catálogo que coincide con la búsqueda.
+         */
+        ProductoEncontrado: {
+            /** Nombre */
+            nombre: string;
+            /** Precio */
+            precio: number | null;
+            /** Precio Oferta */
+            precio_oferta: number | null;
+        };
+        /** ProductoTop */
+        ProductoTop: {
+            /** Nombre */
+            nombre: string;
+            /** Unidades */
+            unidades: number;
         };
         /** Punto */
         Punto: {
@@ -1142,6 +1858,61 @@ export interface components {
             /** Detalle */
             detalle?: string | null;
         };
+        /** Seccion */
+        Seccion: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nombre */
+            nombre: string;
+            /** Orden */
+            orden: number;
+        };
+        /** SeccionEntrada */
+        SeccionEntrada: {
+            /** Nombre */
+            nombre: string;
+            /**
+             * Orden
+             * @default 0
+             */
+            orden: number;
+        };
+        /** Totales */
+        Totales: {
+            /**
+             * Vistas
+             * @description Veces que abrieron la ficha
+             */
+            vistas: number;
+            /**
+             * Vecinos
+             * @description Personas distintas que abrieron la ficha
+             */
+            vecinos: number;
+            /**
+             * Whatsapp
+             * @description Toques en «WhatsApp»
+             */
+            whatsapp: number;
+            /**
+             * Como Llegar
+             * @description Toques en «Cómo llegar» (ficha o mapa)
+             */
+            como_llegar: number;
+            /**
+             * Apartados
+             * @description Apartados recibidos (sin contar cancelados)
+             */
+            apartados: number;
+            /**
+             * Vendido
+             * @description Pesos COP de los apartados entregados
+             */
+            vendido: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1154,6 +1925,13 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VecinoDelApartado */
+        VecinoDelApartado: {
+            /** Nombre */
+            nombre: string | null;
+            /** Celular */
+            celular: string | null;
         };
     };
     responses: never;
@@ -1395,6 +2173,40 @@ export interface operations {
             };
         };
     };
+    estadisticas_del_negocio_api_v1_mis_negocios__negocio_id__estadisticas_get: {
+        parameters: {
+            query?: {
+                /** @description Días hacia atrás, contando hoy */
+                dias?: number;
+            };
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Estadisticas"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     categorias_api_v1_categorias_get: {
         parameters: {
             query?: never;
@@ -1444,6 +2256,8 @@ export interface operations {
                 categoria?: string | null;
                 q?: string | null;
                 abierto_ahora?: boolean;
+                /** @description Solo tiendas con productos en oferta */
+                con_ofertas?: boolean;
                 limit?: number;
                 cursor?: string | null;
             };
@@ -1522,6 +2336,467 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Disponibilidad"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    catalogo_publico_api_v1_negocios__id_o_slug__catalogo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id_o_slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalogo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mi_catalogo_api_v1_mis_negocios__negocio_id__catalogo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalogo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeccionEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seccion"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    editar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                seccion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeccionEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Seccion"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    borrar_seccion_api_v1_mis_negocios__negocio_id__catalogo_secciones__seccion_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                seccion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_item_api_v1_mis_negocios__negocio_id__catalogo_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    editar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    borrar_item_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FotoBorrada"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ajustar_stock_api_v1_mis_negocios__negocio_id__catalogo_items__item_id__stock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioStock"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apartados_del_negocio_api_v1_mis_negocios__negocio_id__apartados_get: {
+        parameters: {
+            query?: {
+                estado?: ("abiertos" | "pendiente" | "confirmado" | "listo" | "entregado" | "cancelado") | null;
+            };
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_estado_apartado_api_v1_mis_negocios__negocio_id__apartados__apartado_id__estado_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+                apartado_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioEstadoApartado"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apartar_api_v1_negocios__negocio_id__apartados_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApartadoEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mis_apartados_api_v1_mis_apartados_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"][];
+                };
+            };
+        };
+    };
+    cancelar_apartado_api_v1_mis_apartados__apartado_id__cancelar_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                apartado_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Cancelacion"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Apartado"];
                 };
             };
             /** @description Validation Error */
@@ -1673,6 +2948,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NegocioAdmin"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_negocio_api_v1_admin_negocios_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NegocioCargaEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NegocioAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cargar_lote_api_v1_admin_negocios_lote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoteEntrada"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoteResultado"];
                 };
             };
             /** @description Validation Error */

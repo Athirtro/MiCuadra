@@ -29,12 +29,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #0f1a15;
-    --surface: #16241d;
-    --ink: #e7efe9;
-    --muted: #9db0a5;
-    --line: #2a3b33;
-    --block: #1c2d25;
+    --bg: #1a2620;
+    --surface: #23332b;
+    --ink: #f1f6f2;
+    --muted: #b3c3b9;
+    --line: #3a4d43;
+    --block: #2c3e35;
     --green: #4fb88a;
     --green-ink: #0b1611;
     --red: #ee7158;
@@ -46,12 +46,12 @@
 }
 
 :root[data-theme='dark'] {
-  --bg: #0f1a15;
-  --surface: #16241d;
-  --ink: #e7efe9;
-  --muted: #9db0a5;
-  --line: #2a3b33;
-  --block: #1c2d25;
+  --bg: #1a2620;
+  --surface: #23332b;
+  --ink: #f1f6f2;
+  --muted: #b3c3b9;
+  --line: #3a4d43;
+  --block: #2c3e35;
   --green: #4fb88a;
   --green-ink: #0b1611;
   --red: #ee7158;
@@ -235,6 +235,16 @@
 /* Barra de acciones fija abajo en el celular, respetando la zona segura del iPhone. */
 @utility barra-inferior {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Alto del menú inferior del celular: las páginas lo reservan abajo para no quedar tapadas. */
+:root {
+  --nav: 0px;
+}
+@media (width < 48rem) {
+  body:has(.nav-inferior) {
+    --nav: calc(58px + max(0.75rem, env(safe-area-inset-bottom)));
+  }
 }
 
 @utility tap {

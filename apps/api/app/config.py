@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # URL pública de la web (enlaces al compartir). Vacía → el primer origen https de CORS.
     sitio_url: str = ""
 
+    # Geocoding API de Google: ubica por dirección las filas del CSV que llegan sin coordenadas.
+    # Vacía → la carga funciona igual y esas filas se ubican a mano en el mapa.
+    google_geocoding_key: str = ""
+
     # Feature flags (sección 4 de SPEC.md). En Fase 2+ también podrán leerse de la tabla `config`.
     mandados_activos: bool = False
     modalidad_a_activa: bool = False

@@ -27,6 +27,19 @@ export type Entrevista = Esquemas['Entrevista']
 export type EntrevistaEntrada = Esquemas['EntrevistaEntrada']
 export type Gate = Esquemas['Gate']
 export type Criterio = Esquemas['Criterio']
+export type Catalogo = Esquemas['Catalogo']
+export type Item = Esquemas['Item']
+export type Seccion = Esquemas['Seccion']
+export type ItemEntrada = Esquemas['ItemEntrada']
+export type SeccionEntrada = Esquemas['SeccionEntrada']
+export type Apartado = Esquemas['Apartado']
+export type ApartadoEntrada = Esquemas['ApartadoEntrada']
+export type CambioEstadoApartado = Esquemas['CambioEstadoApartado']
+export type FilaCsv = Esquemas['FilaCsv']
+export type LoteEntrada = Esquemas['LoteEntrada']
+export type LoteResultado = Esquemas['LoteResultado']
+export type Estadisticas = Esquemas['Estadisticas']
+export type ProductoEncontrado = Esquemas['ProductoEncontrado']
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api/v1'
 
@@ -98,9 +111,10 @@ export interface FiltrosNegocios {
   categoria?: string | null
   q?: string
   abiertoAhora?: boolean
+  conOfertas?: boolean
 }
 
-export function rutaNegocios({ centro, radioM, categoria, q, abiertoAhora }: FiltrosNegocios): string {
+export function rutaNegocios({ centro, radioM, categoria, q, abiertoAhora, conOfertas }: FiltrosNegocios): string {
   const p = new URLSearchParams({
     lat: centro.lat.toFixed(6),
     lng: centro.lng.toFixed(6),
@@ -110,6 +124,7 @@ export function rutaNegocios({ centro, radioM, categoria, q, abiertoAhora }: Fil
   if (categoria) p.set('categoria', categoria)
   if (q?.trim()) p.set('q', q.trim())
   if (abiertoAhora) p.set('abierto_ahora', 'true')
+  if (conOfertas) p.set('con_ofertas', 'true')
   return `/negocios?${p}`
 }
 

@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router'
 import { registerSW } from 'virtual:pwa-register'
 import { App } from './App'
 import { ProveedorSesion } from './lib/sesion'
+import { aplicarTema, seguirSistema } from './lib/tema'
 import './styles.css'
 
 const queryClient = new QueryClient({
@@ -24,6 +25,9 @@ registerSW({
     })
   },
 })
+
+aplicarTema()
+seguirSistema()
 
 const raiz = document.getElementById('root')
 if (!raiz) throw new Error('Falta el elemento #root en index.html')

@@ -34,6 +34,12 @@ export function Negocios() {
 
   return (
     <div className="flex flex-col gap-4">
+      <Link
+        to="/admin/negocios/agregar"
+        className="tap inline-flex items-center justify-center self-start rounded-caja bg-green px-4 font-bold text-green-ink"
+      >
+        ＋ Agregar negocios (uno o por CSV)
+      </Link>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Filtro etiqueta="Estado" valor={estado} opciones={ESTADOS} onChange={setEstado} />
         <input

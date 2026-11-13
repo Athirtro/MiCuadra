@@ -28,3 +28,6 @@ htmlcov/
 
 # Vercel CLI
 .vercel/
+
+# Listas de negocios por verificar (datos de terceros, no van al repositorio)
+candidatos/

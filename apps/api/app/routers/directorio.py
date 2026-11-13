@@ -42,6 +42,7 @@ def negocios(
     categoria: Annotated[str | None, Query(max_length=40)] = None,
     q: Annotated[str | None, Query(max_length=80)] = None,
     abierto_ahora: bool = False,
+    con_ofertas: Annotated[bool, Query(description="Solo tiendas con productos en oferta")] = False,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     cursor: Annotated[str | None, Query(pattern=r"^\d{1,4}$")] = None,
 ) -> ListaNegocios:
@@ -54,6 +55,7 @@ def negocios(
         categoria=categoria,
         q=q.strip() if q else None,
         abierto_ahora=abierto_ahora,
+        con_ofertas=con_ofertas,
         limit=limit,
         offset=int(cursor) if cursor else 0,
     )

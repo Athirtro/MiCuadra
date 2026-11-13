@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { Barrio, Categoria, ListaNegocios, NegocioDetalle } from '../lib/api'
+import type { Apartado, Barrio, Catalogo, Categoria, ListaNegocios, NegocioDetalle } from '../lib/api'
 
 export const CATEGORIAS: Categoria[] = [
   { id: 'c1', slug: 'tienda', nombre: 'Tienda', icono: 'store', color: '#1E6B4E', orden: 1 },
@@ -27,6 +27,8 @@ export const LISTA: ListaNegocios = {
       abierto_ahora: true,
       destacado: true,
       foto_url: null,
+      ofertas: 2,
+      productos: [{ nombre: 'Pandebono', precio: 1500, precio_oferta: 1200 }],
     },
     {
       id: 'n2',
@@ -40,6 +42,8 @@ export const LISTA: ListaNegocios = {
       abierto_ahora: false,
       destacado: false,
       foto_url: null,
+      ofertas: 0,
+      productos: [],
     },
   ],
 }
@@ -76,9 +80,16 @@ export function apiFalsa(rutas: Record<string, unknown> = {}) {
     const ruta = url.replace('/api/v1', '')
     if (init?.method === 'POST') {
       posts.push({ ruta, cuerpo: JSON.parse(String(init.body)) })
-      return new Response(null, { status: 204 })
+      // Respuesta propia del POST si la prueba la da como 'POST /ruta'.
+      const respuesta = Object.keys(rutas).find((r) => r.startsWith('POST ') && ruta.startsWith(r.slice(5)))
+      return respuesta ? json(rutas[respuesta], 201) : new Response(null, { status: 204 })
     }
-    const clave = Object.keys(rutas).find((r) => ruta.startsWith(r))
+    // La ruta más específica gana: '/negocios/x/catalogo' antes que '/negocios/'.
+    const clave = Object.keys(rutas)
+      .filter((r) => ruta.startsWith(r))
+      .sort((a, b) => b.length - a.length)[0]
+    const pideCatalogo = /^\/negocios\/[^/]+\/catalogo/.test(ruta)
+    if (pideCatalogo && !clave?.includes('/catalogo')) return json({ secciones: [], items: [] })
     if (clave === undefined) return json({ error: { codigo: 'no_encontrado', mensaje: 'No existe' } }, 404)
     return json(rutas[clave])
   })
@@ -92,4 +103,29 @@ export function gpsNegado() {
     ...navigator,
     geolocation: { getCurrentPosition: (_ok: unknown, error: () => void) => error() },
   })
+}
+
+export const CATALOGO: Catalogo = {
+  secciones: [{ id: 's1', nombre: 'Panes', orden: 0 }],
+  items: [
+    { id: 'i1', seccion_id: 's1', tipo: 'producto', nombre: 'Pan de bono', descripcion: 'Recién horneado', precio: 1500, precio_oferta: 1200, foto_url: null, stock: 3, visible: true, orden: 0 },
+    { id: 'i2', seccion_id: 's1', tipo: 'producto', nombre: 'Croissant', descripcion: null, precio: 3000, precio_oferta: null, foto_url: null, stock: 0, visible: true, orden: 1 },
+    { id: 'i3', seccion_id: null, tipo: 'servicio', nombre: 'Torta por encargo', descripcion: null, precio: null, foto_url: null, stock: null, visible: true, orden: 0 },
+  ],
+}
+
+export const APARTADO: Apartado = {
+  id: 'a1',
+  codigo: 'K7P2',
+  estado: 'pendiente',
+  negocio: { id: 'n1', slug: 'panaderia-el-trigal', nombre: 'Panadería El Trigal', whatsapp: '3001234567' },
+  vecino: { nombre: 'Valeria Ospina', celular: '3001112233' },
+  items: [{ item_id: 'i1', nombre: 'Pan de bono', precio: 1500, cantidad: 2 }],
+  nota: 'Paso a las 5',
+  total: 3000,
+  hay_sin_precio: false,
+  motivo_cancelacion: null,
+  cancelado_por: null,
+  created_at: '2026-11-04T15:00:00Z',
+  updated_at: '2026-11-04T15:00:00Z',
 }
