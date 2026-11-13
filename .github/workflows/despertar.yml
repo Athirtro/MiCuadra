@@ -1,0 +1,22 @@
+# Mantiene despierto el API: el plan gratis de Render lo apaga tras 15 min sin visitas y el
+# primer vecino espera ~50 s. Un toque cada 10 min lo evita (750 h gratis/mes alcanzan para un
+# servicio prendido todo el mes). Los cron de GitHub solo corren desde la rama principal.
+name: Despertar API
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  despertar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Tocar /health
+        run: |
+          curl -fsS --retry 5 --retry-delay 10 --retry-all-errors --max-time 90 \
+            -o /dev/null -w "%{http_code} en %{time_total}s\n" \
+            https://micuadra-api.onrender.com/api/v1/health
