@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { Link, Navigate, NavLink, Route, Routes } from 'react-router'
+import { AvisoDespertando } from './components/AvisoDespertando'
 import { BotonVolver, NavInferior } from './components/Navegacion'
 import { registrarSesion } from './lib/eventos'
 import { usePerfil } from './lib/sesion'
@@ -55,6 +56,7 @@ export function App() {
           </div>
         </nav>
       </header>
+      <AvisoDespertando />
       <main className="flex-1 pb-[var(--nav)]">
         <Suspense fallback={<p className="p-4 text-muted">Cargando…</p>}>
         <Routes>
