@@ -1,3 +1,4 @@
+import { House, Store, type LucideIcon } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router'
@@ -57,14 +58,14 @@ function FormularioBienvenida({ perfil, token }: { perfil: Perfil; token?: strin
             <OpcionTipo
               activo={tipo === 'vecino'}
               onClick={() => setTipo('vecino')}
-              emoji="🏡"
+              Icono={House}
               titulo="Soy vecino"
               texto="Quiero encontrar negocios de mi barrio."
             />
             <OpcionTipo
               activo={tipo === 'dueno'}
               onClick={() => setTipo('dueno')}
-              emoji="🏪"
+              Icono={Store}
               titulo="Tengo un negocio"
               texto="Quiero que mis vecinos me encuentren. Es gratis."
             />
@@ -150,7 +151,7 @@ function FormularioBienvenida({ perfil, token }: { perfil: Perfil; token?: strin
   )
 }
 
-function OpcionTipo(props: { activo: boolean; onClick: () => void; emoji: string; titulo: string; texto: string }) {
+function OpcionTipo(props: { activo: boolean; onClick: () => void; Icono: LucideIcon; titulo: string; texto: string }) {
   return (
     <button
       type="button"
@@ -160,9 +161,7 @@ function OpcionTipo(props: { activo: boolean; onClick: () => void; emoji: string
         props.activo ? 'border-green bg-green/10' : 'border-line bg-surface'
       }`}
     >
-      <span className="text-3xl" aria-hidden="true">
-        {props.emoji}
-      </span>
+      <props.Icono className="size-7 text-green" strokeWidth={1.75} aria-hidden="true" />
       <span className="font-bold">{props.titulo}</span>
       <span className="text-sm text-muted">{props.texto}</span>
     </button>

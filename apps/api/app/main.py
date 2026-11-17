@@ -9,6 +9,7 @@ from app.config import get_settings
 from app.errors import registrar_manejadores
 from app.routers import (
     admin,
+    catalogo,
     compartir,
     comunidad,
     cuenta,
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
         sistema.router,
         cuenta.router,
         directorio.router,
+        catalogo.router,
         eventos.router,
         comunidad.router,
         compartir.router,

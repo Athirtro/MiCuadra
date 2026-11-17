@@ -1,13 +1,18 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { Bike, ChartColumn, Check, Footprints, MessageCircle, Phone, Share2, ShoppingBasket, Star, Wrench } from 'lucide-react'
+import { CatalogoNegocio, DialogoCarrito } from '../components/CatalogoNegocio'
 import { Dialogo } from '../components/Dialogo'
+import { IconoCategoria } from '../components/Icono'
 import { CLAVE_QUE_PEDIRIA } from '../components/ListaEspera'
-import { ApiError, apiEnviar, apiGet, type NegocioDetalle, type Punto, type ReporteEntrada } from '../lib/api'
+import { ApiError, apiEnviar, apiGet, type Catalogo, type NegocioDetalle, type Punto, type ReporteEntrada } from '../lib/api'
+import { resumenCarrito, useCarrito } from '../lib/carrito'
 import { registrarEvento } from '../lib/eventos'
-import { formatoDistancia } from '../lib/formato'
-import { DIAS, diaHoy, emojiCategoria, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
+import { formatoCOP, formatoDistancia } from '../lib/formato'
+import { DIAS, diaHoy, enlaceWhatsapp, horariosPorDia } from '../lib/negocio'
 import { rutaAPie } from '../lib/ruta'
+import { usePerfil } from '../lib/sesion'
 import { useBrujula } from '../lib/useUbicacion'
 import { EstadoAbierto } from './Mapa'
 
@@ -63,12 +68,50 @@ export function Perfil() {
   return <FichaNegocio n={negocio.data} />
 }
 
+/** La tienda aún no sube productos: se dice y se sugiere cómo preguntar. */
+function SinCatalogo({ n }: { n: NegocioDetalle }) {
+  const contacto = n.whatsapp ? 'Escríbele por WhatsApp' : n.telefono ? 'Llámala' : 'Pasa por la tienda'
+  return (
+    <section className="tarjeta mt-5 p-4" aria-labelledby="titulo-catalogo">
+      <h2 id="titulo-catalogo" className="text-lg font-black">
+        Catálogo
+      </h2>
+      <p className="mt-1 text-sm text-muted">
+        Esta tienda todavía no ha subido sus productos. {contacto} para saber qué tiene.
+      </p>
+    </section>
+  )
+}
+
+/** Atajos para el equipo: administrar el catálogo y ver las estadísticas de cualquier tienda. */
+function HerramientasAdmin({ n }: { n: NegocioDetalle }) {
+  const { perfil } = usePerfil()
+  if (!perfil.data?.roles.includes('admin')) return null
+  return (
+    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-caja border border-dashed border-line p-3 text-sm">
+      <span className="font-bold text-muted">Admin:</span>
+      <Link to={`/mi-negocio/${n.id}/catalogo`} className="tap inline-flex items-center rounded-full bg-block px-3 font-bold">
+        <Wrench className="mr-1.5 size-4" aria-hidden="true" /> Catálogo
+      </Link>
+      <Link to={`/mi-negocio/${n.id}/estadisticas`} className="tap inline-flex items-center rounded-full bg-block px-3 font-bold">
+        <ChartColumn className="mr-1.5 size-4" aria-hidden="true" /> Estadísticas
+      </Link>
+    </div>
+  )
+}
+
 function FichaNegocio({ n }: { n: NegocioDetalle }) {
   const [modalMandado, setModalMandado] = useState(false)
   const [modalReporte, setModalReporte] = useState(false)
   const [copiado, setCopiado] = useState(false)
-  const emoji = emojiCategoria(n.categoria.slug)
   const llegar = useComoLlegar(n.ubicacion)
+  const catalogo = useQuery({
+    queryKey: ['catalogo', n.slug],
+    queryFn: () => apiGet<Catalogo>(`/negocios/${encodeURIComponent(n.slug)}/catalogo`),
+  })
+  const { carrito, poner, vaciar } = useCarrito(n.id)
+  const [verCarrito, setVerCarrito] = useState(false)
+  const resumen = resumenCarrito(catalogo.data, carrito)
 
   async function compartir() {
     const url = `${location.origin}/n/${n.slug}`
@@ -89,17 +132,17 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
 
   return (
     <article className="mx-auto max-w-xl pb-32">
-      <Carrusel fotos={n.fotos} nombre={n.nombre} emoji={emoji} color={n.categoria.color} />
+      <Carrusel fotos={n.fotos} nombre={n.nombre} categoria={n.categoria.slug} color={n.categoria.color} />
 
       {/* Encabezado como hoja que sube sobre la foto */}
       <div className="relative -mt-5 rounded-t-[22px] bg-bg px-4 pt-5">
         <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: n.categoria.color }}>
           <span
-            className="grid size-7 place-items-center rounded-full text-base"
+            className="grid size-7 place-items-center rounded-full"
             style={{ background: `${n.categoria.color}22` }}
             aria-hidden="true"
           >
-            {emoji}
+            <IconoCategoria slug={n.categoria.slug} className="size-4" strokeWidth={2.25} />
           </span>
           {n.categoria.nombre}
           {n.barrio && <span className="font-normal text-muted">· {n.barrio.nombre}</span>}
@@ -108,22 +151,28 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           <EstadoAbierto abierto={n.abierto_ahora} />
           {n.cerrado_hoy && <span className="text-sm text-muted">Hoy no abre</span>}
-          {n.destacado && <span className="rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-sun-ink">★ Destacado</span>}
+          {n.destacado && <span className="inline-flex items-center gap-1 rounded-full bg-sun px-2 py-0.5 text-xs font-bold text-sun-ink"><Star className="size-3 fill-current" aria-hidden="true" /> Destacado</span>}
         </div>
         {n.descripcion && <p className="mt-3 text-pretty">{n.descripcion}</p>}
 
         <div className="mt-4 flex gap-2">
           <button type="button" onClick={compartir} className="tap inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-bold shadow-1">
-            <span aria-hidden="true">↗</span>
-            {copiado ? 'Enlace copiado ✓' : 'Compartir'}
+            {copiado ? <Check className="size-4" aria-hidden="true" /> : <Share2 className="size-4" aria-hidden="true" />}
+            {copiado ? 'Enlace copiado' : 'Compartir'}
           </button>
           {n.telefono && (
             <a href={`tel:${n.telefono}`} className="tap inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-bold shadow-1">
-              <span aria-hidden="true">☎</span>
+              <Phone className="size-4" aria-hidden="true" />
               Llamar
             </a>
           )}
         </div>
+
+        {catalogo.data && catalogo.data.items.length > 0 && (
+          <CatalogoNegocio n={n} catalogo={catalogo.data} carrito={carrito} poner={poner} />
+        )}
+        {catalogo.data && catalogo.data.items.length === 0 && <SinCatalogo n={n} />}
+        <HerramientasAdmin n={n} />
 
         <section className="tarjeta mt-5 overflow-hidden" aria-labelledby="titulo-donde">
           <div className="flex items-start justify-between gap-3 p-4">
@@ -142,7 +191,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
                 }}
                 className="tap inline-flex shrink-0 items-center gap-1.5 rounded-full bg-green px-4 text-sm font-bold text-green-ink"
               >
-                <span aria-hidden="true">🚶</span> Cómo llegar
+                <Footprints className="size-4" aria-hidden="true" /> Cómo llegar
               </button>
             ) : (
               <button
@@ -168,7 +217,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
                 <span className="text-red">{llegar.ruta.error.message}</span>
               ) : (
                 <>
-                  <span className="font-bold">🚶 {llegar.ruta.data.minutos} min</span>
+                  <span className="inline-flex items-center gap-1 font-bold"><Footprints className="size-4" aria-hidden="true" /> {llegar.ruta.data.minutos} min</span>
                   <span className="text-muted"> · {formatoDistancia(llegar.ruta.data.metros)} a pie desde donde estás</span>
                 </>
               )}
@@ -178,7 +227,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
             <MiniMapa
               punto={n.ubicacion}
               color={n.categoria.color}
-              emoji={emoji}
+              categoria={n.categoria.slug}
               yo={llegar.yo}
               camino={llegar.ruta.data?.trazado ?? null}
             />
@@ -228,21 +277,43 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               aria-label="Escribir por WhatsApp"
               className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-green px-3 font-bold whitespace-nowrap text-green-ink shadow-1"
             >
-              <span aria-hidden="true">💬</span> WhatsApp
+              <MessageCircle className="size-5" aria-hidden="true" /> WhatsApp
             </a>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              registrarEvento('click_pedir_mandado', n.id)
-              setModalMandado(true)
-            }}
-            className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
-          >
-            🛵 Pedir mandado
-          </button>
+          {resumen.unidades > 0 ? (
+            <button
+              type="button"
+              onClick={() => setVerCarrito(true)}
+              className="entra tap flex flex-[1.3] items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
+            >
+              <ShoppingBasket className="size-5" aria-hidden="true" /> Pedir ({resumen.unidades})
+              {resumen.total > 0 && <span className="font-mono text-sm">· {formatoCOP(resumen.total)}</span>}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                registrarEvento('click_pedir_mandado', n.id)
+                setModalMandado(true)
+              }}
+              className="tap flex flex-1 items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
+            >
+              <Bike className="size-5" aria-hidden="true" /> Pedir mandado
+            </button>
+          )}
         </div>
       </div>
+
+      {verCarrito && catalogo.data && (
+        <DialogoCarrito
+          n={n}
+          catalogo={catalogo.data}
+          carrito={carrito}
+          poner={poner}
+          vaciar={vaciar}
+          alCerrar={() => setVerCarrito(false)}
+        />
+      )}
 
       {modalMandado && <ModalProximamente nombre={n.nombre} alCerrar={() => setModalMandado(false)} />}
       {modalReporte && <ModalReportar negocioId={n.id} alCerrar={() => setModalReporte(false)} />}
@@ -250,7 +321,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
   )
 }
 
-function Carrusel({ fotos, nombre, emoji, color }: { fotos: string[]; nombre: string; emoji: string; color: string }) {
+function Carrusel({ fotos, nombre, categoria, color }: { fotos: string[]; nombre: string; categoria: string; color: string }) {
   const [rotas, setRotas] = useState<string[]>([])
   const [actual, setActual] = useState(0)
   const validas = fotos.filter((f) => !rotas.includes(f))
@@ -258,11 +329,11 @@ function Carrusel({ fotos, nombre, emoji, color }: { fotos: string[]; nombre: st
   if (!validas.length) {
     return (
       <div
-        className="grid aspect-[16/9] place-items-center text-7xl"
-        style={{ background: `radial-gradient(circle at 50% 40%, ${color}33, ${color}11 70%)` }}
+        className="grid aspect-[16/9] place-items-center"
+        style={{ background: `radial-gradient(circle at 50% 40%, ${color}33, ${color}11 70%)`, color }}
         aria-hidden="true"
       >
-        <span className="drop-shadow-sm">{emoji}</span>
+        <IconoCategoria slug={categoria} className="size-20 opacity-80" strokeWidth={1.5} />
       </div>
     )
   }
@@ -368,9 +439,9 @@ function ModalProximamente({ nombre, alCerrar }: { nombre: string; alCerrar: () 
 
   return (
     <Dialogo titulo="Los mandados llegan muy pronto" alCerrar={alCerrar}>
-      <p className="text-4xl" aria-hidden="true">
-        🛵
-      </p>
+      <span className="grid size-14 place-items-center rounded-full bg-sun text-sun-ink" aria-hidden="true">
+        <Bike className="size-7" />
+      </span>
       <h2 className="mt-2 text-2xl font-black">Los mandados llegan muy pronto</h2>
       <p className="mt-2 text-muted">
         Pronto un vecino podrá ir a {nombre} por ti. Inscríbete en la lista de espera y serás de los primeros en

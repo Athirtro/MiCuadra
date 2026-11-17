@@ -342,3 +342,240 @@ def test_gate_vacio(api: TestClient) -> None:
     assert gate["cumplidos"] == 0
     assert all(c["estado"] == "rojo" for c in gate["criterios"])
     assert gate["criterios"][1]["valor"] == "Sin datos todavía"
+
+
+# ── Carga de negocios por el equipo ──
+
+CUBA = "4.7966, -75.7301"
+
+
+def test_admin_crea_negocio_sin_dueno_y_sin_whatsapp(api: TestClient) -> None:
+    datos = {
+        "nombre": "Real Ferretería La Sierra",
+        "categoria": "ferreteria",
+        "direccion_texto": "Cr 26 # 70-16",
+        "barrio": "Cuba",
+        "ubicacion": {"lat": 4.7966, "lng": -75.7301},
+        "horarios": [{"dia_semana": 1, "abre": "07:00", "cierra": "18:00"}],
+    }
+    r = api.post(f"{V1}/admin/negocios", json=datos, headers=ADMIN)
+    assert r.status_code == 201, r.text
+    n = r.json()
+    assert n["estado"] == "activo" and n["creado_por_admin"] is True
+    assert n["dueno"] is None and n["whatsapp"] is None
+    assert n["barrio"]["slug"] == "cuba"
+    # Ya sale en el mapa público.
+    assert api.get(f"{V1}/negocios/{n['slug']}").status_code == 200
+
+    otra = api.post(f"{V1}/admin/negocios", json=datos, headers=ADMIN)
+    assert otra.status_code == 409 and otra.json()["error"]["codigo"] == "negocio_repetido"
+    vecino = api.post(f"{V1}/admin/negocios", json=datos, headers=_auth("vecino1"))
+    assert vecino.status_code == 403
+
+
+def test_lote_simula_explica_errores_y_crea_todo_o_nada(api: TestClient) -> None:
+    buena = {
+        "nombre": "Real Pastel Pan",
+        "categoria": "Panadería",
+        "barrio": "Cuba",
+        "direccion": "Cra 27 # 71-08",
+        "ubicacion": CUBA,
+        "whatsapp": "+57 310 456 7890",
+        "horario": "lun-sab 6:00-20:00; dom 7-13",
+    }
+    mala = {
+        "nombre": "Real Tienda Sin Datos",
+        "categoria": "Joyería",
+        "direccion": "x",
+        "ubicacion": "Calle 71",
+        "horario": "lunes",
+    }
+    url = f"{V1}/admin/negocios/lote"
+
+    r = api.post(url, json={"filas": [buena, mala, buena]}, headers=ADMIN).json()
+    assert [v["fila"] for v in r["validas"]] == [2]
+    assert r["validas"][0]["categoria"] == "panaderia"
+    assert r["validas"][0]["whatsapp"] == "3104567890" and r["validas"][0]["franjas"] == 7
+    errores = {e["fila"]: e["mensajes"] for e in r["errores"]}
+    assert set(errores) == {3, 4}
+    assert "No existe la categoría «Joyería»." in errores[3]
+    assert any("latitud, longitud" in m for m in errores[3])
+    assert errores[4] == ["Está repetido en el archivo."]
+
+    # Con errores no se crea nada, aunque se pida de verdad.
+    r = api.post(url, json={"filas": [buena, mala], "simular": False}, headers=ADMIN).json()
+    assert r["creados"] == 0
+    assert api.get(f"{V1}/admin/negocios?q=Real Pastel", headers=ADMIN).json() == []
+
+    r = api.post(
+        url, json={"filas": [buena], "simular": False, "estado": "pendiente"}, headers=ADMIN
+    ).json()
+    assert r["creados"] == 1
+    creados = api.get(f"{V1}/admin/negocios?q=Real Pastel", headers=ADMIN).json()
+    assert [(n["estado"], n["creado_por_admin"]) for n in creados] == [("pendiente", True)]
+
+    # Subir el mismo archivo otra vez no duplica.
+    r = api.post(url, json={"filas": [buena]}, headers=ADMIN).json()
+    assert r["errores"][0]["mensajes"] == ["Ya está en MiCuadra (mismo nombre en esa cuadra)."]
+
+
+def test_lote_ubica_con_google_lo_que_trae_direccion(api: TestClient) -> None:
+    from app.schemas.directorio import Punto
+    from app.services.geocodificar import Encontrado, GoogleNoDisponible, get_geocodificador
+
+    def falso(direccion: str, barrio: str | None, cerca: Punto | None = None) -> Encontrado | None:
+        if direccion == "Cr 26 # 70-16":
+            return Encontrado(Punto(lat=4.80482, lng=-75.73751), "Cra. 26 #70-16, Pereira")
+        if direccion == "Cl 1 # 1-01":
+            raise GoogleNoDisponible("REQUEST_DENIED")
+        return None
+
+    api.app.dependency_overrides[get_geocodificador] = lambda: falso  # type: ignore[attr-defined]
+    try:
+        filas = [
+            {
+                "nombre": "Real Ferretería La Sierra",
+                "categoria": "Ferretería",
+                "barrio": "Cuba",
+                "direccion": "Cr 26 # 70-16",
+            },
+            {
+                "nombre": "Real Palacio del Pandebono",
+                "categoria": "Panadería",
+                "direccion": "Cl 71 # 26B-08",
+            },
+            {"nombre": "Real Sin Dirección", "categoria": "Tienda"},
+            {"nombre": "Real Rechazada", "categoria": "Tienda", "direccion": "Cl 1 # 1-01"},
+        ]
+        r = api.post(f"{V1}/admin/negocios/lote", json={"filas": filas}, headers=ADMIN).json()
+        assert [
+            (v["fila"], v["ubicacion_automatica"], v["metodo_ubicacion"], v["detalle_ubicacion"])
+            for v in r["validas"]
+        ] == [(2, True, "google", "Cra. 26 #70-16, Pereira")]
+        errores = {e["fila"]: e["mensajes"] for e in r["errores"]}
+        assert errores[3] == ["No pudimos ubicar esa dirección con precisión: ubícala en el mapa."]
+        # Sin dirección: se ven los dos problemas de una vez.
+        assert "Falta la ubicación (latitud, longitud)." in errores[4]
+        assert any("dirección" in m for m in errores[4])
+        assert errores[5] == [
+            "Google rechazó la consulta (revisa la facturación y la clave en Google Cloud):"
+            " ubícala en el mapa."
+        ]
+    finally:
+        api.app.dependency_overrides.pop(get_geocodificador, None)  # type: ignore[attr-defined]
+
+
+def test_lote_crea_solo_las_listas_si_se_pide(api: TestClient) -> None:
+    filas = [
+        {
+            "nombre": "Real Lista",
+            "categoria": "Tienda",
+            "direccion": "Cl 1 # 1-01",
+            "ubicacion": CUBA,
+        },
+        {"nombre": "Real Sin Ubicar", "categoria": "Tienda", "direccion": "Mz 4 Casa 9"},
+    ]
+    url = f"{V1}/admin/negocios/lote"
+    r = api.post(url, json={"filas": filas, "simular": False}, headers=ADMIN).json()
+    assert r["creados"] == 0  # por defecto, todo o nada
+
+    r = api.post(
+        url, json={"filas": filas, "simular": False, "solo_listas": True}, headers=ADMIN
+    ).json()
+    assert r["creados"] == 1 and [e["fila"] for e in r["errores"]] == [3]
+    nombres = [n["nombre"] for n in api.get(f"{V1}/admin/negocios?q=Real", headers=ADMIN).json()]
+    assert "Real Lista" in nombres and "Real Sin Ubicar" not in nombres
+
+
+# ── Editar nombre y ubicación ──
+
+
+def _negocio_de_prueba(api: TestClient) -> tuple[str, str]:
+    """Negocio propio de la prueba (los «Real …» se borran al final): no toca el seed."""
+    datos = {
+        "nombre": "Real Tienda Editable",
+        "categoria": "panaderia",
+        "direccion_texto": "Por confirmar",
+        "ubicacion": {"lat": 4.81, "lng": -75.69},
+    }
+    r = api.post(f"{V1}/admin/negocios", json=datos, headers=ADMIN)
+    assert r.status_code == 201, r.text
+    return r.json()["id"], r.json()["slug"]
+
+
+def test_admin_edita_nombre_ubicacion_direccion_y_barrio(api: TestClient) -> None:
+    nid, slug = _negocio_de_prueba(api)
+    cambio = {
+        "nombre": "  Real   Panadería Nueva ",
+        "ubicacion": {"lat": 4.8051, "lng": -75.7381},
+        "direccion_texto": "  Cl 70   # 25-48 ",
+        "barrio": "cuba",
+    }
+    r = api.patch(f"{V1}/admin/negocios/{nid}", json=cambio, headers=ADMIN)
+    assert r.status_code == 200, r.text
+    n = r.json()
+    assert n["nombre"] == "Real Panadería Nueva"
+    assert n["slug"] == slug  # los enlaces compartidos siguen funcionando
+    assert n["direccion_texto"] == "Cl 70 # 25-48"
+    assert n["barrio"]["slug"] == "cuba"
+    assert n["ubicacion"] == {"lat": pytest.approx(4.8051), "lng": pytest.approx(-75.7381)}
+
+    sin_barrio = {**cambio, "barrio": None}
+    r = api.patch(f"{V1}/admin/negocios/{nid}", json=sin_barrio, headers=ADMIN)
+    assert r.json()["barrio"] is None
+
+
+def test_editar_negocio_valida_y_protege(api: TestClient) -> None:
+    nid, _ = _negocio_de_prueba(api)
+    ruta = f"{V1}/admin/negocios/{nid}"
+    bien = {
+        "nombre": "Tienda X",
+        "ubicacion": {"lat": 4.81, "lng": -75.69},
+        "direccion_texto": "Cra 8 # 40-15",
+    }
+
+    assert api.patch(ruta, json=bien, headers=_auth("vecino1")).status_code == 403
+    fuera = {**bien, "ubicacion": {"lat": 6.25, "lng": -75.57}}  # Medellín
+    assert api.patch(ruta, json=fuera, headers=ADMIN).status_code == 422
+    assert api.patch(ruta, json={**bien, "barrio": "x"}, headers=ADMIN).status_code == 422
+    assert api.patch(ruta, json={**bien, "nombre": "  a  "}, headers=ADMIN).status_code == 422
+    otro = f"{V1}/admin/negocios/00000000-0000-0000-0000-000000000000"
+    assert api.patch(otro, json=bien, headers=ADMIN).status_code == 404
+
+
+def test_barrio_nuevo_se_crea_y_uno_existente_se_reutiliza(
+    api: TestClient, conn: psycopg.Connection
+) -> None:
+    nid, _ = _negocio_de_prueba(api)
+    ruta = f"{V1}/admin/negocios/{nid}"
+    base = {
+        "nombre": "Real Tienda",
+        "ubicacion": {"lat": 4.80, "lng": -75.74},
+        "direccion_texto": "Cl 1",
+    }
+    try:
+        r = api.patch(ruta, json={**base, "barrio": "  Los Corales Prueba "}, headers=ADMIN)
+        assert r.status_code == 200, r.text
+        assert r.json()["barrio"] == {"slug": "los-corales-prueba", "nombre": "Los Corales Prueba"}
+        # Sin tildes ni mayúsculas es el mismo barrio: no se duplica.
+        r = api.patch(ruta, json={**base, "barrio": "CUBA"}, headers=ADMIN)
+        assert r.json()["barrio"]["slug"] == "cuba"
+        assert conn.execute("select count(*) from barrios where slug = 'cuba'").fetchone()[0] == 1
+    finally:
+        conn.execute("delete from negocios where nombre like 'Real %'")
+        conn.execute("delete from barrios where slug = 'los-corales-prueba'")
+
+
+def test_barrio_en_mapa_usa_openstreetmap(api: TestClient) -> None:
+    from app.services.barrio_del_mapa import get_barrio_del_mapa
+
+    ruta = f"{V1}/admin/barrio-en-mapa?lat=4.7905&lng=-75.7342"
+    assert api.get(ruta, headers=ADMIN).json() == {"nombre": None}  # apagado en pruebas
+    api.app.dependency_overrides[get_barrio_del_mapa] = lambda: lambda lat, lng: "Los Corales"  # type: ignore[attr-defined]
+    try:
+        assert api.get(ruta, headers=ADMIN).json() == {"nombre": "Los Corales"}
+        assert api.get(ruta, headers=_auth("vecino1")).status_code == 403
+        lejos = f"{V1}/admin/barrio-en-mapa?lat=6.25&lng=-75.57"
+        assert api.get(lejos, headers=ADMIN).status_code == 422
+    finally:
+        api.app.dependency_overrides.pop(get_barrio_del_mapa, None)  # type: ignore[attr-defined]

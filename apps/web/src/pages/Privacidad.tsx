@@ -38,6 +38,13 @@ export function Privacidad() {
         ni tu cuenta.
       </p>
 
+      <h2 className="mt-6 text-xl font-black">Métricas de uso</h2>
+      <p className="mt-2">
+        Para saber cuántas personas visitan MiCuadra y qué tan rápido carga, usamos Vercel Web Analytics y Speed
+        Insights (Vercel Inc., Estados Unidos, donde está publicada la página). No usan cookies ni guardan tu IP: solo
+        cuentan la página que abres (sin datos de tu cuenta), el tipo de dispositivo, el país y los tiempos de carga.
+      </p>
+
       <h2 className="mt-6 text-xl font-black">Tus derechos</h2>
       <p className="mt-2">
         Puedes conocer, actualizar, rectificar y pedir que borremos tus datos, y revocar esta autorización en cualquier

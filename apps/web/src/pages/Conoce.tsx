@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, type CSSProperties } from 'react'
-import { useLocation } from 'react-router'
+import { Plus } from 'lucide-react'
+import { Link, useLocation } from 'react-router'
 import { InstalarApp } from '../components/InstalarApp'
 import { BarraMetas, ListaEspera } from '../components/ListaEspera'
 import { apiGet, type Barrio, type Health } from '../lib/api'
@@ -23,7 +24,8 @@ export function Conoce() {
         </p>
         <BarriosVivos />
         <p className="mt-5 text-sm">
-          Cada tienda, panadería, barbería o droguería que se suma pone su barrio en el mapa. Instala
+          Sirve en cualquier barrio de Pereira: cada tienda, panadería, barbería o droguería que se
+          suma pone su barrio en el mapa. Instala
           la app para tenerla a mano y entra a la lista de espera de los mandados.
         </p>
         <div className="mt-5">
@@ -44,25 +46,40 @@ export function Conoce() {
   )
 }
 
-/** Los barrios que ya tienen negocios, del más poblado al menos: la lista crece con el mapa. */
+/** Todos los barrios que ya tienen negocios, del más poblado al menos: la lista crece con el mapa. */
 function BarriosVivos() {
   const barrios = useQuery({ queryKey: ['barrios'], queryFn: () => apiGet<Barrio[]>('/barrios'), staleTime: Infinity })
-  const primeros = barrios.data?.slice(0, 4) ?? []
-  if (!primeros.length) return null
+  const lista = barrios.data ?? []
+  if (!lista.length) return null
+  const negocios = lista.reduce((t, b) => t + b.negocios, 0)
   return (
-    <ul className="mt-5 grid grid-cols-4 gap-1" aria-label="Barrios con más negocios">
-      {primeros.map((b, i) => (
-        <li
-          key={b.slug}
-          className={`flex aspect-square flex-col justify-end rounded-md p-1.5 font-mono text-[10px] leading-tight ${
-            i === 0 ? 'bg-sun text-sun-ink' : 'bg-block text-muted'
-          }`}
-        >
-          <span className="truncate">{b.nombre}</span>
-          <span className="opacity-70">{b.negocios}</span>
+    <div className="mt-5">
+      <p className="text-sm font-bold">
+        {lista.length === 1 ? '1 barrio' : `${lista.length} barrios`} de Pereira con{' '}
+        {negocios === 1 ? '1 negocio' : `${negocios} negocios`} en el mapa, y contando
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Barrios con negocios en el mapa">
+        {lista.map((b, i) => (
+          <li
+            key={b.slug}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ${
+              i === 0 ? 'bg-sun font-bold text-sun-ink' : 'bg-block'
+            }`}
+          >
+            {b.nombre}
+            <span className="font-mono text-xs opacity-70">{b.negocios}</span>
+          </li>
+        ))}
+        <li>
+          <Link
+            to="/mi-negocio/nuevo"
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-line px-3 py-1 text-sm font-bold text-green"
+          >
+            <Plus className="size-4" aria-hidden="true" /> Tu barrio
+          </Link>
         </li>
-      ))}
-    </ul>
+      </ul>
+    </div>
   )
 }
 

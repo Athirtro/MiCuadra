@@ -22,6 +22,23 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('Mapa del barrio (/)', () => {
+  it('el menú inferior lleva a las pantallas principales y no sale en el perfil', async () => {
+    gpsNegado()
+    apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    const { unmount } = renderEn('/')
+    const menu = await screen.findByRole('navigation', { name: 'Menú principal' })
+    expect(within(menu).getByRole('link', { name: 'Mapa' })).toHaveAttribute('aria-current', 'page')
+    expect(within(menu).getByRole('link', { name: 'Pedidos' })).toHaveAttribute('href', '/mis-pedidos')
+    expect(screen.queryByRole('button', { name: 'Volver' })).not.toBeInTheDocument()
+    unmount()
+
+    apiFalsa({ '/negocios/': DETALLE })
+    renderEn('/n/panaderia-el-trigal')
+    expect(await screen.findByRole('heading', { name: 'Panadería El Trigal' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Volver' })).toBeInTheDocument()
+  })
+
   it('"Ir" muestra la tarjeta del camino y, sin ubicación, pide activarla', async () => {
     gpsNegado()
     apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
@@ -52,6 +69,42 @@ describe('Mapa del barrio (/)', () => {
     expect(hoja).toHaveAttribute('data-expandida', 'false')
   })
 
+  it('la hoja sigue al dedo y al soltar sube o baja', async () => {
+    gpsNegado()
+    apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    renderEn('/')
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
+    await screen.findByText('Panadería El Trigal')
+
+    const hoja = screen.getByRole('region', { name: 'Resultados' })
+    Object.defineProperty(hoja, 'offsetHeight', { configurable: true, value: 600 })
+    const lista = screen.getByText('Panadería El Trigal').closest('.overflow-y-auto') as HTMLElement
+    const toque = (y: number) => ({ touches: [{ clientY: y }] })
+
+    // Hoja abajo (escondida 330 px): mientras arrastra hacia arriba, la hoja va con el dedo.
+    fireEvent.touchStart(lista, toque(500))
+    fireEvent.touchMove(lista, toque(490))
+    fireEvent.touchMove(lista, toque(290))
+    expect(hoja.style.transform).toBe('translateY(130px)')
+    fireEvent.touchEnd(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'true')
+    expect(hoja.style.transform).toBe('')
+
+    // Arriba: un tirón corto hacia abajo no alcanza la mitad y vuelve a quedar arriba.
+    fireEvent.touchStart(lista, toque(300))
+    fireEvent.touchMove(lista, toque(310))
+    fireEvent.touchMove(lista, toque(360))
+    fireEvent.touchEnd(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'true')
+
+    // Más de la mitad hacia abajo: baja.
+    fireEvent.touchStart(lista, toque(300))
+    fireEvent.touchMove(lista, toque(310))
+    fireEvent.touchMove(lista, toque(560))
+    fireEvent.touchEnd(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'false')
+  })
+
   it('sin GPS pide el barrio y muestra los negocios cercanos con distancia en cuadras', async () => {
     gpsNegado()
     const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
@@ -68,6 +121,23 @@ describe('Mapa del barrio (/)', () => {
     const consulta = fetchFalso.mock.calls.map(([url]) => url).find((u) => u.includes('/negocios?'))
     expect(consulta).toContain('lat=4.798000')
     expect(consulta).toContain('radio_m=1000')
+  })
+
+  it('busca productos: muestra lo que coincide con su precio y filtra por ofertas', async () => {
+    gpsNegado()
+    const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    renderEn('/')
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
+
+    expect(await screen.findByText('Pandebono')).toBeInTheDocument()
+    expect(screen.getByText('$1.200')).toBeInTheDocument()
+    expect(screen.getByLabelText('antes $1.500')).toBeInTheDocument()
+    expect(screen.getByText('2 ofertas')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ofertas' }))
+    await waitFor(() =>
+      expect(fetchFalso.mock.calls.some(([url]) => url.includes('con_ofertas=true'))).toBe(true),
+    )
   })
 
   it('recuerda el barrio elegido en la siguiente visita', async () => {
@@ -88,7 +158,7 @@ describe('Mapa del barrio (/)', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Panadería/, pressed: false }))
     fireEvent.click(screen.getByRole('button', { name: /Abierto ahora/, pressed: false }))
-    fireEvent.click(screen.getByRole('button', { name: '5 cuadras' }))
+    fireEvent.click(screen.getByRole('radio', { name: '5 cuadras' }))
 
     await waitFor(() => {
       const ultima = String(fetchFalso.mock.calls.at(-1)?.[0])
@@ -134,7 +204,7 @@ describe('Perfil del negocio (/n/:slug)', () => {
     renderEn('/n/panaderia-el-trigal')
 
     fireEvent.click(await screen.findByRole('button', { name: /Cómo llegar/ }))
-    expect(await screen.findByText('🚶 3 min')).toBeInTheDocument()
+    expect(await screen.findByText('3 min', { exact: false })).toBeInTheDocument()
     expect(screen.getByText(/230 m a pie desde donde estás/)).toBeInTheDocument()
     expect(fetchFalso.mock.calls.some(([url]) => url.includes('/foot/-75.731,4.797;'))).toBe(true)
     expect(abrir).not.toHaveBeenCalled()
@@ -238,6 +308,9 @@ describe('Otras rutas', () => {
 
     expect(await screen.findByRole('progressbar', { name: 'Negocios en el mapa' })).toHaveAttribute('aria-valuenow', '12')
     expect(screen.getByText('3 / 15')).toBeInTheDocument()
+    expect(screen.getByText('2 barrios de Pereira con 10 negocios en el mapa, y contando')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Barrios con negocios en el mapa' })).toHaveTextContent('Álamos')
+    expect(screen.getByRole('link', { name: 'Tu barrio' })).toHaveAttribute('href', '/mi-negocio/nuevo')
 
     const inscribirme = screen.getByRole('button', { name: 'Inscribirme' })
     fireEvent.click(screen.getByRole('button', { name: /Tengo un negocio/ }))

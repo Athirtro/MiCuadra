@@ -1,3 +1,4 @@
+import { Bike, House, PartyPopper, Store, type LucideIcon } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
@@ -9,10 +10,10 @@ type Rol = ListaEsperaEntrada['rol']
 /** Lo que el vecino escribió en el modal de "Pedir mandado" viaja aquí sin pasar por la URL. */
 export const CLAVE_QUE_PEDIRIA = 'micuadra.que-pediria'
 
-const ROLES: { rol: Rol; emoji: string; titulo: string }[] = [
-  { rol: 'vecino', emoji: '🏡', titulo: 'Soy vecino' },
-  { rol: 'negocio', emoji: '🏪', titulo: 'Tengo un negocio' },
-  { rol: 'mensajero', emoji: '🛵', titulo: 'Quiero ser mensajero' },
+const ROLES: { rol: Rol; Icono: LucideIcon; titulo: string }[] = [
+  { rol: 'vecino', Icono: House, titulo: 'Soy vecino' },
+  { rol: 'negocio', Icono: Store, titulo: 'Tengo un negocio' },
+  { rol: 'mensajero', Icono: Bike, titulo: 'Quiero ser mensajero' },
 ]
 
 function leerQuePediria(): string {
@@ -73,9 +74,9 @@ export function ListaEspera() {
     const yaEstaba = inscribir.data?.nuevo === false
     return (
       <div role="status" className="entra tarjeta p-6 text-center">
-        <p className="text-4xl" aria-hidden="true">
-          <span className="celebra">🎉</span>
-        </p>
+        <span className="celebra mx-auto grid size-14 place-items-center rounded-full bg-green text-green-ink" aria-hidden="true">
+          <PartyPopper className="size-7" />
+        </span>
         <p className="mt-2 text-xl font-black">{yaEstaba ? 'Ya estabas en la lista' : '¡Quedaste en la lista!'}</p>
         <p className="mt-1 text-muted">
           {yaEstaba ? 'Actualizamos tus datos.' : 'Te escribimos por WhatsApp cuando arranquemos en tu barrio.'}
@@ -106,7 +107,7 @@ export function ListaEspera() {
                 rol === r.rol ? 'border-green bg-green/10' : 'border-line'
               }`}
             >
-              <span aria-hidden="true">{r.emoji}</span>
+              <r.Icono className="size-5 shrink-0" aria-hidden="true" />
               {r.titulo}
             </button>
           ))}

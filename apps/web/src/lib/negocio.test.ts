@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { diaHoy, emojiCategoria, enlaceWhatsapp, horariosPorDia } from './negocio'
+import { Croissant, MapPin } from 'lucide-react'
+import { iconoCategoria } from './iconos'
+import { diaHoy, enlaceWhatsapp, horariosPorDia } from './negocio'
 
 describe('negocio', () => {
   it('arma el enlace de WhatsApp con indicativo de Colombia y saludo', () => {
@@ -19,9 +21,10 @@ describe('negocio', () => {
     expect(dias[6]).toEqual(['Domingo', 'Cerrado'])
   })
 
-  it('tiene emoji por categoría y uno genérico', () => {
-    expect(emojiCategoria('panaderia')).toBe('🥖')
-    expect(emojiCategoria('otra')).toBe('📍')
+  it('tiene ícono por categoría y uno genérico', () => {
+    expect(iconoCategoria('panaderia')).toBe(Croissant)
+    expect(iconoCategoria('otra')).toBe(MapPin)
+    expect(iconoCategoria(null)).toBe(MapPin)
   })
 })
 

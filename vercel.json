@@ -16,7 +16,7 @@
       ],
       "destination": "https://micuadra-api.onrender.com/api/v1/compartir/n/:slug"
     },
-    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|api/|_vercel/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

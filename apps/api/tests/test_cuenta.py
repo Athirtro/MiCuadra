@@ -238,3 +238,32 @@ def test_fotos_de_negocio_ajeno(client: TestClient, nuevo: str) -> None:
     nid = client.post(f"{V1}/mis-negocios", json=NEGOCIO, headers=_auth(nuevo)).json()["id"]
     assert client.get(f"{V1}/mis-negocios/{nid}/fotos", headers=_auth("dueno2")).status_code == 404
     assert client.get(f"{V1}/mis-negocios/{nid}/fotos", headers=_auth("admin")).status_code == 200
+
+
+def test_correo_invitado_queda_como_admin_al_entrar_o_al_invitarlo(
+    client: TestClient, conn: psycopg.Connection
+) -> None:
+    def crear(clave: str, email: str) -> None:
+        conn.execute("delete from auth.users where id = %s", (_id(f"usuario:{clave}"),))
+        conn.execute(
+            "insert into auth.users (id, email) values (%s, %s)", (_id(f"usuario:{clave}"), email)
+        )
+
+    def roles(clave: str) -> list[str]:
+        return client.get(f"{V1}/yo", headers=_auth(clave)).json()["roles"]
+
+    try:
+        # Invitado antes de tener cuenta: al entrar por primera vez ya es admin.
+        conn.execute("insert into admins_invitados (email) values ('kevin@utp.edu.co')")
+        crear("invitado", "Kevin@UTP.edu.co")
+        assert set(roles("invitado")) == {"vecino", "admin"}
+
+        # Con cuenta desde antes: la invitación le da el rol de una vez.
+        crear("antiguo", "sebas@utp.edu.co")
+        assert roles("antiguo") == ["vecino"]
+        conn.execute("insert into admins_invitados (email) values ('sebas@utp.edu.co')")
+        assert set(roles("antiguo")) == {"vecino", "admin"}
+    finally:
+        conn.execute("delete from admins_invitados where email like '%@utp.edu.co'")
+        for clave in ("invitado", "antiguo"):
+            conn.execute("delete from auth.users where id = %s", (_id(f"usuario:{clave}"),))

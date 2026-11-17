@@ -158,7 +158,7 @@ def test_requiere_rol(base_de_datos: None) -> None:
 def test_seed_cumple_lo_pedido(conn: psycopg.Connection) -> None:
     q = conn.execute
     assert q("select count(*) from barrios where es_piloto").fetchone() == (4,)
-    assert q("select count(*) from categorias").fetchone() == (10,)
+    assert q("select count(*) from categorias").fetchone() == (11,)  # 10 de la SPEC + ferretería
     total, activos, cats = q(
         "select count(*), count(*) filter (where estado = 'activo'), count(distinct categoria_id)"
         " from negocios where nombre like '[DEMO]%'"

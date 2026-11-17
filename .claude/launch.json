@@ -4,8 +4,25 @@
     {
       "name": "web",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@micuadra/web", "dev"],
+      "runtimeArgs": [
+        "--filter",
+        "@micuadra/web",
+        "dev"
+      ],
       "port": 5173
+    },
+    {
+      "name": "web-api-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@micuadra/web",
+        "dev"
+      ],
+      "port": 5173,
+      "env": {
+        "VITE_API_URL": "https://micuadra-api.onrender.com/api/v1"
+      }
     }
   ]
 }

@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import type { Gate, NegocioAdmin, Perfil } from './lib/api'
 import { ProveedorSesion } from './lib/sesion'
-import { apiFalsa, BARRIOS, CATEGORIAS } from './test/fixtures'
+import { APARTADO, apiFalsa, BARRIOS, CATALOGO, CATEGORIAS, DETALLE } from './test/fixtures'
 
 // Sesión de Supabase simulada: `conSesion` decide si hay alguien adentro.
 const estado = vi.hoisted(() => ({ conSesion: true, google: vi.fn(), correo: vi.fn(), subir: vi.fn() }))
@@ -72,7 +72,7 @@ describe('Entrar', () => {
 
     fireEvent.change(screen.getByLabelText('Correo electrónico'), { target: { value: 'vale@gmail.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enviarme un enlace para entrar' }))
-    expect(await screen.findByText('📬 Revisa tu correo')).toBeInTheDocument()
+    expect(await screen.findByText('Revisa tu correo')).toBeInTheDocument()
     expect(estado.correo).toHaveBeenCalledWith(expect.objectContaining({ email: 'vale@gmail.com' }))
   })
 
@@ -224,6 +224,7 @@ describe('Panel de administración', () => {
     dueno: { nombre: 'Valeria Ospina', email: 'vale@gmail.com', celular: '3104567890' },
     creado_por_admin: false,
     reportes_abiertos: 1,
+    ubicacion: { lat: 4.8, lng: -75.73 },
     created_at: '2026-11-03T15:00:00Z',
   }
   const GATE: Gate = {
@@ -278,6 +279,40 @@ describe('Panel de administración', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }))
     await waitFor(() => expect(posts).toContainEqual({ ruta: '/admin/negocios/n9/estado', cuerpo: { estado: 'activo' } }))
   })
+
+  it('edita el nombre y la ubicación, y toma el barrio del mapa', async () => {
+    const { posts, fetchFalso } = apiFalsa({
+      '/yo': ADMIN,
+      '/admin/negocios': [PENDIENTE],
+      '/admin/barrio-en-mapa': { nombre: 'Los Corales' },
+      '/barrios': BARRIOS,
+    })
+    renderEn('/admin/negocios')
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar nombre y ubicación' }))
+    expect(await screen.findByRole('dialog', { name: 'Editar Arepas La Esquina' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Nombre del negocio'), { target: { value: '  Arepas Doña Rosa ' } })
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Mover pin' }))
+    expect(screen.getByText('4.79850, -75.73050')).toBeInTheDocument()
+    const pegar = screen.getByLabelText(/pega las coordenadas/)
+    fireEvent.change(pegar, { target: { value: 'Medellín 6.25, -75.57' } })
+    expect(screen.getByText('No encontré coordenadas de Pereira en ese texto.')).toBeInTheDocument()
+    fireEvent.change(pegar, { target: { value: 'https://www.google.com/maps/place/x/@4.8051,-75.7381,19z' } })
+    expect(screen.getByText('4.80510, -75.73810')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Dirección'), { target: { value: 'Cl 70 # 25-48' } })
+    expect(screen.getByLabelText('Barrio')).toHaveValue('Cuba')
+    fireEvent.click(screen.getByRole('button', { name: 'Tomar del mapa' }))
+    await waitFor(() => expect(screen.getByLabelText('Barrio')).toHaveValue('Los Corales'))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await waitFor(() =>
+      expect(posts).toContainEqual({
+        ruta: '/admin/negocios/n9',
+        cuerpo: { nombre: 'Arepas Doña Rosa', ubicacion: { lat: 4.8051, lng: -75.7381 }, direccion_texto: 'Cl 70 # 25-48', barrio: 'Los Corales' },
+      }),
+    )
+    expect(fetchFalso.mock.calls.some(([url]) => String(url).includes('/admin/barrio-en-mapa?lat=4.805100&lng=-75.738100'))).toBe(true)
+  })
 })
 
 describe('Fotos del negocio', () => {
@@ -294,5 +329,321 @@ describe('Fotos del negocio', () => {
 
     await waitFor(() => expect(posts).toContainEqual({ ruta: '/mis-negocios/n9/fotos', cuerpo: { url: URL_FOTO } }))
     expect(estado.subir).toHaveBeenCalledWith('n9', expect.any(Blob), 'token-123')
+  })
+})
+
+describe('Catálogo y pedidos contra entrega', () => {
+  const VECINO: Perfil = { ...NUEVO, perfil_completo: true, celular: '3001112233' }
+  const DUENO: Perfil = { ...VECINO, roles: ['dueno'] }
+  const MI_NEGOCIO = {
+    id: 'n1',
+    slug: 'panaderia-el-trigal',
+    nombre: 'Panadería El Trigal',
+    estado: 'activo',
+    motivo_rechazo: null,
+    categoria: 'panaderia',
+    barrio: null,
+    apartados_pendientes: 1,
+  }
+
+  it('el vecino arma su carrito, pide para recoger y avisa por WhatsApp con el código', async () => {
+    const { posts } = apiFalsa({
+      '/yo': VECINO,
+      '/negocios/panaderia-el-trigal/catalogo': CATALOGO,
+      '/negocios/': DETALLE,
+      'POST /negocios/n1/apartados': APARTADO,
+    })
+    renderEn('/n/panaderia-el-trigal')
+
+    expect(await screen.findByRole('heading', { name: 'Catálogo' })).toBeInTheDocument()
+    expect(screen.getByText('Agotado')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar Croissant' })).toBeDisabled()
+    expect(screen.getByText('Pregunta el precio')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar Pan de bono' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar otro de Pan de bono' }))
+    expect(screen.getByRole('group', { name: 'Cantidad de Pan de bono' })).toHaveTextContent('2')
+    expect(JSON.parse(localStorage.getItem('micuadra.carrito.n1') ?? '{}')).toEqual({ i1: 2 })
+
+    fireEvent.click(screen.getByRole('button', { name: /Pedir \(2\)/ }))
+    fireEvent.change(await screen.findByLabelText(/Nota para el negocio/), { target: { value: 'Paso a las 5' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hacer pedido' }))
+
+    expect(await screen.findByRole('heading', { name: '¡Pedido enviado!' })).toBeInTheDocument()
+    expect(posts).toContainEqual({
+      ruta: '/negocios/n1/apartados',
+      cuerpo: {
+        items: [{ item_id: 'i1', cantidad: 2 }],
+        nota: 'Paso a las 5',
+        entrega: 'recoger',
+        direccion_entrega: null,
+        forma_pago: 'efectivo',
+        paga_con: null,
+      },
+    })
+    const wa = screen.getByRole('link', { name: /Avisar por WhatsApp/ }).getAttribute('href') ?? ''
+    expect(decodeURIComponent(wa)).toContain('Código: *K7P2*')
+    expect(decodeURIComponent(wa)).toContain('• 2 × Pan de bono — $3.000')
+    expect(localStorage.getItem('micuadra.carrito.n1')).toBeNull()
+  })
+
+  it('sin cuenta, el carrito pide entrar y recuerda volver al negocio', async () => {
+    estado.conSesion = false
+    localStorage.setItem('micuadra.carrito.n1', JSON.stringify({ i1: 1 }))
+    apiFalsa({ '/negocios/panaderia-el-trigal/catalogo': CATALOGO, '/negocios/': DETALLE })
+    renderEn('/n/panaderia-el-trigal')
+
+    fireEvent.click(await screen.findByRole('button', { name: /Pedir \(1\)/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar para pedir' }))
+    expect(await screen.findByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument()
+    expect(sessionStorage.getItem('micuadra.volver')).toBe('/n/panaderia-el-trigal')
+  })
+
+  it('el dueño agrega un producto con precio e inventario', async () => {
+    const { posts } = apiFalsa({
+      '/yo': DUENO,
+      '/mis-negocios/n1/catalogo': CATALOGO,
+      '/mis-negocios': [MI_NEGOCIO],
+      'POST /mis-negocios/n1/catalogo/items': CATALOGO.items[0],
+    })
+    renderEn('/mi-negocio/n1/catalogo')
+
+    expect(await screen.findByRole('heading', { name: 'Catálogo de Panadería El Trigal' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /1 por aceptar/ })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Agregar producto o servicio/ }))
+    fireEvent.change(await screen.findByLabelText('Nombre'), { target: { value: 'Pandebono' } })
+    fireEvent.change(screen.getByPlaceholderText(/Pregunta el precio/), { target: { value: '1.800' } })
+    fireEvent.click(screen.getByLabelText('Llevar inventario'))
+    fireEvent.change(screen.getByLabelText(/Unidades disponibles/), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText('Sección'), { target: { value: 's1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+
+    await waitFor(() =>
+      expect(posts).toContainEqual({
+        ruta: '/mis-negocios/n1/catalogo/items',
+        cuerpo: expect.objectContaining({ nombre: 'Pandebono', precio: 1800, stock: 12, seccion_id: 's1', tipo: 'producto' }),
+      }),
+    )
+  })
+
+  it('el dueño ve sus pedidos por etapas y acepta uno nuevo', async () => {
+    const { posts } = apiFalsa({
+      '/yo': DUENO,
+      '/mis-negocios/n1/apartados': [APARTADO],
+      '/mis-negocios': [MI_NEGOCIO],
+      'POST /mis-negocios/n1/apartados/a1/estado': { ...APARTADO, estado: 'confirmado' },
+    })
+    renderEn('/mi-negocio/n1/apartados') // el enlace viejo lleva al tablero de pedidos
+
+    expect(await screen.findByText('K7P2')).toBeInTheDocument()
+    expect(screen.getByText('«Paso a las 5»')).toBeInTheDocument()
+    const nuevos = screen.getByRole('region', { name: /Nuevos/ })
+    expect(within(nuevos).getByText('K7P2')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /Preparando/ })).toHaveTextContent('Nada en preparación.')
+    expect(screen.getByText('Lo recoge en la tienda')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Aceptar y preparar' }))
+    await waitFor(() =>
+      expect(posts).toContainEqual({ ruta: '/mis-negocios/n1/apartados/a1/estado', cuerpo: { estado: 'confirmado' } }),
+    )
+  })
+  it('pide a domicilio contra entrega, con dirección y billete para el cambio', async () => {
+    const { posts } = apiFalsa({
+      '/yo': VECINO,
+      '/negocios/panaderia-el-trigal/catalogo': CATALOGO,
+      '/negocios/': DETALLE,
+      'POST /negocios/n1/apartados': { ...APARTADO, entrega: 'domicilio', direccion_entrega: 'Cra 9 # 20-15', paga_con: 10000 },
+    })
+    renderEn('/n/panaderia-el-trigal')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Agregar Pan de bono' }))
+    fireEvent.click(screen.getByRole('button', { name: /Pedir \(1\)/ }))
+    fireEvent.click(await screen.findByLabelText('Que me lo lleven'))
+    expect(screen.getByRole('button', { name: 'Escribe la dirección' })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText(/Dirección de entrega/), { target: { value: 'Cra 9 # 20-15' } })
+    fireEvent.change(screen.getByLabelText(/Con cuánto pagas/), { target: { value: '500' } })
+    expect(screen.getByText('Con eso no alcanza para el total.')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Con cuánto pagas/), { target: { value: '$10.000' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hacer pedido' }))
+
+    expect(await screen.findByRole('heading', { name: '¡Pedido enviado!' })).toBeInTheDocument()
+    expect(posts).toContainEqual({
+      ruta: '/negocios/n1/apartados',
+      cuerpo: expect.objectContaining({ entrega: 'domicilio', direccion_entrega: 'Cra 9 # 20-15', forma_pago: 'efectivo', paga_con: 10000 }),
+    })
+    const wa = decodeURIComponent(screen.getByRole('link', { name: /Avisar por WhatsApp/ }).getAttribute('href') ?? '')
+    expect(wa).toContain('Para llevar a: Cra 9 # 20-15')
+    expect(localStorage.getItem('micuadra.direccion')).toBe('Cra 9 # 20-15')
+  })
+
+  it('el vecino sigue su pedido paso a paso', async () => {
+    apiFalsa({
+      '/yo': VECINO,
+      '/mis-apartados': [
+        {
+          ...APARTADO,
+          estado: 'listo',
+          entrega: 'domicilio',
+          direccion_entrega: 'Cra 9 # 20-15',
+          confirmado_at: '2026-11-04T15:05:00Z',
+          listo_at: '2026-11-04T15:20:00Z',
+        },
+      ],
+    })
+    renderEn('/mis-pedidos')
+
+    const pasos = await screen.findByRole('list', { name: 'Seguimiento del pedido' })
+    const items = within(pasos).getAllByRole('listitem')
+    ;['Recibido', 'Preparando', 'En camino', 'Entregado'].forEach((texto, i) => expect(items[i]).toHaveTextContent(texto))
+    expect(items[2]).toHaveAttribute('aria-current', 'step')
+    expect(items[3]).toHaveTextContent('(pendiente)')
+    expect(screen.getByText('Va para tu casa')).toBeInTheDocument()
+    // Ya lo están preparando: no se cancela desde aquí, se le escribe a la tienda.
+    expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument()
+  })
+})
+
+describe('Panel: agregar negocios', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] }
+
+  it('revisa el CSV antes de crear y no deja crear si hay filas con errores', async () => {
+    const { posts } = apiFalsa({
+      '/yo': ADMIN,
+      'POST /admin/negocios/lote': {
+        validas: [{ fila: 2, nombre: 'Pastel Pan', categoria: 'panaderia', barrio: 'Cuba', ubicacion: { lat: 4.79, lng: -75.73 }, whatsapp: null, franjas: 7 }],
+        errores: [{ fila: 3, nombre: 'Tienda X', mensajes: ['No existe la categoría «Joyería».'] }],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+
+    const csv = 'nombre;categoria;ubicacion\nPastel Pan;Panadería;4.79, -75.73\nTienda X;Joyería;4.8, -75.7\n'
+    const archivo = new File([csv], 'negocios.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+
+    expect(await screen.findByText('No existe la categoría «Joyería».')).toBeInTheDocument()
+    expect(screen.getByText('1 fila lista')).toBeInTheDocument()
+    expect(posts.find((p) => p.ruta === '/admin/negocios/lote')).toEqual({
+      ruta: '/admin/negocios/lote',
+      cuerpo: {
+        filas: [
+          { nombre: 'Pastel Pan', categoria: 'Panadería', ubicacion: '4.79, -75.73' },
+          { nombre: 'Tienda X', categoria: 'Joyería', ubicacion: '4.8, -75.7' },
+        ],
+        estado: 'activo',
+        simular: true,
+      },
+    })
+    // Se puede agregar lo que está listo; lo demás queda para después.
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar 1 negocio' }))
+    await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
+    expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]?.cuerpo).toMatchObject({ simular: false, solo_listas: true })
+  })
+})
+
+describe('Panel: ubicar filas del CSV', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] }
+
+  it('las filas sin ubicación se ubican en el mapa y el archivo se vuelve a revisar', async () => {
+    const { posts } = apiFalsa({
+      '/yo': ADMIN,
+      '/barrios': BARRIOS,
+      'POST /admin/negocios/lote': {
+        validas: [],
+        errores: [{ fila: 2, nombre: 'Pastel Pan', mensajes: ['Google no encontró esa dirección con precisión: ubícala en el mapa.'] }],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+    const archivo = new File(['nombre,categoria,barrio,direccion\nPastel Pan,Panadería,Cuba,Cra 27 # 71-08\n'], 'n.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ubicar en el mapa/ }))
+    expect(await screen.findByRole('heading', { name: 'Pastel Pan' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Primero pon el pin' })).toBeDisabled()
+    fireEvent.click(await screen.findByRole('button', { name: 'Mover pin' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar ubicación' }))
+
+    await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
+    const segunda = posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]
+    expect(segunda?.cuerpo).toMatchObject({
+      filas: [{ nombre: 'Pastel Pan', ubicacion: '4.798500, -75.730500' }],
+      simular: true,
+    })
+  })
+})
+
+describe('Panel: filas ubicadas por Google', () => {
+  const ADMIN: Perfil = { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] }
+
+  it('marca la fila y crea con el mismo punto que se revisó', async () => {
+    const { posts } = apiFalsa({
+      '/yo': ADMIN,
+      'POST /admin/negocios/lote': {
+        validas: [
+          {
+            fila: 2,
+            nombre: 'Ferretería La Sierra',
+            categoria: 'ferreteria',
+            barrio: 'Cuba',
+            ubicacion: { lat: 4.80482, lng: -75.73751 },
+            whatsapp: null,
+            franjas: 0,
+            ubicacion_automatica: true,
+            metodo_ubicacion: 'google',
+            detalle_ubicacion: 'Cra. 26 #70-16, Pereira',
+          },
+        ],
+        errores: [],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+    const archivo = new File(['nombre,categoria,barrio,direccion\nFerretería La Sierra,Ferretería,Cuba,Cr 26 # 70-16\n'], 'n.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+
+    expect(await screen.findByText('Ubicada por Google')).toBeInTheDocument()
+    expect(screen.getByText('Cra. 26 #70-16, Pereira')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar 1 negocio' }))
+
+    await waitFor(() => expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')).toHaveLength(2))
+    expect(posts.filter((p) => p.ruta === '/admin/negocios/lote')[1]?.cuerpo).toMatchObject({
+      filas: [{ nombre: 'Ferretería La Sierra', ubicacion: '4.804820, -75.737510' }],
+      simular: false,
+    })
+  })
+})
+
+describe('Panel: filas ubicadas por la nomenclatura', () => {
+  it('se marcan como aproximadas con cómo se interpolaron', async () => {
+    apiFalsa({
+      '/yo': { ...NUEVO, perfil_completo: true, roles: ['vecino', 'admin'] },
+      'POST /admin/negocios/lote': {
+        validas: [
+          {
+            fila: 2,
+            nombre: 'Palacio del Pandebono',
+            categoria: 'panaderia',
+            barrio: 'Cuba',
+            ubicacion: { lat: 4.803932, lng: -75.737936 },
+            whatsapp: null,
+            franjas: 0,
+            ubicacion_automatica: true,
+            metodo_ubicacion: 'nomenclatura',
+            detalle_ubicacion: 'sobre la calle 71, entre la carrera 26 Bis y la 27, 8 m adelante',
+          },
+        ],
+        errores: [],
+        creados: 0,
+      },
+    })
+    renderEn('/admin/negocios/agregar')
+    fireEvent.click(await screen.findByRole('button', { name: 'Desde un archivo CSV' }))
+    const archivo = new File(['nombre,categoria,barrio,direccion\nPalacio del Pandebono,Panadería,Cuba,Cl 71 # 26B-08\n'], 'n.csv', { type: 'text/csv' })
+    fireEvent.change(screen.getByLabelText('Elegir archivo CSV'), { target: { files: [archivo] } })
+    expect(await screen.findByText('Ubicación aproximada')).toBeInTheDocument()
+    expect(screen.getByText('sobre la calle 71, entre la carrera 26 Bis y la 27, 8 m adelante')).toBeInTheDocument()
   })
 })

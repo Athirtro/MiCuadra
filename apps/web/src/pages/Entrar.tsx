@@ -1,3 +1,4 @@
+import { MailCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router'
 import { useSesion } from '../lib/sesion'
@@ -69,7 +70,9 @@ export function Entrar() {
 
       {estado === 'enviado' ? (
         <div role="status" className="entra rounded-caja bg-block p-4">
-          <p className="font-bold">📬 Revisa tu correo</p>
+          <p className="flex items-center gap-2 font-bold">
+            <MailCheck className="size-5 text-green" aria-hidden="true" /> Revisa tu correo
+          </p>
           <p className="mt-1 text-sm">
             Te enviamos un enlace a <strong>{email}</strong>. Ábrelo desde este mismo celular para entrar. Si no
             llega, mira en "Spam" o "Promociones".

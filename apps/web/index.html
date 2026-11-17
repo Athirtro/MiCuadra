@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>MiCuadra — El mapa vivo de tu cuadra</title>
     <meta name="description" content="Encuentra en segundos los negocios de tu barrio en Pereira — y si no puedes salir, un vecino va por ti." />
-    <meta name="theme-color" content="#1E6B4E" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0F1A15" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FFFFFF" />
+    <script>
+      // Tema antes de pintar (sin parpadeo): claro por defecto; oscuro o automático si la persona
+      // lo eligió en «Mi cuenta». La misma lógica vive en src/lib/tema.ts.
+      ;(function () {
+        var t = 'claro'
+        try { t = localStorage.getItem('micuadra.tema') || 'claro' } catch (e) {}
+        var oscuro = t === 'oscuro' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = oscuro ? 'dark' : 'light'
+        document.querySelector('meta[name=theme-color]').content = oscuro ? '#1A2620' : '#FFFFFF'
+      })()
+    </script>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="MiCuadra" />
     <meta property="og:locale" content="es_CO" />
