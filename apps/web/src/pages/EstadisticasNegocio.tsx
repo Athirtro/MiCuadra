@@ -15,7 +15,7 @@ const TARJETAS: { clave: Clave; titulo: string; Icono: LucideIcon; dinero?: bool
   { clave: 'vecinos', titulo: 'Vecinos distintos', Icono: Users },
   { clave: 'como_llegar', titulo: 'Pidieron cómo llegar', Icono: Footprints },
   { clave: 'whatsapp', titulo: 'Te escribieron', Icono: MessageCircle },
-  { clave: 'apartados', titulo: 'Apartados', Icono: ShoppingBasket },
+  { clave: 'apartados', titulo: 'Pedidos', Icono: ShoppingBasket },
   { clave: 'vendido', titulo: 'Entregado', Icono: Banknote, dinero: true },
 ]
 
@@ -99,10 +99,10 @@ export function EstadisticasNegocio() {
 
       <section className="tarjeta p-4" aria-labelledby="titulo-top">
         <h2 id="titulo-top" className="text-lg font-black">
-          Lo más apartado
+          Lo más pedido
         </h2>
         {e.mas_apartados.length === 0 ? (
-          <p className="mt-1 text-sm text-muted">Todavía no te han apartado nada en estos {dias} días.</p>
+          <p className="mt-1 text-sm text-muted">Todavía no te han pedido nada en estos {dias} días.</p>
         ) : (
           <ol className="mt-2 flex flex-col gap-2">
             {e.mas_apartados.map((p, k) => {
@@ -181,7 +181,7 @@ function GraficaVistas({ porDia }: { porDia: Estadisticas['por_dia'] }) {
         </h2>
         <p className="text-sm text-muted tabular-nums" aria-live="polite">
           {dia
-            ? `${fechaCorta(dia.fecha)}: ${dia.vistas} vistas · ${dia.contactos} contactos · ${dia.apartados} apartados`
+            ? `${fechaCorta(dia.fecha)}: ${dia.vistas} vistas · ${dia.contactos} contactos · ${dia.apartados} pedidos`
             : `Máximo ${max} en un día`}
         </p>
       </div>
@@ -215,13 +215,13 @@ function GraficaVistas({ porDia }: { porDia: Estadisticas['por_dia'] }) {
             <span>Hoy</span>
           </div>
           <table className="sr-only">
-            <caption>Vistas, contactos y apartados por día</caption>
+            <caption>Vistas, contactos y pedidos por día</caption>
             <thead>
               <tr>
                 <th>Día</th>
                 <th>Vistas</th>
                 <th>Contactos</th>
-                <th>Apartados</th>
+                <th>Pedidos</th>
               </tr>
             </thead>
             <tbody>

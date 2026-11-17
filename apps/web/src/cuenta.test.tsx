@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
@@ -332,7 +332,7 @@ describe('Fotos del negocio', () => {
   })
 })
 
-describe('Catálogo y apartados', () => {
+describe('Catálogo y pedidos contra entrega', () => {
   const VECINO: Perfil = { ...NUEVO, perfil_completo: true, celular: '3001112233' }
   const DUENO: Perfil = { ...VECINO, roles: ['dueno'] }
   const MI_NEGOCIO = {
@@ -346,7 +346,7 @@ describe('Catálogo y apartados', () => {
     apartados_pendientes: 1,
   }
 
-  it('el vecino arma su carrito, aparta y avisa por WhatsApp con el código', async () => {
+  it('el vecino arma su carrito, pide para recoger y avisa por WhatsApp con el código', async () => {
     const { posts } = apiFalsa({
       '/yo': VECINO,
       '/negocios/panaderia-el-trigal/catalogo': CATALOGO,
@@ -365,14 +365,21 @@ describe('Catálogo y apartados', () => {
     expect(screen.getByRole('group', { name: 'Cantidad de Pan de bono' })).toHaveTextContent('2')
     expect(JSON.parse(localStorage.getItem('micuadra.carrito.n1') ?? '{}')).toEqual({ i1: 2 })
 
-    fireEvent.click(screen.getByRole('button', { name: /Apartar \(2\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Pedir \(2\)/ }))
     fireEvent.change(await screen.findByLabelText(/Nota para el negocio/), { target: { value: 'Paso a las 5' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Apartar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hacer pedido' }))
 
-    expect(await screen.findByRole('heading', { name: '¡Apartado!' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '¡Pedido enviado!' })).toBeInTheDocument()
     expect(posts).toContainEqual({
       ruta: '/negocios/n1/apartados',
-      cuerpo: { items: [{ item_id: 'i1', cantidad: 2 }], nota: 'Paso a las 5' },
+      cuerpo: {
+        items: [{ item_id: 'i1', cantidad: 2 }],
+        nota: 'Paso a las 5',
+        entrega: 'recoger',
+        direccion_entrega: null,
+        forma_pago: 'efectivo',
+        paga_con: null,
+      },
     })
     const wa = screen.getByRole('link', { name: /Avisar por WhatsApp/ }).getAttribute('href') ?? ''
     expect(decodeURIComponent(wa)).toContain('Código: *K7P2*')
@@ -386,8 +393,8 @@ describe('Catálogo y apartados', () => {
     apiFalsa({ '/negocios/panaderia-el-trigal/catalogo': CATALOGO, '/negocios/': DETALLE })
     renderEn('/n/panaderia-el-trigal')
 
-    fireEvent.click(await screen.findByRole('button', { name: /Apartar \(1\)/ }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Entrar para apartar' }))
+    fireEvent.click(await screen.findByRole('button', { name: /Pedir \(1\)/ }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar para pedir' }))
     expect(await screen.findByRole('button', { name: 'Continuar con Google' })).toBeInTheDocument()
     expect(sessionStorage.getItem('micuadra.volver')).toBe('/n/panaderia-el-trigal')
   })
@@ -402,7 +409,7 @@ describe('Catálogo y apartados', () => {
     renderEn('/mi-negocio/n1/catalogo')
 
     expect(await screen.findByRole('heading', { name: 'Catálogo de Panadería El Trigal' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /1 por confirmar/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /1 por aceptar/ })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /Agregar producto o servicio/ }))
     fireEvent.change(await screen.findByLabelText('Nombre'), { target: { value: 'Pandebono' } })
     fireEvent.change(screen.getByPlaceholderText(/Pregunta el precio/), { target: { value: '1.800' } })
@@ -419,21 +426,79 @@ describe('Catálogo y apartados', () => {
     )
   })
 
-  it('el dueño confirma un apartado pendiente', async () => {
+  it('el dueño ve sus pedidos por etapas y acepta uno nuevo', async () => {
     const { posts } = apiFalsa({
       '/yo': DUENO,
       '/mis-negocios/n1/apartados': [APARTADO],
       '/mis-negocios': [MI_NEGOCIO],
       'POST /mis-negocios/n1/apartados/a1/estado': { ...APARTADO, estado: 'confirmado' },
     })
-    renderEn('/mi-negocio/n1/apartados')
+    renderEn('/mi-negocio/n1/apartados') // el enlace viejo lleva al tablero de pedidos
 
     expect(await screen.findByText('K7P2')).toBeInTheDocument()
     expect(screen.getByText('«Paso a las 5»')).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    const nuevos = screen.getByRole('region', { name: /Nuevos/ })
+    expect(within(nuevos).getByText('K7P2')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: /Preparando/ })).toHaveTextContent('Nada en preparación.')
+    expect(screen.getByText('Lo recoge en la tienda')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Aceptar y preparar' }))
     await waitFor(() =>
       expect(posts).toContainEqual({ ruta: '/mis-negocios/n1/apartados/a1/estado', cuerpo: { estado: 'confirmado' } }),
     )
+  })
+  it('pide a domicilio contra entrega, con dirección y billete para el cambio', async () => {
+    const { posts } = apiFalsa({
+      '/yo': VECINO,
+      '/negocios/panaderia-el-trigal/catalogo': CATALOGO,
+      '/negocios/': DETALLE,
+      'POST /negocios/n1/apartados': { ...APARTADO, entrega: 'domicilio', direccion_entrega: 'Cra 9 # 20-15', paga_con: 10000 },
+    })
+    renderEn('/n/panaderia-el-trigal')
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Agregar Pan de bono' }))
+    fireEvent.click(screen.getByRole('button', { name: /Pedir \(1\)/ }))
+    fireEvent.click(await screen.findByLabelText('Que me lo lleven'))
+    expect(screen.getByRole('button', { name: 'Escribe la dirección' })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText(/Dirección de entrega/), { target: { value: 'Cra 9 # 20-15' } })
+    fireEvent.change(screen.getByLabelText(/Con cuánto pagas/), { target: { value: '500' } })
+    expect(screen.getByText('Con eso no alcanza para el total.')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Con cuánto pagas/), { target: { value: '$10.000' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hacer pedido' }))
+
+    expect(await screen.findByRole('heading', { name: '¡Pedido enviado!' })).toBeInTheDocument()
+    expect(posts).toContainEqual({
+      ruta: '/negocios/n1/apartados',
+      cuerpo: expect.objectContaining({ entrega: 'domicilio', direccion_entrega: 'Cra 9 # 20-15', forma_pago: 'efectivo', paga_con: 10000 }),
+    })
+    const wa = decodeURIComponent(screen.getByRole('link', { name: /Avisar por WhatsApp/ }).getAttribute('href') ?? '')
+    expect(wa).toContain('Para llevar a: Cra 9 # 20-15')
+    expect(localStorage.getItem('micuadra.direccion')).toBe('Cra 9 # 20-15')
+  })
+
+  it('el vecino sigue su pedido paso a paso', async () => {
+    apiFalsa({
+      '/yo': VECINO,
+      '/mis-apartados': [
+        {
+          ...APARTADO,
+          estado: 'listo',
+          entrega: 'domicilio',
+          direccion_entrega: 'Cra 9 # 20-15',
+          confirmado_at: '2026-11-04T15:05:00Z',
+          listo_at: '2026-11-04T15:20:00Z',
+        },
+      ],
+    })
+    renderEn('/mis-pedidos')
+
+    const pasos = await screen.findByRole('list', { name: 'Seguimiento del pedido' })
+    const items = within(pasos).getAllByRole('listitem')
+    ;['Recibido', 'Preparando', 'En camino', 'Entregado'].forEach((texto, i) => expect(items[i]).toHaveTextContent(texto))
+    expect(items[2]).toHaveAttribute('aria-current', 'step')
+    expect(items[3]).toHaveTextContent('(pendiente)')
+    expect(screen.getByText('Va para tu casa')).toBeInTheDocument()
+    // Ya lo están preparando: no se cancela desde aquí, se le escribe a la tienda.
+    expect(screen.queryByRole('button', { name: 'Cancelar pedido' })).not.toBeInTheDocument()
   })
 })
 

@@ -859,6 +859,26 @@ export interface components {
             total: number;
             /** Hay Sin Precio */
             hay_sin_precio: boolean;
+            /**
+             * Entrega
+             * @enum {string}
+             */
+            entrega: "recoger" | "domicilio";
+            /** Direccion Entrega */
+            direccion_entrega: string | null;
+            /**
+             * Forma Pago
+             * @enum {string}
+             */
+            forma_pago: "efectivo" | "transferencia";
+            /** Paga Con */
+            paga_con: number | null;
+            /** Confirmado At */
+            confirmado_at: string | null;
+            /** Listo At */
+            listo_at: string | null;
+            /** Entregado At */
+            entregado_at: string | null;
             /** Motivo Cancelacion */
             motivo_cancelacion: string | null;
             /** Cancelado Por */
@@ -874,12 +894,35 @@ export interface components {
              */
             updated_at: string;
         };
-        /** ApartadoEntrada */
+        /**
+         * ApartadoEntrada
+         * @description Pedido contra entrega: se paga al recibir, en efectivo o por transferencia.
+         */
         ApartadoEntrada: {
             /** Items */
             items: components["schemas"]["ApartadoItemEntrada"][];
             /** Nota */
             nota?: string | null;
+            /**
+             * Entrega
+             * @description Lo recoge el vecino o la tienda se lo lleva
+             * @default recoger
+             * @enum {string}
+             */
+            entrega: "recoger" | "domicilio";
+            /** Direccion Entrega */
+            direccion_entrega?: string | null;
+            /**
+             * Forma Pago
+             * @default efectivo
+             * @enum {string}
+             */
+            forma_pago: "efectivo" | "transferencia";
+            /**
+             * Paga Con
+             * @description Billete con el que paga, para el cambio
+             */
+            paga_con?: number | null;
         };
         /** ApartadoItem */
         ApartadoItem: {

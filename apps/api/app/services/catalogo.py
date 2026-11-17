@@ -1,4 +1,4 @@
-"""Catálogo del negocio y apartados.
+"""Catálogo del negocio y apartados (pedidos contra entrega: se paga al recibir).
 
 Reglas del apartado (en un solo lugar, como la máquina de estados de los mandados):
 - pendiente → confirmado | cancelado
@@ -316,6 +316,8 @@ def _cargar_apartados(
         db.execute(
             text(
                 "select a.id, a.codigo, a.estado, a.nota, a.total, a.hay_sin_precio,"
+                " a.entrega, a.direccion_entrega, a.forma_pago, a.paga_con,"
+                " a.confirmado_at, a.listo_at, a.entregado_at,"
                 " a.motivo_cancelacion, a.cancelado_por, a.created_at, a.updated_at,"
                 " n.id as negocio_id, n.slug, n.nombre as negocio_nombre, n.whatsapp,"
                 " u.nombre as vecino_nombre, u.celular as vecino_celular"
@@ -361,6 +363,13 @@ def _apartado(f: RowMapping, items: list[ApartadoItem], con_vecino: bool) -> Apa
         nota=f["nota"],
         total=f["total"],
         hay_sin_precio=f["hay_sin_precio"],
+        entrega=f["entrega"],
+        direccion_entrega=f["direccion_entrega"],
+        forma_pago=f["forma_pago"],
+        paga_con=f["paga_con"],
+        confirmado_at=f["confirmado_at"],
+        listo_at=f["listo_at"],
+        entregado_at=f["entregado_at"],
         motivo_cancelacion=f["motivo_cancelacion"],
         cancelado_por=f["cancelado_por"],
         created_at=f["created_at"],
@@ -433,6 +442,10 @@ def crear_apartado(
 
     total = sum((filas[i]["precio"] or 0) * c for i, c in cantidades.items())
     hay_sin_precio = any(filas[i]["precio"] is None for i in cantidades)
+    if datos.paga_con is not None and datos.paga_con < total:
+        raise ApiError(
+            422, "paga_con_insuficiente", "El billete con el que pagas no alcanza para el total."
+        )
 
     apartado_id: UUID | None = None
     for _ in range(5):
@@ -442,8 +455,10 @@ def crear_apartado(
                 apartado_id = db.execute(
                     text(
                         "insert into apartados"
-                        " (codigo, negocio_id, vecino_id, nota, total, hay_sin_precio)"
-                        " values (:codigo, :negocio, :vecino, :nota, :total, :sin_precio)"
+                        " (codigo, negocio_id, vecino_id, nota, total, hay_sin_precio,"
+                        " entrega, direccion_entrega, forma_pago, paga_con)"
+                        " values (:codigo, :negocio, :vecino, :nota, :total, :sin_precio,"
+                        " :entrega, :direccion, :pago, :paga_con)"
                         " returning id"
                     ),
                     {
@@ -453,6 +468,10 @@ def crear_apartado(
                         "nota": datos.nota,
                         "total": total,
                         "sin_precio": hay_sin_precio,
+                        "entrega": datos.entrega,
+                        "direccion": datos.direccion_entrega,
+                        "pago": datos.forma_pago,
+                        "paga_con": datos.paga_con,
                     },
                 ).scalar_one()
             break
@@ -578,7 +597,12 @@ def _transicion(
     db.execute(
         text(
             "update apartados set estado = :estado, stock_descontado = :descontado,"
-            " motivo_cancelacion = :motivo, cancelado_por = :por where id = :id"
+            " motivo_cancelacion = :motivo, cancelado_por = :por,"
+            # La hora de cada paso, para la línea de seguimiento del vecino.
+            " confirmado_at = case when :estado = 'confirmado' then now() else confirmado_at end,"
+            " listo_at = case when :estado = 'listo' then now() else listo_at end,"
+            " entregado_at = case when :estado = 'entregado' then now() else entregado_at end"
+            " where id = :id"
         ),
         {
             "id": fila["id"],

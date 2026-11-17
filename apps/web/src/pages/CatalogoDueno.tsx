@@ -65,11 +65,11 @@ export function CatalogoDueno() {
         </Link>
         <h1 className="mt-1 text-2xl font-black">Catálogo de {negocio?.nombre ?? 'este negocio'}</h1>
         <p className="mt-1 text-muted">
-          Lo que agregues aquí lo ven los vecinos en tu perfil y lo pueden apartar. Si llevas inventario, se descuenta solo
-          cuando confirmas un apartado.
+          Lo que agregues aquí lo ven los vecinos en tu perfil y lo pueden pedir contra entrega. Si llevas inventario, se
+          descuenta solo cuando aceptas un pedido.
         </p>
-        <Link to={`/mi-negocio/${id}/apartados`} className="mt-2 inline-block font-bold text-green underline">
-          Ver apartados{negocio?.apartados_pendientes ? ` (${negocio.apartados_pendientes} por confirmar)` : ''}
+        <Link to={`/mi-negocio/${id}/pedidos`} className="mt-2 inline-block font-bold text-green underline">
+          Ver pedidos{negocio?.apartados_pendientes ? ` (${negocio.apartados_pendientes} por aceptar)` : ''}
         </Link>
       </div>
 
@@ -476,7 +476,7 @@ function FormItem({
                   onChange={(e) => setCantidad(soloDigitos(e.target.value).slice(0, 6))}
                   className={ENTRADA}
                 />
-                <span className="font-normal text-muted">Con 0 sale «Agotado». Se descuenta al confirmar un apartado.</span>
+                <span className="font-normal text-muted">Con 0 sale «Agotado». Se descuenta al aceptar un pedido.</span>
               </label>
             )}
           </div>

@@ -2653,6 +2653,80 @@
             "type": "boolean",
             "title": "Hay Sin Precio"
           },
+          "entrega": {
+            "type": "string",
+            "enum": [
+              "recoger",
+              "domicilio"
+            ],
+            "title": "Entrega"
+          },
+          "direccion_entrega": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion Entrega"
+          },
+          "forma_pago": {
+            "type": "string",
+            "enum": [
+              "efectivo",
+              "transferencia"
+            ],
+            "title": "Forma Pago"
+          },
+          "paga_con": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paga Con"
+          },
+          "confirmado_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmado At"
+          },
+          "listo_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listo At"
+          },
+          "entregado_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entregado At"
+          },
           "motivo_cancelacion": {
             "anyOf": [
               {
@@ -2700,6 +2774,13 @@
           "nota",
           "total",
           "hay_sin_precio",
+          "entrega",
+          "direccion_entrega",
+          "forma_pago",
+          "paga_con",
+          "confirmado_at",
+          "listo_at",
+          "entregado_at",
           "motivo_cancelacion",
           "cancelado_por",
           "created_at",
@@ -2729,13 +2810,59 @@
               }
             ],
             "title": "Nota"
+          },
+          "entrega": {
+            "type": "string",
+            "enum": [
+              "recoger",
+              "domicilio"
+            ],
+            "title": "Entrega",
+            "description": "Lo recoge el vecino o la tienda se lo lleva",
+            "default": "recoger"
+          },
+          "direccion_entrega": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direccion Entrega"
+          },
+          "forma_pago": {
+            "type": "string",
+            "enum": [
+              "efectivo",
+              "transferencia"
+            ],
+            "title": "Forma Pago",
+            "default": "efectivo"
+          },
+          "paga_con": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 2000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paga Con",
+            "description": "Billete con el que paga, para el cambio"
           }
         },
         "type": "object",
         "required": [
           "items"
         ],
-        "title": "ApartadoEntrada"
+        "title": "ApartadoEntrada",
+        "description": "Pedido contra entrega: se paga al recibir, en efectivo o por transferencia."
       },
       "ApartadoItem": {
         "properties": {

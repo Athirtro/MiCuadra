@@ -286,7 +286,7 @@ function FichaNegocio({ n }: { n: NegocioDetalle }) {
               onClick={() => setVerCarrito(true)}
               className="entra tap flex flex-[1.3] items-center justify-center gap-2 rounded-caja bg-sun px-3 font-bold whitespace-nowrap text-sun-ink shadow-1"
             >
-              <ShoppingBasket className="size-5" aria-hidden="true" /> Apartar ({resumen.unidades})
+              <ShoppingBasket className="size-5" aria-hidden="true" /> Pedir ({resumen.unidades})
               {resumen.total > 0 && <span className="font-mono text-sm">· {formatoCOP(resumen.total)}</span>}
             </button>
           ) : (

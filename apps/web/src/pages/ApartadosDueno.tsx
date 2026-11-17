@@ -8,37 +8,53 @@ import { enlaceWhatsappTexto } from '../lib/negocio'
 import { usePerfil } from '../lib/sesion'
 import { Cargando } from './Cuenta'
 
-type Filtro = 'abiertos' | 'entregado' | 'cancelado'
+type Vista = 'tablero' | 'entregado' | 'cancelado'
 
-const FILTROS: { valor: Filtro; texto: string }[] = [
-  { valor: 'abiertos', texto: 'Por atender' },
+const VISTAS: { valor: Vista; texto: string }[] = [
+  { valor: 'tablero', texto: 'En curso' },
   { valor: 'entregado', texto: 'Entregados' },
   { valor: 'cancelado', texto: 'Cancelados' },
 ]
 
-// El siguiente paso natural de cada estado, con el texto del botón.
-const SIGUIENTE: Partial<Record<Apartado['estado'], { estado: CambioEstadoApartado['estado']; texto: string }>> = {
-  pendiente: { estado: 'confirmado', texto: 'Confirmar' },
-  confirmado: { estado: 'listo', texto: 'Ya está listo' },
-  listo: { estado: 'entregado', texto: 'Entregado' },
+/** Las columnas del tablero, en el orden en que avanza un pedido. */
+const COLUMNAS: { estado: Apartado['estado']; titulo: string; vacio: string }[] = [
+  { estado: 'pendiente', titulo: 'Nuevos', vacio: 'Sin pedidos nuevos.' },
+  { estado: 'confirmado', titulo: 'Preparando', vacio: 'Nada en preparación.' },
+  { estado: 'listo', titulo: 'Para entregar', vacio: 'Nada esperando entrega.' },
+]
+
+/** El siguiente paso de cada pedido, con el texto del botón según cómo se entrega. */
+function siguiente(a: Apartado): { estado: CambioEstadoApartado['estado']; texto: string } | null {
+  const domicilio = a.entrega === 'domicilio'
+  switch (a.estado) {
+    case 'pendiente':
+      return { estado: 'confirmado', texto: 'Aceptar y preparar' }
+    case 'confirmado':
+      return { estado: 'listo', texto: domicilio ? 'Salió a entregar' : 'Listo para recoger' }
+    case 'listo':
+      return { estado: 'entregado', texto: 'Entregado y pagado' }
+    default:
+      return null
+  }
 }
 
-/** Apartados que recibió el negocio: confirmar (descuenta inventario), avisar que está listo, entregar. */
+/** Pedidos contra entrega del negocio, por etapas: nuevos → preparando → para entregar. */
 export function ApartadosDueno() {
   const { id = '' } = useParams()
   const { sesion, token, cargandoSesion } = usePerfil()
-  const [filtro, setFiltro] = useState<Filtro>('abiertos')
+  const [vista, setVista] = useState<Vista>('tablero')
+  const filtro = vista === 'tablero' ? 'abiertos' : vista
 
   const negocios = useQuery({
     queryKey: ['mis-negocios', sesion?.user.id],
     queryFn: () => apiGet<MiNegocio[]>('/mis-negocios', undefined, token),
     enabled: Boolean(token),
   })
-  const apartados = useQuery({
+  const pedidos = useQuery({
     queryKey: ['apartados-negocio', id, filtro],
     queryFn: () => apiGet<Apartado[]>(`/mis-negocios/${id}/apartados?estado=${filtro}`, undefined, token),
     enabled: Boolean(token),
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
   })
 
   if (cargandoSesion) return <Cargando />
@@ -46,49 +62,77 @@ export function ApartadosDueno() {
   const negocio = negocios.data?.find((n) => n.id === id)
 
   return (
-    <section className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-8">
-      <div>
+    <section className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8">
+      <div className="max-w-xl">
         <Link to="/cuenta" className="text-sm font-bold text-green underline">
           ← Mi cuenta
         </Link>
-        <h1 className="mt-1 text-2xl font-black">Apartados de {negocio?.nombre ?? 'tu negocio'}</h1>
+        <h1 className="mt-1 text-2xl font-black">Pedidos de {negocio?.nombre ?? 'tu negocio'}</h1>
         <p className="mt-1 text-muted">
-          Confirma lo que puedas preparar: al confirmar se descuenta del inventario. El vecino paga al recoger.
+          Todo es contra entrega: el vecino paga cuando recibe, en efectivo o por transferencia. Al aceptar un pedido se
+          descuenta del inventario.
         </p>
         <Link to={`/mi-negocio/${id}/catalogo`} className="mt-2 inline-block font-bold text-green underline">
           Editar mi catálogo
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-1 rounded-caja bg-block p-1" role="tablist" aria-label="Filtrar apartados">
-        {FILTROS.map((f) => (
+      <div className="grid max-w-xl grid-cols-3 gap-1 rounded-caja bg-block p-1" role="tablist" aria-label="Ver pedidos">
+        {VISTAS.map((v) => (
           <button
-            key={f.valor}
+            key={v.valor}
             type="button"
             role="tab"
-            aria-selected={filtro === f.valor}
-            onClick={() => setFiltro(f.valor)}
-            className={`tap rounded-[10px] text-sm font-bold ${filtro === f.valor ? 'bg-surface shadow-1' : 'text-muted'}`}
+            aria-selected={vista === v.valor}
+            onClick={() => setVista(v.valor)}
+            className={`tap rounded-[10px] text-sm font-bold ${vista === v.valor ? 'bg-surface shadow-1' : 'text-muted'}`}
           >
-            {f.texto}
+            {v.texto}
           </button>
         ))}
       </div>
 
-      {apartados.isPending ? (
+      {pedidos.isPending ? (
         <Cargando />
-      ) : apartados.isError ? (
+      ) : pedidos.isError ? (
         <p role="alert" className="font-bold">
-          {apartados.error.message}
+          {pedidos.error.message}
         </p>
-      ) : apartados.data.length === 0 ? (
-        <p className="py-6 text-center text-muted">
-          {filtro === 'abiertos' ? 'No tienes apartados por atender.' : 'Nada por aquí todavía.'}
-        </p>
+      ) : vista === 'tablero' ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          {COLUMNAS.map((c) => {
+            const lista = pedidos.data.filter((a) => a.estado === c.estado)
+            return (
+              <section key={c.estado} aria-labelledby={`columna-${c.estado}`} className="flex flex-col gap-2 rounded-caja bg-block/60 p-2">
+                <h2 id={`columna-${c.estado}`} className="flex items-center justify-between px-1 font-black">
+                  {c.titulo}
+                  <span
+                    className={`rounded-full px-2 font-mono text-sm ${
+                      c.estado === 'pendiente' && lista.length ? 'bg-sun text-sun-ink' : 'bg-surface text-muted'
+                    }`}
+                  >
+                    {lista.length}
+                  </span>
+                </h2>
+                {lista.length === 0 ? (
+                  <p className="px-1 py-3 text-center text-sm text-muted">{c.vacio}</p>
+                ) : (
+                  <ul className="flex flex-col gap-2">
+                    {lista.map((a) => (
+                      <PedidoDelNegocio key={a.id} a={a} negocioId={id} token={token} />
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )
+          })}
+        </div>
+      ) : pedidos.data.length === 0 ? (
+        <p className="py-6 text-center text-muted">Nada por aquí todavía.</p>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {apartados.data.map((a) => (
-            <ApartadoDelNegocio key={a.id} a={a} negocioId={id} token={token} />
+        <ul className="grid gap-3 md:grid-cols-2">
+          {pedidos.data.map((a) => (
+            <PedidoDelNegocio key={a.id} a={a} negocioId={id} token={token} />
           ))}
         </ul>
       )}
@@ -96,7 +140,7 @@ export function ApartadosDueno() {
   )
 }
 
-function ApartadoDelNegocio({ a, negocioId, token }: { a: Apartado; negocioId: string; token: string }) {
+function PedidoDelNegocio({ a, negocioId, token }: { a: Apartado; negocioId: string; token: string }) {
   const queryClient = useQueryClient()
   const [cancelando, setCancelando] = useState(false)
   const [motivo, setMotivo] = useState('')
@@ -109,13 +153,19 @@ function ApartadoDelNegocio({ a, negocioId, token }: { a: Apartado; negocioId: s
       void queryClient.invalidateQueries({ queryKey: ['mi-catalogo', negocioId] })
     },
   })
-  const siguiente = SIGUIENTE[a.estado]
+  const paso = siguiente(a)
   const vecino = a.vecino?.nombre?.split(' ')[0] ?? 'Vecino'
-  const avisoListo = `Hola, ${vecino}. Tu apartado ${a.codigo} en ${a.negocio.nombre} ya está listo para recoger 🙌`
+  const aviso =
+    a.estado === 'pendiente'
+      ? `Hola, ${vecino}. Recibimos tu pedido ${a.codigo} en ${a.negocio.nombre}.`
+      : a.entrega === 'domicilio'
+        ? `Hola, ${vecino}. Tu pedido ${a.codigo} de ${a.negocio.nombre} va en camino 🛵`
+        : `Hola, ${vecino}. Tu pedido ${a.codigo} en ${a.negocio.nombre} ya está listo para recoger 🙌`
 
   return (
     <TarjetaApartado
       a={a}
+      seguimiento={false}
       titulo={a.vecino?.nombre ?? 'Vecino'}
       acciones={
         cancelando ? (
@@ -133,13 +183,13 @@ function ApartadoDelNegocio({ a, negocioId, token }: { a: Apartado; negocioId: s
                 maxLength={200}
                 value={motivo}
                 onChange={(e) => setMotivo(e.target.value)}
-                placeholder="Se acabó el pan, no vino a recogerlo…"
+                placeholder="Se acabó el pan, no hacemos domicilio allá…"
                 className="tap rounded-caja border border-line bg-bg px-3 text-base font-normal"
               />
             </label>
             <div className="flex gap-2">
               <button type="submit" disabled={cambiar.isPending} className="tap rounded-caja bg-red px-4 font-bold text-white">
-                Cancelar apartado
+                Cancelar pedido
               </button>
               <button type="button" onClick={() => setCancelando(false)} className="tap rounded-caja border border-line px-4 font-bold">
                 Volver
@@ -151,25 +201,24 @@ function ApartadoDelNegocio({ a, negocioId, token }: { a: Apartado; negocioId: s
               </p>
             )}
           </form>
-        ) : siguiente ? (
+        ) : paso ? (
           <>
             <button
               type="button"
               disabled={cambiar.isPending}
-              onClick={() => cambiar.mutate({ estado: siguiente.estado })}
-              className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+              onClick={() => cambiar.mutate({ estado: paso.estado })}
+              className="tap w-full rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
             >
-              {siguiente.texto}
+              {paso.texto}
             </button>
             {a.vecino?.celular && (
               <a
-                href={enlaceWhatsappTexto(a.vecino.celular, a.estado === 'pendiente' ? `Hola, ${vecino}. Vi tu apartado ${a.codigo} en ${a.negocio.nombre}.` : avisoListo)}
+                href={enlaceWhatsappTexto(a.vecino.celular, aviso)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold"
               >
-                <MessageCircle className="mr-1.5 size-4" aria-hidden="true" />
-                {a.estado === 'listo' || a.estado === 'confirmado' ? 'Avisar que está listo' : 'Escribirle'}
+                <MessageCircle className="mr-1.5 size-4" aria-hidden="true" /> Escribirle
               </a>
             )}
             <button type="button" onClick={() => setCancelando(true)} className="tap px-2 text-sm font-bold text-red underline">

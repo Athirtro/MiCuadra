@@ -4,7 +4,7 @@ import { useSesion } from '../lib/sesion'
 import { authDisponible } from '../lib/supabase'
 
 /** Pantallas principales: llevan el menú inferior en el celular y no muestran "volver". */
-const PRINCIPALES = ['/', '/mis-apartados', '/conoce', '/cuenta', '/entrar']
+const PRINCIPALES = ['/', '/mis-pedidos', '/conoce', '/cuenta', '/entrar']
 
 function esPrincipal(ruta: string): boolean {
   return PRINCIPALES.includes(ruta)
@@ -58,7 +58,7 @@ export function NavInferior() {
 
   const items = [
     { a: '/', texto: 'Mapa', icono: ICONOS.mapa },
-    { a: '/mis-apartados', texto: 'Apartados', icono: ICONOS.apartados },
+    { a: '/mis-pedidos', texto: 'Pedidos', icono: ICONOS.apartados },
     { a: '/conoce', texto: 'Conoce', icono: ICONOS.conoce },
     ...(authDisponible ? [{ a: sesion ? '/cuenta' : '/entrar', texto: sesion ? 'Mi cuenta' : 'Entrar', icono: ICONOS.cuenta }] : []),
   ]

@@ -262,3 +262,40 @@ def test_vecino_cancela_el_suyo_y_hay_tope_de_abiertos(client: TestClient, negoc
     assert _apartar(client, negocio, [(pan["id"], 1)]).status_code == 201
     r = client.post(f"{V1}/mis-apartados/{ids[0]}/cancelar", json={}, headers=_h("vecino1"))
     assert r.status_code == 409
+
+
+def test_pedido_a_domicilio_contra_entrega_con_horas_de_cada_paso(
+    client: TestClient, negocio: UUID
+) -> None:
+    leche = _item(client, negocio, nombre="Leche Colanta", precio=4900, stock=10)
+    pedir = f"{V1}/negocios/{negocio}/apartados"
+
+    def pedido(**extra: object):
+        cuerpo = {"items": [{"item_id": leche["id"], "cantidad": 2}], **extra}
+        return client.post(pedir, json=cuerpo, headers=_h("vecino1"))
+
+    # A domicilio hace falta la dirección, y el billete tiene que alcanzar.
+    r = pedido(entrega="domicilio")
+    assert r.status_code == 422
+    r = pedido(entrega="domicilio", direccion_entrega="Cra 9 # 20-15", paga_con=5000)
+    assert r.status_code == 422 and r.json()["error"]["codigo"] == "paga_con_insuficiente"
+
+    r = pedido(entrega="domicilio", direccion_entrega=" Cra 9  # 20-15, apto 201 ", paga_con=20000)
+    assert r.status_code == 201, r.text
+    a = r.json()
+    assert a["entrega"] == "domicilio" and a["direccion_entrega"] == "Cra 9 # 20-15, apto 201"
+    assert a["forma_pago"] == "efectivo" and a["paga_con"] == 20000
+    assert a["confirmado_at"] is None and a["listo_at"] is None
+
+    url = f"{V1}/mis-negocios/{negocio}/apartados/{a['id']}/estado"
+    for estado in ("confirmado", "listo", "entregado"):
+        assert client.post(url, json={"estado": estado}, headers=_h("dueno1")).status_code == 200
+    final = client.get(f"{V1}/mis-apartados", headers=_h("vecino1")).json()
+    final = next(x for x in final if x["id"] == a["id"])
+    assert final["estado"] == "entregado"
+    assert final["confirmado_at"] <= final["listo_at"] <= final["entregado_at"]
+
+    # Por transferencia no se pregunta con cuánto paga; al recoger se ignora la dirección.
+    r = pedido(forma_pago="transferencia", paga_con=50000, direccion_entrega="Cra 9 # 20-15")
+    assert r.json()["paga_con"] is None and r.json()["direccion_entrega"] is None
+    assert r.json()["entrega"] == "recoger"

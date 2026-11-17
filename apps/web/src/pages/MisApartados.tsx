@@ -8,14 +8,14 @@ import { enlaceWhatsappTexto } from '../lib/negocio'
 import { usePerfil } from '../lib/sesion'
 import { Cargando } from './Cuenta'
 
-/** Lo que el vecino ha apartado, con su estado y la opción de cancelar mientras no lo recoja. */
+/** Los pedidos del vecino con su seguimiento; se puede cancelar mientras la tienda no lo acepte. */
 export function MisApartados() {
   const { sesion, token, cargandoSesion } = usePerfil()
   const apartados = useQuery({
     queryKey: ['mis-apartados', sesion?.user.id],
     queryFn: () => apiGet<Apartado[]>('/mis-apartados', undefined, token),
     enabled: Boolean(token),
-    refetchInterval: 60_000,
+    refetchInterval: 30_000,
   })
 
   if (cargandoSesion) return <Cargando />
@@ -27,8 +27,8 @@ export function MisApartados() {
         <Link to="/cuenta" className="text-sm font-bold text-green underline">
           ← Mi cuenta
         </Link>
-        <h1 className="mt-1 text-2xl font-black">Mis apartados</h1>
-        <p className="mt-1 text-muted">Lo que separaste en los negocios del barrio. Pagas al recoger.</p>
+        <h1 className="mt-1 text-2xl font-black">Mis pedidos</h1>
+        <p className="mt-1 text-muted">Sigue cada pedido paso a paso. Pagas cuando lo recibes.</p>
       </div>
       {apartados.isPending ? (
         <Cargando />
@@ -39,22 +39,36 @@ export function MisApartados() {
       ) : apartados.data.length === 0 ? (
         <div className="tarjeta p-6 text-center">
           <ShoppingBasket className="mx-auto size-9 text-muted" strokeWidth={1.5} aria-hidden="true" />
-          <p className="mt-2 font-bold">Todavía no has apartado nada</p>
-          <p className="mt-1 text-sm text-muted">En el perfil de cada negocio verás su catálogo.</p>
+          <p className="mt-2 font-bold">Todavía no has hecho pedidos</p>
+          <p className="mt-1 text-sm text-muted">En el perfil de cada negocio verás su catálogo para pedir.</p>
           <Link to="/" className="mt-3 inline-block font-bold text-green underline">
             Ir al mapa
           </Link>
         </div>
       ) : (
-        <ul className="flex flex-col gap-3">
-          {apartados.data.map((a) => (
-            <MiApartado key={a.id} a={a} token={token} />
-          ))}
-        </ul>
+        <>
+          {[
+            { titulo: 'En curso', lista: apartados.data.filter(abierto) },
+            { titulo: 'Anteriores', lista: apartados.data.filter((a) => !abierto(a)) },
+          ]
+            .filter((g) => g.lista.length)
+            .map((g) => (
+              <div key={g.titulo} className="flex flex-col gap-3">
+                <h2 className="font-mono text-xs tracking-wider text-muted uppercase">{g.titulo}</h2>
+                <ul className="flex flex-col gap-3">
+                  {g.lista.map((a) => (
+                    <MiApartado key={a.id} a={a} token={token} />
+                  ))}
+                </ul>
+              </div>
+            ))}
+        </>
       )}
     </section>
   )
 }
+
+const abierto = (a: Apartado) => a.estado !== 'entregado' && a.estado !== 'cancelado'
 
 function MiApartado({ a, token }: { a: Apartado; token: string }) {
   const queryClient = useQueryClient()
@@ -62,7 +76,6 @@ function MiApartado({ a, token }: { a: Apartado; token: string }) {
     mutationFn: () => apiEnviar<Apartado>('POST', `/mis-apartados/${a.id}/cancelar`, {}, token),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mis-apartados'] }),
   })
-  const abierto = a.estado !== 'entregado' && a.estado !== 'cancelado'
   return (
     <TarjetaApartado
       a={a}
@@ -72,7 +85,7 @@ function MiApartado({ a, token }: { a: Apartado; token: string }) {
         </Link>
       }
       acciones={
-        abierto && (
+        abierto(a) && (
           <>
             {a.negocio.whatsapp && (
               <a
@@ -84,14 +97,16 @@ function MiApartado({ a, token }: { a: Apartado; token: string }) {
                 <MessageCircle className="mr-1.5 size-4" aria-hidden="true" /> Escribirle
               </a>
             )}
+            {a.estado === 'pendiente' && (
             <button
               type="button"
               disabled={cancelar.isPending}
               onClick={() => cancelar.mutate()}
               className="tap rounded-caja border border-line px-4 font-bold text-red disabled:opacity-50"
             >
-              Cancelar
+              Cancelar pedido
             </button>
+            )}
             {cancelar.isError && (
               <p role="alert" className="w-full text-sm font-bold text-red">
                 {cancelar.error.message}

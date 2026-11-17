@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 TipoItem = Literal["producto", "servicio"]
 EstadoApartado = Literal["pendiente", "confirmado", "listo", "entregado", "cancelado"]
+Entrega = Literal["recoger", "domicilio"]
+FormaPago = Literal["efectivo", "transferencia"]
 
 
 def _limpio(v: str | None) -> str | None:
@@ -102,13 +104,34 @@ class ApartadoItemEntrada(BaseModel):
 
 
 class ApartadoEntrada(BaseModel):
+    """Pedido contra entrega: se paga al recibir, en efectivo o por transferencia."""
+
     items: list[ApartadoItemEntrada] = Field(min_length=1, max_length=30)
     nota: str | None = Field(default=None, max_length=280)
+    entrega: Entrega = Field(
+        default="recoger", description="Lo recoge el vecino o la tienda se lo lleva"
+    )
+    direccion_entrega: str | None = Field(default=None, max_length=160)
+    forma_pago: FormaPago = "efectivo"
+    paga_con: int | None = Field(
+        default=None, ge=0, le=2_000_000, description="Billete con el que paga, para el cambio"
+    )
 
-    @field_validator("nota")
+    @field_validator("nota", "direccion_entrega")
     @classmethod
-    def nota_limpia(cls, v: str | None) -> str | None:
+    def texto_limpio(cls, v: str | None) -> str | None:
         return _limpio(v)
+
+    @model_validator(mode="after")
+    def entrega_coherente(self) -> "ApartadoEntrada":
+        if self.entrega == "domicilio":
+            if not self.direccion_entrega or len(self.direccion_entrega) < 5:
+                raise ValueError("Escribe la dirección para llevarte el pedido.")
+        else:
+            self.direccion_entrega = None
+        if self.forma_pago != "efectivo":
+            self.paga_con = None
+        return self
 
 
 class ApartadoItem(BaseModel):
@@ -142,6 +165,13 @@ class Apartado(BaseModel):
     nota: str | None
     total: int = Field(description="Suma de los ítems con precio, en pesos COP")
     hay_sin_precio: bool
+    entrega: Entrega
+    direccion_entrega: str | None
+    forma_pago: FormaPago
+    paga_con: int | None
+    confirmado_at: datetime | None
+    listo_at: datetime | None
+    entregado_at: datetime | None
     motivo_cancelacion: str | None
     cancelado_por: Literal["vecino", "negocio"] | None
     created_at: datetime

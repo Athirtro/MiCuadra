@@ -89,12 +89,12 @@ export function Cuenta() {
                 )}
                 {n.apartados_pendientes > 0 && (
                   <Link
-                    to={`/mi-negocio/${n.id}/apartados`}
+                    to={`/mi-negocio/${n.id}/pedidos`}
                     className="mt-2 flex items-center justify-between rounded-lg bg-sun px-3 py-2 text-sm font-bold text-sun-ink"
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <ShoppingBasket className="size-4" aria-hidden="true" />
-                      {n.apartados_pendientes} {n.apartados_pendientes === 1 ? 'apartado' : 'apartados'} por confirmar
+                      {n.apartados_pendientes} {n.apartados_pendientes === 1 ? 'pedido nuevo' : 'pedidos nuevos'} por aceptar
                     </span>
                     <ChevronRight className="size-4" aria-hidden="true" />
                   </Link>
@@ -106,8 +106,8 @@ export function Cuenta() {
                   <Link to={`/mi-negocio/${n.id}/catalogo`} className="underline">
                     Catálogo
                   </Link>
-                  <Link to={`/mi-negocio/${n.id}/apartados`} className="underline">
-                    Apartados
+                  <Link to={`/mi-negocio/${n.id}/pedidos`} className="underline">
+                    Pedidos
                   </Link>
                   <Link to={`/mi-negocio/${n.id}/fotos`} className="underline">
                     Fotos
@@ -138,9 +138,9 @@ export function Cuenta() {
         </div>
       )}
 
-      <Link to="/mis-apartados" className="tarjeta flex items-center justify-between p-4 font-bold">
+      <Link to="/mis-pedidos" className="tarjeta flex items-center justify-between p-4 font-bold">
         <span className="inline-flex items-center gap-2">
-          <ShoppingBasket className="size-5 text-green" aria-hidden="true" /> Mis apartados
+          <ShoppingBasket className="size-5 text-green" aria-hidden="true" /> Mis pedidos
         </span>
         <span aria-hidden="true" className="text-muted">
           ›

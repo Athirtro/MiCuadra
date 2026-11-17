@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Link, Navigate, NavLink, Route, Routes } from 'react-router'
+import { Link, Navigate, NavLink, Route, Routes, useParams } from 'react-router'
 import { AvisoDespertando } from './components/AvisoDespertando'
 import { BotonVolver, NavInferior } from './components/Navegacion'
 import { registrarSesion } from './lib/eventos'
@@ -70,8 +70,10 @@ export function App() {
           <Route path="/mi-negocio/:id/fotos" element={<FotosNegocio />} />
           <Route path="/mi-negocio/:id/catalogo" element={<CatalogoDueno />} />
           <Route path="/mi-negocio/:id/estadisticas" element={<EstadisticasNegocio />} />
-          <Route path="/mi-negocio/:id/apartados" element={<ApartadosDueno />} />
-          <Route path="/mis-apartados" element={<MisApartados />} />
+          <Route path="/mi-negocio/:id/pedidos" element={<ApartadosDueno />} />
+          <Route path="/mi-negocio/:id/apartados" element={<RedirigirPedidos />} />
+          <Route path="/mis-pedidos" element={<MisApartados />} />
+          <Route path="/mis-apartados" element={<Navigate to="/mis-pedidos" replace />} />
           <Route path="/privacidad" element={<Privacidad />} />
           <Route path="/admin" element={<Admin />}>
             <Route index element={<Navigate to="metricas" replace />} />
@@ -126,4 +128,10 @@ function NoEncontrado() {
       </Link>
     </section>
   )
+}
+
+/** Los enlaces viejos de "apartados" siguen funcionando. */
+function RedirigirPedidos() {
+  const { id = '' } = useParams()
+  return <Navigate to={`/mi-negocio/${id}/pedidos`} replace />
 }

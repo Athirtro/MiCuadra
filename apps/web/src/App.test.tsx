@@ -28,7 +28,7 @@ describe('Mapa del barrio (/)', () => {
     const { unmount } = renderEn('/')
     const menu = await screen.findByRole('navigation', { name: 'Menú principal' })
     expect(within(menu).getByRole('link', { name: 'Mapa' })).toHaveAttribute('aria-current', 'page')
-    expect(within(menu).getByRole('link', { name: 'Apartados' })).toHaveAttribute('href', '/mis-apartados')
+    expect(within(menu).getByRole('link', { name: 'Pedidos' })).toHaveAttribute('href', '/mis-pedidos')
     expect(screen.queryByRole('button', { name: 'Volver' })).not.toBeInTheDocument()
     unmount()
 
