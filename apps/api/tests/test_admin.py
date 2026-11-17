@@ -490,14 +490,23 @@ def test_lote_crea_solo_las_listas_si_se_pide(api: TestClient) -> None:
 # ── Editar nombre y ubicación ──
 
 
-def test_admin_edita_nombre_ubicacion_direccion_y_barrio(
-    api: TestClient, conn: psycopg.Connection
-) -> None:
-    nid, slug = conn.execute(
-        "select id::text, slug from negocios where estado = 'activo' order by slug limit 1"
-    ).fetchone()
+def _negocio_de_prueba(api: TestClient) -> tuple[str, str]:
+    """Negocio propio de la prueba (los «Real …» se borran al final): no toca el seed."""
+    datos = {
+        "nombre": "Real Tienda Editable",
+        "categoria": "panaderia",
+        "direccion_texto": "Por confirmar",
+        "ubicacion": {"lat": 4.81, "lng": -75.69},
+    }
+    r = api.post(f"{V1}/admin/negocios", json=datos, headers=ADMIN)
+    assert r.status_code == 201, r.text
+    return r.json()["id"], r.json()["slug"]
+
+
+def test_admin_edita_nombre_ubicacion_direccion_y_barrio(api: TestClient) -> None:
+    nid, slug = _negocio_de_prueba(api)
     cambio = {
-        "nombre": "  Panadería   Nueva ",
+        "nombre": "  Real   Panadería Nueva ",
         "ubicacion": {"lat": 4.8051, "lng": -75.7381},
         "direccion_texto": "  Cl 70   # 25-48 ",
         "barrio": "cuba",
@@ -505,7 +514,7 @@ def test_admin_edita_nombre_ubicacion_direccion_y_barrio(
     r = api.patch(f"{V1}/admin/negocios/{nid}", json=cambio, headers=ADMIN)
     assert r.status_code == 200, r.text
     n = r.json()
-    assert n["nombre"] == "Panadería Nueva"
+    assert n["nombre"] == "Real Panadería Nueva"
     assert n["slug"] == slug  # los enlaces compartidos siguen funcionando
     assert n["direccion_texto"] == "Cl 70 # 25-48"
     assert n["barrio"]["slug"] == "cuba"
@@ -516,8 +525,8 @@ def test_admin_edita_nombre_ubicacion_direccion_y_barrio(
     assert r.json()["barrio"] is None
 
 
-def test_editar_negocio_valida_y_protege(api: TestClient, conn: psycopg.Connection) -> None:
-    nid = conn.execute("select id::text from negocios limit 1").fetchone()[0]
+def test_editar_negocio_valida_y_protege(api: TestClient) -> None:
+    nid, _ = _negocio_de_prueba(api)
     ruta = f"{V1}/admin/negocios/{nid}"
     bien = {
         "nombre": "Tienda X",
