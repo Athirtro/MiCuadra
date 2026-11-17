@@ -1,3 +1,4 @@
+import { Banknote, Eye, Footprints, MessageCircle, ShoppingBasket, Users, type LucideIcon } from 'lucide-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
@@ -9,13 +10,13 @@ import { Cargando } from './Cuenta'
 const PERIODOS = [7, 30, 90] as const
 type Clave = keyof Estadisticas['totales']
 
-const TARJETAS: { clave: Clave; titulo: string; emoji: string; dinero?: boolean }[] = [
-  { clave: 'vistas', titulo: 'Vieron tu ficha', emoji: '👀' },
-  { clave: 'vecinos', titulo: 'Vecinos distintos', emoji: '🏘️' },
-  { clave: 'como_llegar', titulo: 'Pidieron cómo llegar', emoji: '🚶' },
-  { clave: 'whatsapp', titulo: 'Te escribieron', emoji: '💬' },
-  { clave: 'apartados', titulo: 'Apartados', emoji: '🛍️' },
-  { clave: 'vendido', titulo: 'Entregado', emoji: '💵', dinero: true },
+const TARJETAS: { clave: Clave; titulo: string; Icono: LucideIcon; dinero?: boolean }[] = [
+  { clave: 'vistas', titulo: 'Vieron tu ficha', Icono: Eye },
+  { clave: 'vecinos', titulo: 'Vecinos distintos', Icono: Users },
+  { clave: 'como_llegar', titulo: 'Pidieron cómo llegar', Icono: Footprints },
+  { clave: 'whatsapp', titulo: 'Te escribieron', Icono: MessageCircle },
+  { clave: 'apartados', titulo: 'Apartados', Icono: ShoppingBasket },
+  { clave: 'vendido', titulo: 'Entregado', Icono: Banknote, dinero: true },
 ]
 
 const fechaCorta = (iso: string) =>
@@ -130,14 +131,14 @@ export function EstadisticasNegocio() {
 
 function Tarjeta({
   titulo,
-  emoji,
+  Icono,
   valor,
   antes,
   dinero,
   dias,
 }: {
   titulo: string
-  emoji: string
+  Icono: LucideIcon
   valor: number
   antes: number
   dinero?: boolean
@@ -146,8 +147,8 @@ function Tarjeta({
   const cambio = antes === 0 ? null : Math.round(((valor - antes) / antes) * 100)
   return (
     <li className="tarjeta flex flex-col gap-1 p-3">
-      <span className="text-sm text-muted">
-        <span aria-hidden="true">{emoji}</span> {titulo}
+      <span className="flex items-center gap-1.5 text-sm text-muted">
+        <Icono className="size-4 shrink-0" aria-hidden="true" /> {titulo}
       </span>
       <span className="text-2xl font-black tabular-nums">{dinero ? formatoCOP(valor) : valor.toLocaleString('es-CO')}</span>
       <span className="text-xs text-muted">

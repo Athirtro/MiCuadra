@@ -122,7 +122,7 @@ export function FotosNegocio() {
         onClick={() => entrada.current?.click()}
         className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
       >
-        {espacio <= 0 ? 'Ya tienes las 5 fotos' : subiendo ? 'Subiendo…' : '📷 Agregar fotos'}
+        {espacio <= 0 ? 'Ya tienes las 5 fotos' : subiendo ? 'Subiendo…' : 'Agregar fotos'}
       </button>
       <Link to="/cuenta" className="tap flex items-center justify-center rounded-caja border border-line px-4 font-bold">
         Listo

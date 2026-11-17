@@ -69,6 +69,42 @@ describe('Mapa del barrio (/)', () => {
     expect(hoja).toHaveAttribute('data-expandida', 'false')
   })
 
+  it('la hoja sigue al dedo y al soltar sube o baja', async () => {
+    gpsNegado()
+    apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
+    renderEn('/')
+    fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
+    await screen.findByText('Panadería El Trigal')
+
+    const hoja = screen.getByRole('region', { name: 'Resultados' })
+    Object.defineProperty(hoja, 'offsetHeight', { configurable: true, value: 600 })
+    const lista = screen.getByText('Panadería El Trigal').closest('.overflow-y-auto') as HTMLElement
+    const toque = (y: number) => ({ touches: [{ clientY: y }] })
+
+    // Hoja abajo (escondida 330 px): mientras arrastra hacia arriba, la hoja va con el dedo.
+    fireEvent.touchStart(lista, toque(500))
+    fireEvent.touchMove(lista, toque(490))
+    fireEvent.touchMove(lista, toque(290))
+    expect(hoja.style.transform).toBe('translateY(130px)')
+    fireEvent.touchEnd(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'true')
+    expect(hoja.style.transform).toBe('')
+
+    // Arriba: un tirón corto hacia abajo no alcanza la mitad y vuelve a quedar arriba.
+    fireEvent.touchStart(lista, toque(300))
+    fireEvent.touchMove(lista, toque(310))
+    fireEvent.touchMove(lista, toque(360))
+    fireEvent.touchEnd(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'true')
+
+    // Más de la mitad hacia abajo: baja.
+    fireEvent.touchStart(lista, toque(300))
+    fireEvent.touchMove(lista, toque(310))
+    fireEvent.touchMove(lista, toque(560))
+    fireEvent.touchEnd(lista)
+    expect(hoja).toHaveAttribute('data-expandida', 'false')
+  })
+
   it('sin GPS pide el barrio y muestra los negocios cercanos con distancia en cuadras', async () => {
     gpsNegado()
     const { fetchFalso } = apiFalsa({ '/categorias': CATEGORIAS, '/barrios': BARRIOS, '/negocios': LISTA })
@@ -93,12 +129,12 @@ describe('Mapa del barrio (/)', () => {
     renderEn('/')
     fireEvent.click(await screen.findByRole('button', { name: /^Cuba/ }))
 
-    expect(await screen.findByText('🔎 Pandebono')).toBeInTheDocument()
+    expect(await screen.findByText('Pandebono')).toBeInTheDocument()
     expect(screen.getByText('$1.200')).toBeInTheDocument()
     expect(screen.getByLabelText('antes $1.500')).toBeInTheDocument()
-    expect(screen.getByText('🔥 2 ofertas')).toBeInTheDocument()
+    expect(screen.getByText('2 ofertas')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '🔥 Ofertas' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ofertas' }))
     await waitFor(() =>
       expect(fetchFalso.mock.calls.some(([url]) => url.includes('con_ofertas=true'))).toBe(true),
     )
@@ -168,7 +204,7 @@ describe('Perfil del negocio (/n/:slug)', () => {
     renderEn('/n/panaderia-el-trigal')
 
     fireEvent.click(await screen.findByRole('button', { name: /Cómo llegar/ }))
-    expect(await screen.findByText('🚶 3 min')).toBeInTheDocument()
+    expect(await screen.findByText('3 min', { exact: false })).toBeInTheDocument()
     expect(screen.getByText(/230 m a pie desde donde estás/)).toBeInTheDocument()
     expect(fetchFalso.mock.calls.some(([url]) => url.includes('/foot/-75.731,4.797;'))).toBe(true)
     expect(abrir).not.toHaveBeenCalled()

@@ -1,7 +1,8 @@
+import { Plus } from 'lucide-react'
 import { useDeferredValue, useState } from 'react'
 import { Link } from 'react-router'
 import type { CambioEstadoNegocio, NegocioAdmin } from '../../lib/api'
-import { emojiCategoria } from '../../lib/negocio'
+import { IconoCategoria } from '../../components/Icono'
 import { Estado, fecha, Filtro, useAdminMutation, useAdminQuery } from './Admin'
 
 type FiltroEstado = NegocioAdmin['estado'] | 'todos'
@@ -38,7 +39,7 @@ export function Negocios() {
         to="/admin/negocios/agregar"
         className="tap inline-flex items-center justify-center self-start rounded-caja bg-green px-4 font-bold text-green-ink"
       >
-        ＋ Agregar negocios (uno o por CSV)
+        <Plus className="mr-1.5 size-5" aria-hidden="true" /> Agregar negocios (uno o por CSV)
       </Link>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Filtro etiqueta="Estado" valor={estado} opciones={ESTADOS} onChange={setEstado} />
@@ -72,8 +73,8 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
     <li className="tarjeta p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-bold" style={{ color: n.categoria.color }}>
-            {emojiCategoria(n.categoria.slug)} {n.categoria.nombre}
+          <p className="flex flex-wrap items-center gap-x-1.5 text-sm font-bold" style={{ color: n.categoria.color }}>
+            <IconoCategoria slug={n.categoria.slug} className="size-4" /> {n.categoria.nombre}
             <span className="font-normal text-muted"> · {n.barrio?.nombre ?? 'Sin barrio piloto'}</span>
           </p>
           <h2 className="text-lg font-black">{n.nombre}</h2>

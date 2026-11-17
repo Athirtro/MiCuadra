@@ -1,3 +1,4 @@
+import { Camera, Flame, Package, Pencil, Plus, Scissors, ShoppingBasket } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
@@ -80,7 +81,7 @@ export function CatalogoDueno() {
             onClick={() => setSeccionEditando(s)}
             className="tap inline-flex items-center gap-1 rounded-full border border-line bg-surface px-3 text-sm font-bold"
           >
-            {s.nombre} <span aria-hidden="true" className="text-muted">✎</span>
+            {s.nombre} <Pencil className="size-3.5 text-muted" aria-hidden="true" />
           </button>
         ))}
         <button
@@ -88,15 +89,13 @@ export function CatalogoDueno() {
           onClick={() => setSeccionEditando('nueva')}
           className="tap inline-flex items-center rounded-full border border-dashed border-line px-3 text-sm font-bold text-muted"
         >
-          ＋ Sección
+          <Plus className="mr-1 size-4" aria-hidden="true" /> Sección
         </button>
       </div>
 
       {items.length === 0 && (
         <div className="tarjeta p-6 text-center">
-          <p className="text-3xl" aria-hidden="true">
-            🧺
-          </p>
+          <ShoppingBasket className="mx-auto size-9 text-muted" strokeWidth={1.5} aria-hidden="true" />
           <p className="mt-2 font-bold">Tu catálogo está vacío</p>
           <p className="mt-1 text-sm text-muted">
             Empieza por lo que más te piden. Puedes crear secciones como «Panes» o «Bebidas» para ordenarlo.
@@ -115,13 +114,13 @@ export function CatalogoDueno() {
                 <li key={i.id} className="flex items-center gap-3 p-3">
                   <button type="button" onClick={() => setEditando(i)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                     <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-caja bg-block text-xl" aria-hidden="true">
-                      {i.foto_url ? <img src={i.foto_url} alt="" className="size-full object-cover" /> : i.tipo === 'servicio' ? '✂️' : '📦'}
+                      {i.foto_url ? <img src={i.foto_url} alt="" className="size-full object-cover" /> : i.tipo === 'servicio' ? <Scissors className="size-5 text-muted" aria-hidden="true" /> : <Package className="size-5 text-muted" aria-hidden="true" />}
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate font-bold">{i.nombre}</span>
                       <span className="block text-sm text-muted">
                         {i.precio !== null ? formatoCOP(i.precio_oferta ?? i.precio) : 'Sin precio'}
-                        {i.precio_oferta !== null && ' · 🔥 En oferta'}
+                        {i.precio_oferta !== null && ' · En oferta'}
                         {i.tipo === 'servicio' && ' · Servicio'}
                         {!i.visible && ' · Oculto'}
                       </span>
@@ -170,7 +169,7 @@ export function CatalogoDueno() {
           onClick={() => setEditando('nuevo')}
           className="tap mx-auto flex w-full max-w-xl items-center justify-center rounded-caja bg-green px-4 font-bold text-green-ink shadow-1"
         >
-          ＋ Agregar producto o servicio
+          <Plus className="mr-1.5 size-5" aria-hidden="true" /> Agregar producto o servicio
         </button>
       </div>
 
@@ -374,9 +373,10 @@ function FormItem({
               role="radio"
               aria-checked={tipo === t}
               onClick={() => setTipo(t)}
-              className={`tap rounded-[10px] font-bold ${tipo === t ? 'bg-surface shadow-1' : 'text-muted'}`}
+              className={`tap inline-flex items-center justify-center gap-1.5 rounded-[10px] font-bold ${tipo === t ? 'bg-surface shadow-1' : 'text-muted'}`}
             >
-              {t === 'producto' ? '📦 Producto' : '✂️ Servicio'}
+              {t === 'producto' ? <Package className="size-4" aria-hidden="true" /> : <Scissors className="size-4" aria-hidden="true" />}
+              {t === 'producto' ? 'Producto' : 'Servicio'}
             </button>
           ))}
         </div>
@@ -388,7 +388,11 @@ function FormItem({
             className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-caja border border-dashed border-line bg-bg text-sm text-muted"
             aria-label={foto ? 'Cambiar foto' : 'Agregar foto'}
           >
-            {subiendo ? 'Subiendo…' : foto ? <img src={foto} alt="" className="size-full object-cover" /> : '📷 Foto'}
+            {subiendo ? 'Subiendo…' : foto ? <img src={foto} alt="" className="size-full object-cover" /> : (
+              <span className="flex flex-col items-center gap-1">
+                <Camera className="size-5" aria-hidden="true" /> Foto
+              </span>
+            )}
           </button>
           <div className="text-sm text-muted">
             <p>Foto opcional. Se comprime en tu celular.</p>
@@ -433,7 +437,7 @@ function FormItem({
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-3 font-bold">
               <input type="checkbox" checked={enOferta} onChange={(e) => setEnOferta(e.target.checked)} className="size-5 accent-[var(--green)]" />
-              🔥 Ponerlo en oferta
+              <Flame className="size-4 text-red" aria-hidden="true" /> Ponerlo en oferta
             </label>
             {enOferta && (
               <label className="flex flex-col gap-1 text-sm font-bold">
@@ -450,7 +454,7 @@ function FormItem({
                 {oferta && Number(oferta) >= Number(precio) ? (
                   <span className="font-normal text-red">Tiene que ser menor que {formatoCOP(Number(precio))}.</span>
                 ) : (
-                  <span className="font-normal text-muted">Sale tachado el precio normal y la tienda aparece en «🔥 Ofertas» del mapa.</span>
+                  <span className="font-normal text-muted">Sale tachado el precio normal y la tienda aparece en «Ofertas» del mapa.</span>
                 )}
               </label>
             )}

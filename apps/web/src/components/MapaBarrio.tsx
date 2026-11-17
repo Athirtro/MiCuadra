@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useRef } from 'react'
 import { Circle, MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { NegocioResumen, Punto } from '../lib/api'
-import { emojiCategoria } from '../lib/negocio'
+import { svgCategoria } from '../lib/iconoSvg'
 import type { Yo } from '../lib/useUbicacion'
 
 const ATRIBUCION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -15,7 +15,7 @@ function iconoNegocio(n: NegocioResumen): L.DivIcon {
   const clase = n.destacado ? 'pin pin-destacado' : 'pin'
   return L.divIcon({
     className: '',
-    html: `<span class="${clase}" style="--pin:${n.categoria.color}" aria-hidden="true"><span>${emojiCategoria(n.categoria.slug)}</span></span>`,
+    html: `<span class="${clase}" style="--pin:${n.categoria.color}" aria-hidden="true"><span>${svgCategoria(n.categoria.slug)}</span></span>`,
     iconSize: [36, 36],
     iconAnchor: [18, 36],
     popupAnchor: [0, -32],
@@ -203,13 +203,14 @@ export function MapaBarrio({ centro, radioM, negocios, alElegir, alMover, yo = n
 interface PropsMini {
   punto: Punto
   color: string
-  emoji: string
+  /** Slug de la categoría: define el ícono del pin. */
+  categoria: string
   /** Con camino, el mapa crece y se puede mover para seguirlo. */
   camino?: [number, number][] | null
   yo?: Yo | null
 }
 
-export function MiniMapa({ punto, color, emoji, camino = null, yo = null }: PropsMini) {
+export function MiniMapa({ punto, color, categoria, camino = null, yo = null }: PropsMini) {
   const conCamino = Boolean(camino)
   return (
     <MapContainer
@@ -228,19 +229,19 @@ export function MiniMapa({ punto, color, emoji, camino = null, yo = null }: Prop
       <TileLayer attribution={ATRIBUCION} url={TILES} />
       <AjustarTamano />
       {camino && <Camino trazado={camino} margenArriba={32} />}
-      <PinFijo punto={punto} color={color} emoji={emoji} />
+      <PinFijo punto={punto} color={color} categoria={categoria} />
       {yo && <EstoyAqui yo={yo} />}
     </MapContainer>
   )
 }
 
-function PinFijo({ punto, color, emoji }: { punto: Punto; color: string; emoji: string }) {
+function PinFijo({ punto, color, categoria }: { punto: Punto; color: string; categoria: string }) {
   const mapa = useMap()
   useEffect(() => {
     const m = L.marker([punto.lat, punto.lng], {
       icon: L.divIcon({
         className: '',
-        html: `<span class="pin" style="--pin:${color}" aria-hidden="true"><span>${emoji}</span></span>`,
+        html: `<span class="pin" style="--pin:${color}" aria-hidden="true"><span>${svgCategoria(categoria)}</span></span>`,
         iconSize: [36, 36],
         iconAnchor: [18, 36],
       }),
@@ -249,7 +250,7 @@ function PinFijo({ punto, color, emoji }: { punto: Punto; color: string; emoji: 
     return () => {
       m.remove()
     }
-  }, [mapa, punto, color, emoji])
+  }, [mapa, punto, color, categoria])
   return null
 }
 
@@ -257,23 +258,32 @@ function PinFijo({ punto, color, emoji }: { punto: Punto; color: string; emoji: 
 export function SelectorUbicacion({
   punto,
   alCambiar,
-  emoji = '📍',
+  categoria = null,
 }: {
   punto: Punto
   alCambiar: (p: Punto) => void
-  emoji?: string
+  /** Slug de la categoría para el ícono del pin (sin categoría: un pin genérico). */
+  categoria?: string | null
 }) {
   return (
     <MapContainer center={[punto.lat, punto.lng]} zoom={17} className="h-72 w-full rounded-caja" zoomControl>
       <TileLayer attribution={ATRIBUCION} url={TILES} maxZoom={19} />
       <AjustarTamano />
       <Recentrar centro={punto} />
-      <PinArrastrable punto={punto} alCambiar={alCambiar} emoji={emoji} />
+      <PinArrastrable punto={punto} alCambiar={alCambiar} categoria={categoria} />
     </MapContainer>
   )
 }
 
-function PinArrastrable({ punto, alCambiar, emoji }: { punto: Punto; alCambiar: (p: Punto) => void; emoji: string }) {
+function PinArrastrable({
+  punto,
+  alCambiar,
+  categoria,
+}: {
+  punto: Punto
+  alCambiar: (p: Punto) => void
+  categoria: string | null
+}) {
   const mapa = useMap()
   useMapEvents({ click: (e) => alCambiar({ lat: e.latlng.lat, lng: e.latlng.lng }) })
   useEffect(() => {
@@ -283,7 +293,7 @@ function PinArrastrable({ punto, alCambiar, emoji }: { punto: Punto; alCambiar: 
       title: 'Arrástrame hasta tu negocio',
       icon: L.divIcon({
         className: '',
-        html: `<span class="pin pin-destacado" style="--pin:#C8462F" aria-hidden="true"><span>${emoji}</span></span>`,
+        html: `<span class="pin pin-destacado" style="--pin:#C8462F" aria-hidden="true"><span>${svgCategoria(categoria)}</span></span>`,
         iconSize: [36, 36],
         iconAnchor: [18, 36],
       }),
@@ -296,6 +306,6 @@ function PinArrastrable({ punto, alCambiar, emoji }: { punto: Punto; alCambiar: 
     return () => {
       m.remove()
     }
-  }, [mapa, punto, alCambiar, emoji])
+  }, [mapa, punto, alCambiar, categoria])
   return null
 }

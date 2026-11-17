@@ -22,7 +22,7 @@ export function Metricas() {
               role="status"
             >
               {gate.data.listo
-                ? '✅ Se cumplen los 6 criterios: el equipo puede activar los mandados.'
+                ? 'Se cumplen los 6 criterios: el equipo puede activar los mandados.'
                 : `${gate.data.cumplidos} de 6 criterios cumplidos. Los mandados siguen apagados.`}
             </div>
             <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">

@@ -2,10 +2,11 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { apiGet, rutaNegocios, type Barrio, type Categoria, type ListaNegocios, type NegocioResumen, type Punto } from '../lib/api'
+import { Flame, Footprints, MapPin, MapPinned, Search } from 'lucide-react'
+import { IconoCategoria } from '../components/Icono'
 import { Precio } from '../components/Precio'
 import { registrarEvento } from '../lib/eventos'
 import { formatoDistancia } from '../lib/formato'
-import { emojiCategoria } from '../lib/negocio'
 import { rutaAPie, type Ruta } from '../lib/ruta'
 import { barrioGuardado, useUbicacion } from '../lib/useUbicacion'
 
@@ -128,16 +129,19 @@ export function Mapa() {
           </Chip>
           {categorias.data?.map((c) => (
             <Chip key={c.slug} activo={categoria === c.slug} onClick={() => setCategoria(categoria === c.slug ? null : c.slug)}>
-              {emojiCategoria(c.slug)} {c.nombre}
+              <IconoCategoria slug={c.slug} className="size-4" />
+              {c.nombre}
             </Chip>
           ))}
         </div>
         <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 text-sm [scrollbar-width:none]">
           <Chip activo={abiertoAhora} onClick={() => setAbiertoAhora(!abiertoAhora)}>
-            🟢 Abierto ahora
+            <span className="size-2 rounded-full bg-current" aria-hidden="true" />
+            Abierto ahora
           </Chip>
           <Chip activo={conOfertas} onClick={() => setConOfertas(!conOfertas)}>
-            🔥 Ofertas
+            <Flame className="size-4" aria-hidden="true" />
+            Ofertas
           </Chip>
           <div className="flex shrink-0 items-center gap-1 rounded-full border border-line bg-surface p-1" role="radiogroup" aria-label="¿Qué tan cerca?">
             <span className="pl-2 pr-1 text-xs font-bold text-muted">Hasta</span>
@@ -227,6 +231,11 @@ function redondearPunto(p: Punto): Punto {
   return { lat: Math.round(p.lat * 4000) / 4000, lng: Math.round(p.lng * 4000) / 4000 }
 }
 
+/** Fracción de la hoja que queda escondida cuando está abajo (igual que `.hoja` en styles.css). */
+const HOJA_ABAJO = 0.55
+/** Velocidad (px/ms) desde la que un tirón decide la dirección aunque el dedo haya recorrido poco. */
+const TIRON = 0.35
+
 function HojaResultados({
   expandida,
   alCambiar,
@@ -238,16 +247,109 @@ function HojaResultados({
   ocupada: boolean
   children: React.ReactNode
 }) {
+  const hoja = useRef<HTMLElement>(null)
   const lista = useRef<HTMLDivElement>(null)
-  const toque = useRef<{ y: number; arriba: boolean } | null>(null)
+  // Se leen dentro de los listeners nativos sin volver a registrarlos.
+  const estado = useRef({ expandida, alCambiar })
+  useEffect(() => {
+    estado.current = { expandida, alCambiar }
+  }, [expandida, alCambiar])
+  const arrastro = useRef(false)
 
   // Al bajar la hoja, la lista vuelve al principio para que lo primero que se vea sea el inicio.
   useEffect(() => {
     if (!expandida && lista.current) lista.current.scrollTop = 0
   }, [expandida])
 
+  // La hoja sigue al dedo (listeners nativos: hace falta `passive: false` para frenar el scroll de la
+  // lista mientras se arrastra). Al soltar, termina según la velocidad del gesto o la mitad del recorrido.
+  useEffect(() => {
+    const el = hoja.current
+    if (!el) return
+    const escritorio = window.matchMedia?.('(min-width: 48rem)')
+    let inicio: { y: number; base: number; desdeLista: boolean } | null = null
+    let activo = false
+    let pos = 0
+    let muestras: { y: number; t: number }[] = []
+
+    const abajoPx = () => el.offsetHeight * HOJA_ABAJO
+    const limitar = (v: number) => {
+      const max = abajoPx()
+      // Más allá de los topes se mueve a un tercio: se siente elástico en vez de un muro.
+      if (v < 0) return v / 3
+      if (v > max) return max + (v - max) / 3
+      return v
+    }
+
+    const alTocar = (e: TouchEvent) => {
+      if (escritorio?.matches || e.touches.length !== 1) return
+      const t = e.touches[0]
+      if (!t) return
+      const desdeLista = Boolean(lista.current?.contains(e.target as Node))
+      inicio = { y: t.clientY, base: estado.current.expandida ? 0 : abajoPx(), desdeLista }
+      activo = false
+      arrastro.current = false
+      muestras = [{ y: t.clientY, t: e.timeStamp }]
+    }
+
+    const alMover = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (!inicio || !t) return
+      const dy = t.clientY - inicio.y
+      if (!activo) {
+        if (Math.abs(dy) < 6) return
+        // Con la hoja arriba, la lista se desplaza normal; solo se arrastra la hoja al tirar hacia
+        // abajo estando la lista al principio.
+        if (estado.current.expandida && inicio.desdeLista && (dy < 0 || (lista.current?.scrollTop ?? 0) > 0)) {
+          inicio = null
+          return
+        }
+        activo = true
+        arrastro.current = true
+        inicio.y = t.clientY
+        el.style.transition = 'none'
+      }
+      e.preventDefault()
+      pos = limitar(inicio.base + t.clientY - inicio.y)
+      el.style.transform = `translateY(${pos}px)`
+      muestras.push({ y: t.clientY, t: e.timeStamp })
+      if (muestras.length > 5) muestras.shift()
+    }
+
+    const alSoltar = () => {
+      if (!inicio || !activo) {
+        inicio = null
+        return
+      }
+      const primera = muestras[0]
+      const ultima = muestras[muestras.length - 1]
+      // Velocidad de los últimos movimientos (con menos de 10 ms de datos no es confiable: decide la posición).
+      const dt = primera && ultima ? ultima.t - primera.t : 0
+      const v = primera && ultima && dt >= 10 ? (ultima.y - primera.y) / dt : 0
+      const arriba = v < -TIRON ? true : v > TIRON ? false : pos < abajoPx() / 2
+      // Se quitan los estilos del dedo: la clase anima desde aquí hasta el destino.
+      el.style.transition = ''
+      el.style.transform = ''
+      inicio = null
+      activo = false
+      estado.current.alCambiar(arriba)
+    }
+
+    el.addEventListener('touchstart', alTocar, { passive: true })
+    el.addEventListener('touchmove', alMover, { passive: false })
+    el.addEventListener('touchend', alSoltar)
+    el.addEventListener('touchcancel', alSoltar)
+    return () => {
+      el.removeEventListener('touchstart', alTocar)
+      el.removeEventListener('touchmove', alMover)
+      el.removeEventListener('touchend', alSoltar)
+      el.removeEventListener('touchcancel', alSoltar)
+    }
+  }, [])
+
   return (
     <section
+      ref={hoja}
       aria-label="Resultados"
       aria-busy={ocupada}
       data-expandida={expandida}
@@ -255,17 +357,17 @@ function HojaResultados({
     >
       <button
         type="button"
-        onClick={() => alCambiar(!expandida)}
+        onClick={() => {
+          // Un arrastre que termina sobre la manija no cuenta como toque.
+          if (arrastro.current) {
+            arrastro.current = false
+            return
+          }
+          alCambiar(!expandida)
+        }}
         aria-expanded={expandida}
         aria-label={expandida ? 'Bajar la lista y ver el mapa' : 'Subir la lista'}
-        className="flex h-6 w-full shrink-0 items-center justify-center md:hidden"
-        onTouchStart={(e) => (toque.current = { y: e.touches[0]?.clientY ?? 0, arriba: true })}
-        onTouchEnd={(e) => {
-          const dy = (e.changedTouches[0]?.clientY ?? 0) - (toque.current?.y ?? 0)
-          if (dy > 30) alCambiar(false)
-          else if (dy < -30) alCambiar(true)
-          toque.current = null
-        }}
+        className="flex h-7 w-full shrink-0 touch-none items-center justify-center md:hidden"
       >
         <span className="h-1 w-10 rounded-full bg-line" />
       </button>
@@ -273,25 +375,9 @@ function HojaResultados({
         ref={lista}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
         onScroll={(e) => {
+          // Rueda del mouse o teclado con la hoja abajo: sube la hoja.
           if (!expandida && e.currentTarget.scrollTop > 8) alCambiar(true)
         }}
-        onTouchStart={(e) =>
-          (toque.current = { y: e.touches[0]?.clientY ?? 0, arriba: e.currentTarget.scrollTop <= 0 })
-        }
-        onTouchMove={(e) => {
-          const t = toque.current
-          if (!t) return
-          const dy = (e.touches[0]?.clientY ?? 0) - t.y
-          // Hoja abajo: arrastrar hacia arriba la sube. Hoja arriba y lista al inicio: tirar hacia abajo la baja.
-          if (!expandida && dy < -24) {
-            alCambiar(true)
-            toque.current = null
-          } else if (expandida && t.arriba && dy > 48) {
-            alCambiar(false)
-            toque.current = null
-          }
-        }}
-        onTouchEnd={() => (toque.current = null)}
       >
         {children}
       </div>
@@ -318,11 +404,11 @@ function TarjetaCamino({
     <div className="entra absolute inset-x-3 top-3 z-[1000] rounded-caja bg-surface p-3 shadow-2" role="status">
       <div className="flex items-start gap-3">
         <span
-          className="grid size-11 shrink-0 place-items-center rounded-full text-xl"
-          style={{ background: `${n.categoria.color}22` }}
+          className="grid size-11 shrink-0 place-items-center rounded-full"
+          style={{ background: `${n.categoria.color}22`, color: n.categoria.color }}
           aria-hidden="true"
         >
-          {emojiCategoria(n.categoria.slug)}
+          <IconoCategoria slug={n.categoria.slug} className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-bold">{n.nombre}</p>
@@ -334,7 +420,9 @@ function TarjetaCamino({
             <p className="text-sm text-red">{camino.error.message}</p>
           ) : (
             <p className="text-sm">
-              <span className="font-bold">🚶 {camino.data.minutos} min</span>
+              <span className="inline-flex items-center gap-1 font-bold">
+                <Footprints className="size-4" aria-hidden="true" /> {camino.data.minutos} min
+              </span>
               <span className="text-muted"> · {formatoDistancia(camino.data.metros)} a pie</span>
             </p>
           )}
@@ -401,9 +489,7 @@ function Resultados({
   if (!items.length) {
     return (
       <div className="p-6 text-center">
-        <p className="text-3xl" aria-hidden="true">
-          🗺️
-        </p>
+        <MapPinned className="mx-auto size-9 text-muted" strokeWidth={1.5} aria-hidden="true" />
         <p className="mt-2 font-bold">Todavía no hay negocios en esta cuadra.</p>
         <p className="mt-1 text-sm text-muted">
           {radioM < 1000 ? 'Prueba con 10 cuadras o quita algún filtro. ' : ''}¿Conoces uno?{' '}
@@ -428,14 +514,14 @@ function Resultados({
               className="group flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left hover:bg-bg focus-visible:bg-bg"
             >
               <span
-                className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-caja text-2xl ring-1 ring-black/5"
-                style={{ background: `${n.categoria.color}22` }}
+                className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-caja ring-1 ring-black/5"
+                style={{ background: `${n.categoria.color}22`, color: n.categoria.color }}
                 aria-hidden="true"
               >
                 {n.foto_url ? (
                   <img src={n.foto_url} alt="" loading="lazy" className="size-full object-cover" width={56} height={56} />
                 ) : (
-                  emojiCategoria(n.categoria.slug)
+                  <IconoCategoria slug={n.categoria.slug} className="size-6" />
                 )}
               </span>
               <span className="min-w-0 flex-1">
@@ -451,8 +537,9 @@ function Resultados({
                 <span className="flex flex-wrap items-center gap-x-2">
                   <EstadoAbierto abierto={n.abierto_ahora} />
                   {n.ofertas > 0 && (
-                    <span className="rounded-full bg-red/10 px-2 text-xs font-bold text-red">
-                      🔥 {n.ofertas} {n.ofertas === 1 ? 'oferta' : 'ofertas'}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red/10 px-2 text-xs font-bold text-red">
+                      <Flame className="size-3" aria-hidden="true" />
+                      {n.ofertas} {n.ofertas === 1 ? 'oferta' : 'ofertas'}
                     </span>
                   )}
                 </span>
@@ -460,7 +547,10 @@ function Resultados({
                   <span className="mt-1.5 flex flex-col gap-0.5 rounded-caja bg-bg px-2 py-1.5 text-sm">
                     {n.productos.map((p) => (
                       <span key={p.nombre} className="flex items-baseline justify-between gap-2">
-                        <span className="truncate">🔎 {p.nombre}</span>
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <Search className="size-3.5 shrink-0 text-muted" aria-hidden="true" />
+                          <span className="truncate">{p.nombre}</span>
+                        </span>
                         <Precio precio={p.precio} oferta={p.precio_oferta} className="shrink-0 text-sm" />
                       </span>
                     ))}
@@ -474,9 +564,7 @@ function Resultados({
               aria-label={`Cómo llegar a ${n.nombre}`}
               className="tap mx-3 flex shrink-0 flex-col items-center justify-center rounded-caja bg-block px-2.5 py-1.5 text-xs font-bold"
             >
-              <span className="text-lg leading-none" aria-hidden="true">
-                🚶
-              </span>
+              <Footprints className="size-5" aria-hidden="true" />
               Ir
             </button>
           </li>
@@ -501,7 +589,7 @@ function Chip({ activo, onClick, children }: { activo: boolean; onClick: () => v
       type="button"
       aria-pressed={activo}
       onClick={onClick}
-      className={`tap shrink-0 rounded-full border px-4 text-sm font-bold whitespace-nowrap ${
+      className={`tap inline-flex shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-bold whitespace-nowrap ${
         activo ? 'border-green bg-green text-green-ink shadow-1' : 'border-line bg-surface text-ink'
       }`}
     >
@@ -576,9 +664,7 @@ function ElegirBarrio({
 function Aviso({ titulo, texto }: { titulo: string; texto: string }) {
   return (
     <section className="entra mx-auto max-w-md px-4 py-16 text-center" role="status">
-      <p className="text-4xl" aria-hidden="true">
-        📍
-      </p>
+      <MapPin className="mx-auto size-10 text-green" strokeWidth={1.75} aria-hidden="true" />
       <h1 className="mt-3 text-2xl font-black">{titulo}</h1>
       <p className="mt-2 text-muted">{texto}</p>
     </section>

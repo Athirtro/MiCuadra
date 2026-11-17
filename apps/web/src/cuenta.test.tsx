@@ -72,7 +72,7 @@ describe('Entrar', () => {
 
     fireEvent.change(screen.getByLabelText('Correo electrónico'), { target: { value: 'vale@gmail.com' } })
     fireEvent.click(screen.getByRole('button', { name: 'Enviarme un enlace para entrar' }))
-    expect(await screen.findByText('📬 Revisa tu correo')).toBeInTheDocument()
+    expect(await screen.findByText('Revisa tu correo')).toBeInTheDocument()
     expect(estado.correo).toHaveBeenCalledWith(expect.objectContaining({ email: 'vale@gmail.com' }))
   })
 

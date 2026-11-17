@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Flame, MessageCircle, ShoppingBasket } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { mensajeApartado, textoTotal } from '../lib/apartado'
@@ -6,10 +7,11 @@ import { apiEnviar, type Apartado, type ApartadoEntrada, type Catalogo, type Ite
 import { precioFinal, resumenCarrito, type Carrito } from '../lib/carrito'
 import { registrarEvento } from '../lib/eventos'
 import { formatoCOP } from '../lib/formato'
-import { emojiCategoria, enlaceWhatsappTexto } from '../lib/negocio'
+import { enlaceWhatsappTexto } from '../lib/negocio'
 import { usePerfil } from '../lib/sesion'
 import { guardarVolver } from '../lib/volver'
 import { Dialogo } from './Dialogo'
+import { IconoCategoria } from './Icono'
 import { Precio } from './Precio'
 
 type Poner = (itemId: string, cantidad: number, tope?: number | null) => void
@@ -76,14 +78,14 @@ function FilaItem({ i, n, cantidad, poner }: { i: Item; n: NegocioDetalle; canti
   return (
     <li className={`flex gap-3 px-4 py-3 ${agotado ? 'opacity-60' : ''}`}>
       <span
-        className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-caja text-2xl"
-        style={{ background: `${n.categoria.color}1a` }}
+        className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-caja"
+        style={{ background: `${n.categoria.color}1a`, color: n.categoria.color }}
         aria-hidden="true"
       >
         {i.foto_url ? (
           <img src={i.foto_url} alt="" loading="lazy" className="size-full object-cover" width={64} height={64} />
         ) : (
-          emojiCategoria(n.categoria.slug)
+          <IconoCategoria slug={n.categoria.slug} className="size-6 opacity-80" />
         )}
       </span>
       <div className="min-w-0 flex-1">
@@ -91,7 +93,7 @@ function FilaItem({ i, n, cantidad, poner }: { i: Item; n: NegocioDetalle; canti
         {i.descripcion && <p className="mt-0.5 line-clamp-2 text-sm text-muted">{i.descripcion}</p>}
         <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
           <Precio precio={i.precio} oferta={i.precio_oferta} />
-          {i.precio_oferta !== null && <span className="rounded-full bg-red/10 px-2 text-xs font-bold text-red">🔥 Oferta</span>}
+          {i.precio_oferta !== null && <span className="inline-flex items-center gap-1 rounded-full bg-red/10 px-2 text-xs font-bold text-red"><Flame className="size-3" aria-hidden="true" /> Oferta</span>}
           {i.tipo === 'servicio' && <span className="rounded bg-block px-1.5 text-xs font-bold">Servicio</span>}
           {agotado ? (
             <span className="font-bold text-red">Agotado</span>
@@ -183,9 +185,9 @@ export function DialogoCarrito({
     return (
       <Dialogo titulo="Apartado listo" alCerrar={alCerrar}>
         <div role="status" className="entra text-center">
-          <p className="text-4xl" aria-hidden="true">
-            <span className="celebra">🛒</span>
-          </p>
+          <span className="celebra mx-auto grid size-14 place-items-center rounded-full bg-sun text-sun-ink" aria-hidden="true">
+            <ShoppingBasket className="size-7" />
+          </span>
           <h2 className="mt-2 text-2xl font-black">¡Apartado!</h2>
           <p className="mt-1 text-muted">
             Tu código es <strong className="font-mono text-ink">{a.codigo}</strong>. Avísale a {n.nombre} por WhatsApp para
@@ -199,7 +201,7 @@ export function DialogoCarrito({
               onClick={() => registrarEvento('click_whatsapp', n.id, { apartado: a.codigo })}
               className="tap mt-5 flex items-center justify-center gap-2 rounded-caja bg-green px-4 font-bold text-green-ink"
             >
-              💬 Avisar por WhatsApp
+              <MessageCircle className="size-5" aria-hidden="true" /> Avisar por WhatsApp
             </a>
           )}
           <Link to="/mis-apartados" className="tap mt-2 flex items-center justify-center rounded-caja border border-line px-4 font-bold">

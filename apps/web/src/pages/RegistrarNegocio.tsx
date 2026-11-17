@@ -1,3 +1,4 @@
+import { Camera, LocateFixed, PartyPopper } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router'
@@ -12,7 +13,8 @@ import {
   type Perfil,
   type Punto,
 } from '../lib/api'
-import { DIAS, emojiCategoria } from '../lib/negocio'
+import { DIAS } from '../lib/negocio'
+import { IconoCategoria } from '../components/Icono'
 import { usePerfil } from '../lib/sesion'
 import { Campo } from './Bienvenida'
 import { Cargando } from './Cuenta'
@@ -156,9 +158,9 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
   if (enviar.isSuccess) {
     return (
       <section className="entra mx-auto max-w-md px-4 py-12 text-center">
-        <p className="text-5xl" aria-hidden="true">
-          <span className="celebra">🎉</span>
-        </p>
+        <span className="celebra mx-auto grid size-16 place-items-center rounded-full bg-green text-green-ink" aria-hidden="true">
+          <PartyPopper className="size-8" />
+        </span>
         <h1 className="mt-3 text-3xl font-black">¡Recibimos tu negocio!</h1>
         <p className="mt-2 text-muted">
           <strong>{enviar.data.nombre}</strong> queda en revisión. El equipo de MiCuadra lo revisa y te avisamos por
@@ -170,7 +172,7 @@ function Asistente({ perfil, token }: { perfil: Perfil; token?: string }) {
             to={`/mi-negocio/${enviar.data.id}/fotos`}
             className="tap inline-flex items-center justify-center rounded-caja bg-green px-5 font-bold text-green-ink"
           >
-            📷 Subir fotos
+            <Camera className="mr-2 size-5" aria-hidden="true" /> Subir fotos
           </Link>
           <Link to="/cuenta" className="tap inline-flex items-center justify-center rounded-caja border border-line px-5 font-bold">
             Más tarde
@@ -279,7 +281,7 @@ function PasoDatos({
                 b.categoria === c.slug ? 'border-green bg-green/10' : 'border-line bg-surface'
               }`}
             >
-              <span aria-hidden="true">{emojiCategoria(c.slug)}</span>
+              <IconoCategoria slug={c.slug} className="size-5 shrink-0" />
               {c.nombre}
             </button>
           ))}
@@ -356,11 +358,12 @@ function PasoUbicacion({
         <p className="font-bold">¿Dónde queda tu negocio?</p>
         <p className="text-sm text-muted">Arrastra el pin o toca el mapa justo donde está la puerta.</p>
       </div>
-      <button type="button" onClick={usarGps} className="tap rounded-caja border border-line px-4 font-bold">
-        {buscando ? 'Buscando…' : '📍 Estoy en mi negocio, usar mi ubicación'}
+      <button type="button" onClick={usarGps} className="tap inline-flex items-center justify-center gap-2 rounded-caja border border-line px-4 font-bold">
+        {!buscando && <LocateFixed className="size-5" aria-hidden="true" />}
+        {buscando ? 'Buscando…' : 'Estoy en mi negocio, usar mi ubicación'}
       </button>
       <Suspense fallback={<div className="h-72 rounded-caja bg-block" />}>
-        <SelectorUbicacion punto={punto} alCambiar={alCambiar} />
+        <SelectorUbicacion punto={punto} alCambiar={alCambiar} categoria={b.categoria || null} />
       </Suspense>
       {!b.ubicacion && <p className="text-sm text-red">Mueve el pin para confirmar la ubicación.</p>}
       <Campo etiqueta="Dirección" ayuda='Como la diría un vecino: "Calle 72 # 25-10, frente al parque".'>
@@ -491,8 +494,8 @@ function PasoRevisar({ b, categorias, irA }: { b: Borrador; categorias?: Categor
     <div className="flex flex-col gap-3">
       <p className="font-bold">Revisa que todo esté bien</p>
       <Resumen titulo="Tu negocio" alEditar={() => irA(0)}>
-        <p className="font-bold">
-          {emojiCategoria(b.categoria)} {b.nombre}
+        <p className="flex items-center gap-2 font-bold">
+          <IconoCategoria slug={b.categoria} className="size-5" /> {b.nombre}
         </p>
         <p className="text-sm text-muted">
           {categoria?.nombre} · WhatsApp {b.whatsapp}

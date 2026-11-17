@@ -268,8 +268,10 @@
   line-height: 1;
 }
 .pin > span {
-  /* el emoji queda derecho aunque la gota esté girada */
+  /* el ícono queda derecho aunque la gota esté girada; toma el color de la categoría */
+  display: grid;
   transform: rotate(45deg);
+  color: var(--pin, var(--red));
 }
 .pin-destacado {
   border-color: var(--sun);
@@ -361,7 +363,8 @@
 @media (width < 48rem) {
   .hoja {
     transform: translateY(55%);
-    transition: transform 380ms var(--ease-cajon);
+    /* Curva de las hojas de iOS (la misma de Vaul): arranca con la velocidad del dedo y frena despacio. */
+    transition: transform 500ms var(--ease-cajon);
     will-change: transform;
   }
   .hoja[data-expandida='true'] {

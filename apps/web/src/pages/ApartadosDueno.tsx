@@ -1,3 +1,4 @@
+import { MessageCircle } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router'
@@ -167,7 +168,8 @@ function ApartadoDelNegocio({ a, negocioId, token }: { a: Apartado; negocioId: s
                 rel="noopener noreferrer"
                 className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold"
               >
-                💬 {a.estado === 'listo' || a.estado === 'confirmado' ? 'Avisar que está listo' : 'Escribirle'}
+                <MessageCircle className="mr-1.5 size-4" aria-hidden="true" />
+                {a.estado === 'listo' || a.estado === 'confirmado' ? 'Avisar que está listo' : 'Escribirle'}
               </a>
             )}
             <button type="button" onClick={() => setCancelando(true)} className="tap px-2 text-sm font-bold text-red underline">

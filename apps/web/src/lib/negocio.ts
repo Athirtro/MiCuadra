@@ -1,23 +1,4 @@
 
-/** Emoji por categoría: liviano, sin descargar íconos, y se entiende en cualquier celular. */
-export const EMOJI_CATEGORIA: Record<string, string> = {
-  tienda: '🏪',
-  panaderia: '🥖',
-  barberia: '💈',
-  drogueria: '💊',
-  fruver: '🍎',
-  papeleria: '✏️',
-  taller: '🔧',
-  gimnasio: '🏋️',
-  lavanderia: '👕',
-  'comida-casera': '🍲',
-  ferreteria: '🔨',
-}
-
-export function emojiCategoria(slug: string): string {
-  return EMOJI_CATEGORIA[slug] ?? '📍'
-}
-
 /** `3001234567` → enlace de WhatsApp con el saludo de MiCuadra. */
 export function enlaceWhatsapp(celular: string, nombreNegocio: string): string {
   return enlaceWhatsappTexto(celular, `Hola, ${nombreNegocio}. Te encontré en MiCuadra 👋`)

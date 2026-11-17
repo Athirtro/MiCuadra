@@ -1,9 +1,9 @@
+import { FileSpreadsheet, LocateFixed, MapPin } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { apiEnviar, apiGet, type Barrio, type Categoria, type LoteEntrada, type LoteResultado, type Punto } from '../../lib/api'
 import { csvDePendientes, filasDesdeCsv, PLANTILLA, type FilaCsv } from '../../lib/csv'
-import { emojiCategoria } from '../../lib/negocio'
 import { Dialogo } from '../../components/Dialogo'
 import { Filtro, useToken } from './Admin'
 
@@ -99,7 +99,7 @@ function Errores({ r, alUbicar }: { r: LoteResultado; alUbicar?: (fila: number) 
                 onClick={() => alUbicar(e.fila)}
                 className="tap mt-1 inline-flex items-center gap-1 rounded-full bg-green px-4 text-sm font-bold text-green-ink"
               >
-                📍 Ubicar en el mapa
+                <MapPin className="size-4" aria-hidden="true" /> Ubicar en el mapa
               </button>
             )}
           </li>
@@ -158,7 +158,7 @@ function UnoPorUno() {
     <form onSubmit={enviar} className="flex max-w-xl flex-col gap-4">
       {lote.data?.creados ? (
         <p role="status" className="entra rounded-caja bg-green/15 p-3 font-bold text-green">
-          ✓ Agregado «{lote.data.validas[0]?.nombre}». Puedes seguir con el siguiente.
+          Agregado «{lote.data.validas[0]?.nombre}». Puedes seguir con el siguiente.
         </p>
       ) : null}
       {lote.data && <Errores r={lote.data} />}
@@ -175,7 +175,7 @@ function UnoPorUno() {
           </option>
           {categorias.data?.map((c) => (
             <option key={c.slug} value={c.slug}>
-              {emojiCategoria(c.slug)} {c.nombre}
+              {c.nombre}
             </option>
           ))}
         </select>
@@ -196,11 +196,12 @@ function UnoPorUno() {
 
       <div className="flex flex-col gap-2">
         <p className="font-bold">Ubicación</p>
-        <button type="button" onClick={aqui} className="tap rounded-caja border border-line px-4 font-bold">
-          {buscando ? 'Buscando…' : '📍 Estoy en el negocio, usar mi ubicación'}
+        <button type="button" onClick={aqui} className="tap inline-flex items-center justify-center gap-2 rounded-caja border border-line px-4 font-bold">
+          {!buscando && <LocateFixed className="size-5" aria-hidden="true" />}
+          {buscando ? 'Buscando…' : 'Estoy en el negocio, usar mi ubicación'}
         </button>
         <Suspense fallback={<div className="esqueleto h-72 rounded-caja" />}>
-          <SelectorUbicacion punto={punto ?? CENTRO_PEREIRA} alCambiar={setPunto} emoji={f.categoria ? emojiCategoria(f.categoria) : '📍'} />
+          <SelectorUbicacion punto={punto ?? CENTRO_PEREIRA} alCambiar={setPunto} categoria={f.categoria || null} />
         </Suspense>
         <p className={`text-sm ${punto ? 'text-muted' : 'text-red'}`}>
           {punto ? `${punto.lat.toFixed(5)}, ${punto.lng.toFixed(5)}` : 'Toca el mapa o mueve el pin justo donde está la puerta.'}
@@ -326,7 +327,8 @@ function DesdeCsv() {
       </ol>
 
       <label className="tap flex cursor-pointer items-center justify-center rounded-caja border-2 border-dashed border-line bg-surface px-4 font-bold">
-        📄 {archivo ? `Cambiar archivo (${archivo})` : 'Elegir archivo CSV'}
+        <FileSpreadsheet className="mr-2 size-5" aria-hidden="true" />
+        {archivo ? `Cambiar archivo (${archivo})` : 'Elegir archivo CSV'}
         <input type="file" accept=".csv,text/csv" hidden onChange={elegir} aria-label="Elegir archivo CSV" />
       </label>
       {ignoradas.length > 0 && <p className="text-sm text-muted">Columnas que no usamos: {ignoradas.join(', ')}.</p>}
@@ -341,7 +343,7 @@ function DesdeCsv() {
       {r?.creados ? (
         <div role="status" className="entra flex flex-col gap-2 rounded-caja bg-green/15 p-4">
           <p className="font-bold text-green">
-            ✓ Se {r.creados === 1 ? 'agregó 1 negocio' : `agregaron ${r.creados} negocios`}.{' '}
+            Se {r.creados === 1 ? 'agregó 1 negocio' : `agregaron ${r.creados} negocios`}.{' '}
             <Link to="/admin/negocios" className="underline">
               Verlos
             </Link>
@@ -388,7 +390,7 @@ function DesdeCsv() {
                       <td className="p-2 font-mono">{v.fila}</td>
                       <td className="p-2 font-bold">{v.nombre}</td>
                       <td className="p-2">
-                        {emojiCategoria(v.categoria)} {v.categoria}
+                        {v.categoria}
                       </td>
                       <td className="p-2">{v.barrio ?? '—'}</td>
                       <td className="p-2 font-mono">{v.whatsapp ?? '—'}</td>
@@ -477,7 +479,7 @@ function UbicarFila({
           <SelectorUbicacion
             punto={punto ?? delBarrio ?? CENTRO_PEREIRA}
             alCambiar={setPunto}
-            emoji={emojiCategoria(normal(datos.categoria).replace(/\s+/g, '-'))}
+            categoria={normal(datos.categoria).replace(/\s+/g, '-')}
           />
         </Suspense>
         <button

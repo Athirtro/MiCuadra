@@ -1,3 +1,4 @@
+import { ChevronRight, ShoppingBasket } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router'
@@ -91,13 +92,16 @@ export function Cuenta() {
                     to={`/mi-negocio/${n.id}/apartados`}
                     className="mt-2 flex items-center justify-between rounded-lg bg-sun px-3 py-2 text-sm font-bold text-sun-ink"
                   >
-                    🛒 {n.apartados_pendientes} {n.apartados_pendientes === 1 ? 'apartado' : 'apartados'} por confirmar
-                    <span aria-hidden="true">›</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <ShoppingBasket className="size-4" aria-hidden="true" />
+                      {n.apartados_pendientes} {n.apartados_pendientes === 1 ? 'apartado' : 'apartados'} por confirmar
+                    </span>
+                    <ChevronRight className="size-4" aria-hidden="true" />
                   </Link>
                 )}
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold text-green">
                   <Link to={`/mi-negocio/${n.id}/estadisticas`} className="underline">
-                    📊 Estadísticas
+                    Estadísticas
                   </Link>
                   <Link to={`/mi-negocio/${n.id}/catalogo`} className="underline">
                     Catálogo
@@ -135,7 +139,9 @@ export function Cuenta() {
       )}
 
       <Link to="/mis-apartados" className="tarjeta flex items-center justify-between p-4 font-bold">
-        <span>🛒 Mis apartados</span>
+        <span className="inline-flex items-center gap-2">
+          <ShoppingBasket className="size-5 text-green" aria-hidden="true" /> Mis apartados
+        </span>
         <span aria-hidden="true" className="text-muted">
           ›
         </span>
@@ -176,8 +182,8 @@ function Volver({ a }: { a: string }) {
 }
 
 const TEMAS: { valor: Tema; texto: string }[] = [
-  { valor: 'claro', texto: '☀️ Claro' },
-  { valor: 'oscuro', texto: '🌙 Oscuro' },
+  { valor: 'claro', texto: 'Claro' },
+  { valor: 'oscuro', texto: 'Oscuro' },
   { valor: 'auto', texto: 'Como el celular' },
 ]
 

@@ -1,3 +1,4 @@
+import { MessageCircle, ShoppingBasket } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, Navigate } from 'react-router'
 import { TarjetaApartado } from '../components/TarjetaApartado'
@@ -37,9 +38,7 @@ export function MisApartados() {
         </p>
       ) : apartados.data.length === 0 ? (
         <div className="tarjeta p-6 text-center">
-          <p className="text-3xl" aria-hidden="true">
-            🛒
-          </p>
+          <ShoppingBasket className="mx-auto size-9 text-muted" strokeWidth={1.5} aria-hidden="true" />
           <p className="mt-2 font-bold">Todavía no has apartado nada</p>
           <p className="mt-1 text-sm text-muted">En el perfil de cada negocio verás su catálogo.</p>
           <Link to="/" className="mt-3 inline-block font-bold text-green underline">
@@ -82,7 +81,7 @@ function MiApartado({ a, token }: { a: Apartado; token: string }) {
                 rel="noopener noreferrer"
                 className="tap inline-flex items-center rounded-caja bg-green px-4 font-bold text-green-ink"
               >
-                💬 Escribirle
+                <MessageCircle className="mr-1.5 size-4" aria-hidden="true" /> Escribirle
               </a>
             )}
             <button
