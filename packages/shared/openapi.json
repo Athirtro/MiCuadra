@@ -1920,14 +1920,14 @@
         }
       }
     },
-    "/api/v1/admin/negocios/{negocio_id}/ubicacion": {
+    "/api/v1/admin/negocios/{negocio_id}": {
       "patch": {
         "tags": [
           "admin"
         ],
-        "summary": "Cambiar Ubicacion Negocio",
-        "description": "Mover el pin del negocio y corregir su dirección y barrio.",
-        "operationId": "cambiar_ubicacion_negocio_api_v1_admin_negocios__negocio_id__ubicacion_patch",
+        "summary": "Editar Negocio",
+        "description": "Corregir el nombre, mover el pin y ajustar la dirección y el barrio (el slug no cambia).",
+        "operationId": "editar_negocio_api_v1_admin_negocios__negocio_id__patch",
         "security": [
           {
             "HTTPBearer": []
@@ -1950,7 +1950,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CambioUbicacion"
+                "$ref": "#/components/schemas/EdicionNegocio"
               }
             }
           }
@@ -2907,39 +2907,6 @@
         "title": "CambioStock",
         "description": "Ajuste rápido desde el panel: suma o resta unidades (no baja de 0)."
       },
-      "CambioUbicacion": {
-        "properties": {
-          "ubicacion": {
-            "$ref": "#/components/schemas/Punto"
-          },
-          "direccion_texto": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 3,
-            "title": "Direccion Texto"
-          },
-          "barrio": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 40
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Barrio",
-            "description": "Slug del barrio"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ubicacion",
-          "direccion_texto"
-        ],
-        "title": "CambioUbicacion",
-        "description": "El admin corrige dónde queda un negocio: pin, dirección y barrio."
-      },
       "Cancelacion": {
         "properties": {
           "motivo": {
@@ -3240,6 +3207,46 @@
           "celular"
         ],
         "title": "DuenoCorto"
+      },
+      "EdicionNegocio": {
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Nombre"
+          },
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "direccion_texto": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Direccion Texto"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio",
+            "description": "Slug del barrio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre",
+          "ubicacion",
+          "direccion_texto"
+        ],
+        "title": "EdicionNegocio",
+        "description": "El admin corrige el nombre del negocio y dónde queda: pin, dirección y barrio.\n\nEl slug no cambia, para que los enlaces ya compartidos sigan funcionando."
       },
       "Entrevista": {
         "properties": {

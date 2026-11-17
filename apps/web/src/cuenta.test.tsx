@@ -280,12 +280,12 @@ describe('Panel de administración', () => {
     await waitFor(() => expect(posts).toContainEqual({ ruta: '/admin/negocios/n9/estado', cuerpo: { estado: 'activo' } }))
   })
 
-  it('cambia la ubicación con el pin, coordenadas pegadas, dirección y barrio', async () => {
+  it('edita el nombre y la ubicación con el pin, coordenadas pegadas, dirección y barrio', async () => {
     const { posts } = apiFalsa({ '/yo': ADMIN, '/admin/negocios': [PENDIENTE], '/barrios': BARRIOS })
     renderEn('/admin/negocios')
-    fireEvent.click(await screen.findByRole('button', { name: 'Cambiar ubicación' }))
-    const dialogo = await screen.findByRole('dialog', { name: 'Cambiar ubicación de Arepas La Esquina' })
-    expect(dialogo).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar nombre y ubicación' }))
+    expect(await screen.findByRole('dialog', { name: 'Editar Arepas La Esquina' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Nombre del negocio'), { target: { value: '  Arepas Doña Rosa ' } })
 
     fireEvent.click(await screen.findByRole('button', { name: 'Mover pin' }))
     expect(screen.getByText('4.79850, -75.73050')).toBeInTheDocument()
@@ -298,11 +298,11 @@ describe('Panel de administración', () => {
     fireEvent.change(screen.getByLabelText('Dirección'), { target: { value: 'Cl 70 # 25-48' } })
     await screen.findByRole('option', { name: 'Álamos' })
     fireEvent.change(screen.getByLabelText('Barrio'), { target: { value: 'alamos' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar ubicación' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
     await waitFor(() =>
       expect(posts).toContainEqual({
-        ruta: '/admin/negocios/n9/ubicacion',
-        cuerpo: { ubicacion: { lat: 4.8051, lng: -75.7381 }, direccion_texto: 'Cl 70 # 25-48', barrio: 'alamos' },
+        ruta: '/admin/negocios/n9',
+        cuerpo: { nombre: 'Arepas Doña Rosa', ubicacion: { lat: 4.8051, lng: -75.7381 }, direccion_texto: 'Cl 70 # 25-48', barrio: 'alamos' },
       }),
     )
   })

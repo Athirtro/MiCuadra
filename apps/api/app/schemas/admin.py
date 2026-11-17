@@ -39,17 +39,24 @@ class NegocioAdmin(BaseModel):
     created_at: datetime
 
 
-class CambioUbicacion(BaseModel):
-    """El admin corrige dónde queda un negocio: pin, dirección y barrio."""
+class EdicionNegocio(BaseModel):
+    """El admin corrige el nombre del negocio y dónde queda: pin, dirección y barrio.
 
+    El slug no cambia, para que los enlaces ya compartidos sigan funcionando.
+    """
+
+    nombre: str = Field(min_length=2, max_length=80)
     ubicacion: Punto
     direccion_texto: str = Field(min_length=3, max_length=120)
     barrio: str | None = Field(default=None, max_length=40, description="Slug del barrio")
 
-    @field_validator("direccion_texto")
+    @field_validator("nombre", "direccion_texto")
     @classmethod
     def sin_espacios_extra(cls, v: str) -> str:
-        return " ".join(v.split())
+        v = " ".join(v.split())
+        if len(v) < 2:
+            raise ValueError("Escribe al menos 2 letras")
+        return v
 
     @field_validator("ubicacion")
     @classmethod

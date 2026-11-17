@@ -13,7 +13,7 @@ from app.schemas.admin import (
     CambioEstadoNegocio,
     CambioInscrito,
     CambioReporte,
-    CambioUbicacion,
+    EdicionNegocio,
     Entrevista,
     EntrevistaEntrada,
     EstadoNegocio,
@@ -83,12 +83,10 @@ def cambiar_estado_negocio(
     return admin.cambiar_estado_negocio(db, negocio_id, cambio, notificaciones)
 
 
-@router.patch("/negocios/{negocio_id}/ubicacion", response_model=NegocioAdmin)
-def cambiar_ubicacion_negocio(
-    negocio_id: UUID, cambio: CambioUbicacion, _: Admin, db: Db
-) -> NegocioAdmin:
-    """Mover el pin del negocio y corregir su dirección y barrio."""
-    return admin.cambiar_ubicacion(db, negocio_id, cambio)
+@router.patch("/negocios/{negocio_id}", response_model=NegocioAdmin)
+def editar_negocio(negocio_id: UUID, cambio: EdicionNegocio, _: Admin, db: Db) -> NegocioAdmin:
+    """Corregir el nombre, mover el pin y ajustar la dirección y el barrio (el slug no cambia)."""
+    return admin.editar_negocio(db, negocio_id, cambio)
 
 
 @router.get("/lista-espera", response_model=list[InscritoEspera])

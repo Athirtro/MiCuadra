@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, MapPin, Plus } from 'lucide-react'
+import { ExternalLink, Pencil, Plus } from 'lucide-react'
 import { lazy, Suspense, useDeferredValue, useState } from 'react'
 import { Link } from 'react-router'
-import { apiGet, type Barrio, type CambioEstadoNegocio, type CambioUbicacion, type NegocioAdmin, type Punto } from '../../lib/api'
+import { apiGet, type Barrio, type CambioEstadoNegocio, type EdicionNegocio, type NegocioAdmin, type Punto } from '../../lib/api'
 import { Dialogo } from '../../components/Dialogo'
 import { IconoCategoria } from '../../components/Icono'
 import { Estado, fecha, Filtro, useAdminMutation, useAdminQuery } from './Admin'
@@ -73,7 +73,7 @@ export function Negocios() {
 
 function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
   const [rechazando, setRechazando] = useState(false)
-  const [ubicando, setUbicando] = useState(false)
+  const [editando, setEditando] = useState(false)
   const [motivo, setMotivo] = useState('')
   const cambiar = useAdminMutation<CambioEstadoNegocio>('POST', () => `/negocios/${n.id}/estado`, (v) => v)
 
@@ -162,10 +162,10 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
           )}
           <button
             type="button"
-            onClick={() => setUbicando(true)}
+            onClick={() => setEditando(true)}
             className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold"
           >
-            <MapPin className="mr-1.5 size-4" aria-hidden="true" /> Cambiar ubicación
+            <Pencil className="mr-1.5 size-4" aria-hidden="true" /> Editar nombre y ubicación
           </button>
           {n.estado === 'pendiente' && (
             <button type="button" onClick={() => setRechazando(true)} className="tap rounded-caja border border-line px-4 font-bold">
@@ -194,7 +194,7 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
           {cambiar.error.message}
         </p>
       )}
-      {ubicando && <DialogoUbicacion n={n} alCerrar={() => setUbicando(false)} />}
+      {editando && <DialogoEdicion n={n} alCerrar={() => setEditando(false)} />}
     </li>
   )
 }
@@ -207,31 +207,36 @@ function puntoDeTexto(texto: string): Punto | null {
   return p.lat >= 4.6 && p.lat <= 5 && p.lng >= -76 && p.lng <= -75.5 ? p : null
 }
 
-/** El admin mueve el pin del negocio y corrige su dirección y barrio. */
-function DialogoUbicacion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => void }) {
+/** El admin corrige el nombre, mueve el pin y ajusta la dirección y el barrio. */
+function DialogoEdicion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => void }) {
   const barrios = useQuery({ queryKey: ['barrios'], queryFn: () => apiGet<Barrio[]>('/barrios'), staleTime: Infinity })
+  const [nombre, setNombre] = useState(n.nombre)
   const [punto, setPunto] = useState<Punto>(n.ubicacion ?? CENTRO_PEREIRA)
   const [direccion, setDireccion] = useState(n.direccion_texto ?? '')
   const [barrio, setBarrio] = useState(n.barrio?.slug ?? '')
   const [pegado, setPegado] = useState('')
-  const guardar = useAdminMutation<CambioUbicacion>('PATCH', () => `/negocios/${n.id}/ubicacion`, (v) => v)
+  const guardar = useAdminMutation<EdicionNegocio>('PATCH', () => `/negocios/${n.id}`, (v) => v)
   const pegadoInvalido = pegado.trim() !== '' && puntoDeTexto(pegado) === null
-  const direccionValida = direccion.trim().length >= 3
+  const valido = direccion.trim().length >= 3 && nombre.trim().length >= 2
 
   return (
-    <Dialogo titulo={`Cambiar ubicación de ${n.nombre}`} alCerrar={alCerrar}>
+    <Dialogo titulo={`Editar ${n.nombre}`} alCerrar={alCerrar}>
       <form
         className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault()
-          if (!direccionValida) return
+          if (!valido) return
           guardar.mutate(
-            { ubicacion: punto, direccion_texto: direccion.trim(), barrio: barrio || null },
+            { nombre: nombre.trim(), ubicacion: punto, direccion_texto: direccion.trim(), barrio: barrio || null },
             { onSuccess: alCerrar },
           )
         }}
       >
-        <h2 className="text-xl font-black">{n.nombre}</h2>
+        <h2 className="text-xl font-black">Editar negocio</h2>
+        <label className="flex flex-col gap-1 text-sm font-bold">
+          Nombre del negocio
+          <input required minLength={2} maxLength={80} value={nombre} onChange={(e) => setNombre(e.target.value)} className={ENTRADA} />
+        </label>
         <p className="text-sm text-muted">Toca el mapa o arrastra el pin justo donde está la puerta.</p>
         <Suspense fallback={<div className="esqueleto h-72 rounded-caja" />}>
           <SelectorUbicacion punto={punto} alCambiar={setPunto} categoria={n.categoria.slug} />
@@ -277,10 +282,10 @@ function DialogoUbicacion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => vo
         )}
         <button
           type="submit"
-          disabled={!direccionValida || guardar.isPending}
+          disabled={!valido || guardar.isPending}
           className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
         >
-          {guardar.isPending ? 'Guardando…' : 'Guardar ubicación'}
+          {guardar.isPending ? 'Guardando…' : 'Guardar cambios'}
         </button>
         <button type="button" onClick={alCerrar} className="tap font-bold text-muted">
           Cancelar

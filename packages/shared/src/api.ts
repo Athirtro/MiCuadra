@@ -589,7 +589,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/negocios/{negocio_id}/ubicacion": {
+    "/api/v1/admin/negocios/{negocio_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -603,10 +603,10 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Cambiar Ubicacion Negocio
-         * @description Mover el pin del negocio y corregir su dirección y barrio.
+         * Editar Negocio
+         * @description Corregir el nombre, mover el pin y ajustar la dirección y el barrio (el slug no cambia).
          */
-        patch: operations["cambiar_ubicacion_negocio_api_v1_admin_negocios__negocio_id__ubicacion_patch"];
+        patch: operations["editar_negocio_api_v1_admin_negocios__negocio_id__patch"];
         trace?: never;
     };
     "/api/v1/admin/lista-espera": {
@@ -951,20 +951,6 @@ export interface components {
             /** Delta */
             delta: number;
         };
-        /**
-         * CambioUbicacion
-         * @description El admin corrige dónde queda un negocio: pin, dirección y barrio.
-         */
-        CambioUbicacion: {
-            ubicacion: components["schemas"]["Punto"];
-            /** Direccion Texto */
-            direccion_texto: string;
-            /**
-             * Barrio
-             * @description Slug del barrio
-             */
-            barrio?: string | null;
-        };
         /** Cancelacion */
         Cancelacion: {
             /** Motivo */
@@ -1070,6 +1056,24 @@ export interface components {
             email: string | null;
             /** Celular */
             celular: string | null;
+        };
+        /**
+         * EdicionNegocio
+         * @description El admin corrige el nombre del negocio y dónde queda: pin, dirección y barrio.
+         *
+         *     El slug no cambia, para que los enlaces ya compartidos sigan funcionando.
+         */
+        EdicionNegocio: {
+            /** Nombre */
+            nombre: string;
+            ubicacion: components["schemas"]["Punto"];
+            /** Direccion Texto */
+            direccion_texto: string;
+            /**
+             * Barrio
+             * @description Slug del barrio
+             */
+            barrio?: string | null;
         };
         /** Entrevista */
         Entrevista: {
@@ -3097,7 +3101,7 @@ export interface operations {
             };
         };
     };
-    cambiar_ubicacion_negocio_api_v1_admin_negocios__negocio_id__ubicacion_patch: {
+    editar_negocio_api_v1_admin_negocios__negocio_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -3108,7 +3112,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CambioUbicacion"];
+                "application/json": components["schemas"]["EdicionNegocio"];
             };
         };
         responses: {

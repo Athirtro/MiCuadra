@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.schemas.admin import (
     CambioEstadoNegocio,
-    CambioUbicacion,
     DuenoCorto,
+    EdicionNegocio,
     Entrevista,
     EntrevistaEntrada,
     EstadoNegocio,
@@ -133,7 +133,7 @@ def cambiar_estado_negocio(
     return _negocio(fila)
 
 
-def cambiar_ubicacion(db: Session, negocio_id: UUID, cambio: CambioUbicacion) -> NegocioAdmin:
+def editar_negocio(db: Session, negocio_id: UUID, cambio: EdicionNegocio) -> NegocioAdmin:
     barrio_id = None
     if cambio.barrio:
         barrio_id = db.execute(
@@ -143,12 +143,13 @@ def cambiar_ubicacion(db: Session, negocio_id: UUID, cambio: CambioUbicacion) ->
             raise ApiError(422, "barrio_no_existe", "Ese barrio no está en MiCuadra.")
     actualizado = db.execute(
         text(
-            "update negocios set ubicacion = st_point(:lng, :lat, 4326)::geography,"
+            "update negocios set nombre = :nombre, ubicacion = st_point(:lng, :lat, 4326)::geography,"
             " direccion_texto = :direccion, barrio_id = :barrio"
             " where id = :id and deleted_at is null returning id"
         ),
         {
             "id": negocio_id,
+            "nombre": cambio.nombre,
             "lat": cambio.ubicacion.lat,
             "lng": cambio.ubicacion.lng,
             "direccion": cambio.direccion_texto,
