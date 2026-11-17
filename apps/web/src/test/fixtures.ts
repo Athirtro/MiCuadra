@@ -78,11 +78,13 @@ export function apiFalsa(rutas: Record<string, unknown> = {}) {
   const posts: { ruta: string; cuerpo: Record<string, unknown> }[] = []
   const fetchFalso = vi.fn(async (url: string, init?: RequestInit) => {
     const ruta = url.replace('/api/v1', '')
-    if (init?.method === 'POST') {
-      posts.push({ ruta, cuerpo: JSON.parse(String(init.body)) })
-      // Respuesta propia del POST si la prueba la da como 'POST /ruta'.
-      const respuesta = Object.keys(rutas).find((r) => r.startsWith('POST ') && ruta.startsWith(r.slice(5)))
-      return respuesta ? json(rutas[respuesta], 201) : new Response(null, { status: 204 })
+    const metodo = init?.method
+    if (metodo === 'POST' || metodo === 'PATCH') {
+      posts.push({ ruta, cuerpo: JSON.parse(String(init?.body)) })
+      // Respuesta propia si la prueba la da como 'POST /ruta' o 'PATCH /ruta'.
+      const prefijo = `${metodo} `
+      const respuesta = Object.keys(rutas).find((r) => r.startsWith(prefijo) && ruta.startsWith(r.slice(prefijo.length)))
+      return respuesta ? json(rutas[respuesta], metodo === 'POST' ? 201 : 200) : new Response(null, { status: 204 })
     }
     // La ruta más específica gana: '/negocios/x/catalogo' antes que '/negocios/'.
     const clave = Object.keys(rutas)

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.schemas.comunidad import RolEspera
 from app.schemas.cuenta import CELULAR, NegocioBase
@@ -35,7 +35,28 @@ class NegocioAdmin(BaseModel):
     dueno: DuenoCorto | None
     creado_por_admin: bool
     reportes_abiertos: int
+    ubicacion: Punto | None
     created_at: datetime
+
+
+class CambioUbicacion(BaseModel):
+    """El admin corrige dónde queda un negocio: pin, dirección y barrio."""
+
+    ubicacion: Punto
+    direccion_texto: str = Field(min_length=3, max_length=120)
+    barrio: str | None = Field(default=None, max_length=40, description="Slug del barrio")
+
+    @field_validator("direccion_texto")
+    @classmethod
+    def sin_espacios_extra(cls, v: str) -> str:
+        return " ".join(v.split())
+
+    @field_validator("ubicacion")
+    @classmethod
+    def en_pereira(cls, v: Punto) -> Punto:
+        if not (4.6 <= v.lat <= 5.0 and -76.0 <= v.lng <= -75.5):
+            raise ValueError("La ubicación debe estar en Pereira")
+        return v
 
 
 class CambioEstadoNegocio(BaseModel):

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.schemas.admin import (
     CambioEstadoNegocio,
+    CambioUbicacion,
     DuenoCorto,
     Entrevista,
     EntrevistaEntrada,
@@ -21,7 +22,7 @@ from app.schemas.admin import (
     Reporte,
 )
 from app.schemas.comunidad import RolEspera
-from app.schemas.directorio import BarrioCorto, CategoriaCorta
+from app.schemas.directorio import BarrioCorto, CategoriaCorta, Punto
 from app.services.notificaciones import NotificationService
 
 _NEGOCIOS = (
@@ -31,6 +32,7 @@ _NEGOCIOS = (
     " b.slug as barrio_slug, b.nombre as barrio_nombre,"
     " u.id as dueno_id, u.nombre as dueno_nombre, u.email as dueno_email,"
     " u.celular as dueno_celular,"
+    " st_y(n.ubicacion::geometry) as lat, st_x(n.ubicacion::geometry) as lng,"
     " (select count(*) from incidencias i"
     "   where i.negocio_id = n.id and i.estado = 'abierta') as reportes_abiertos"
     " from negocios n join categorias c on c.id = n.categoria_id"
@@ -63,6 +65,7 @@ def _negocio(f: RowMapping) -> NegocioAdmin:
         else None,
         creado_por_admin=f["creado_por_admin"],
         reportes_abiertos=f["reportes_abiertos"],
+        ubicacion=Punto(lat=f["lat"], lng=f["lng"]) if f["lat"] is not None else None,
         created_at=f["created_at"],
     )
 
@@ -128,6 +131,34 @@ def cambiar_estado_negocio(
         notificaciones.send(antes["dueno_id"], "negocio_aprobado")
     fila = db.execute(text(_NEGOCIOS + " and n.id = :id"), {"id": negocio_id}).mappings().one()
     return _negocio(fila)
+
+
+def cambiar_ubicacion(db: Session, negocio_id: UUID, cambio: CambioUbicacion) -> NegocioAdmin:
+    barrio_id = None
+    if cambio.barrio:
+        barrio_id = db.execute(
+            text("select id from barrios where slug = :slug"), {"slug": cambio.barrio}
+        ).scalar_one_or_none()
+        if barrio_id is None:
+            raise ApiError(422, "barrio_no_existe", "Ese barrio no está en MiCuadra.")
+    actualizado = db.execute(
+        text(
+            "update negocios set ubicacion = st_point(:lng, :lat, 4326)::geography,"
+            " direccion_texto = :direccion, barrio_id = :barrio"
+            " where id = :id and deleted_at is null returning id"
+        ),
+        {
+            "id": negocio_id,
+            "lat": cambio.ubicacion.lat,
+            "lng": cambio.ubicacion.lng,
+            "direccion": cambio.direccion_texto,
+            "barrio": barrio_id,
+        },
+    ).scalar_one_or_none()
+    if actualizado is None:
+        raise ApiError(404, "negocio_no_encontrado", "No encontramos ese negocio.")
+    db.commit()
+    return buscar_negocio(db, negocio_id)
 
 
 def listar_espera(

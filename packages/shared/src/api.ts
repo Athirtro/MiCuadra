@@ -589,6 +589,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/negocios/{negocio_id}/ubicacion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Cambiar Ubicacion Negocio
+         * @description Mover el pin del negocio y corregir su dirección y barrio.
+         */
+        patch: operations["cambiar_ubicacion_negocio_api_v1_admin_negocios__negocio_id__ubicacion_patch"];
+        trace?: never;
+    };
     "/api/v1/admin/lista-espera": {
         parameters: {
             query?: never;
@@ -930,6 +950,20 @@ export interface components {
         CambioStock: {
             /** Delta */
             delta: number;
+        };
+        /**
+         * CambioUbicacion
+         * @description El admin corrige dónde queda un negocio: pin, dirección y barrio.
+         */
+        CambioUbicacion: {
+            ubicacion: components["schemas"]["Punto"];
+            /** Direccion Texto */
+            direccion_texto: string;
+            /**
+             * Barrio
+             * @description Slug del barrio
+             */
+            barrio?: string | null;
         };
         /** Cancelacion */
         Cancelacion: {
@@ -1576,6 +1610,7 @@ export interface components {
             creado_por_admin: boolean;
             /** Reportes Abiertos */
             reportes_abiertos: number;
+            ubicacion: components["schemas"]["Punto"] | null;
             /**
              * Created At
              * Format: date-time
@@ -3039,6 +3074,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CambioEstadoNegocio"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NegocioAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cambiar_ubicacion_negocio_api_v1_admin_negocios__negocio_id__ubicacion_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                negocio_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioUbicacion"];
             };
         };
         responses: {

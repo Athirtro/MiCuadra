@@ -1920,6 +1920,65 @@
         }
       }
     },
+    "/api/v1/admin/negocios/{negocio_id}/ubicacion": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Cambiar Ubicacion Negocio",
+        "description": "Mover el pin del negocio y corregir su dirección y barrio.",
+        "operationId": "cambiar_ubicacion_negocio_api_v1_admin_negocios__negocio_id__ubicacion_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "negocio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Negocio Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioUbicacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NegocioAdmin"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/lista-espera": {
       "get": {
         "tags": [
@@ -2847,6 +2906,39 @@
         ],
         "title": "CambioStock",
         "description": "Ajuste rápido desde el panel: suma o resta unidades (no baja de 0)."
+      },
+      "CambioUbicacion": {
+        "properties": {
+          "ubicacion": {
+            "$ref": "#/components/schemas/Punto"
+          },
+          "direccion_texto": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 3,
+            "title": "Direccion Texto"
+          },
+          "barrio": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Barrio",
+            "description": "Slug del barrio"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ubicacion",
+          "direccion_texto"
+        ],
+        "title": "CambioUbicacion",
+        "description": "El admin corrige dónde queda un negocio: pin, dirección y barrio."
       },
       "Cancelacion": {
         "properties": {
@@ -4460,6 +4552,16 @@
             "type": "integer",
             "title": "Reportes Abiertos"
           },
+          "ubicacion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Punto"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -4481,6 +4583,7 @@
           "dueno",
           "creado_por_admin",
           "reportes_abiertos",
+          "ubicacion",
           "created_at"
         ],
         "title": "NegocioAdmin"

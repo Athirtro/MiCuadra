@@ -224,6 +224,7 @@ describe('Panel de administración', () => {
     dueno: { nombre: 'Valeria Ospina', email: 'vale@gmail.com', celular: '3104567890' },
     creado_por_admin: false,
     reportes_abiertos: 1,
+    ubicacion: { lat: 4.8, lng: -75.73 },
     created_at: '2026-11-03T15:00:00Z',
   }
   const GATE: Gate = {
@@ -277,6 +278,33 @@ describe('Panel de administración', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Aprobar' }))
     await waitFor(() => expect(posts).toContainEqual({ ruta: '/admin/negocios/n9/estado', cuerpo: { estado: 'activo' } }))
+  })
+
+  it('cambia la ubicación con el pin, coordenadas pegadas, dirección y barrio', async () => {
+    const { posts } = apiFalsa({ '/yo': ADMIN, '/admin/negocios': [PENDIENTE], '/barrios': BARRIOS })
+    renderEn('/admin/negocios')
+    fireEvent.click(await screen.findByRole('button', { name: 'Cambiar ubicación' }))
+    const dialogo = await screen.findByRole('dialog', { name: 'Cambiar ubicación de Arepas La Esquina' })
+    expect(dialogo).toBeInTheDocument()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Mover pin' }))
+    expect(screen.getByText('4.79850, -75.73050')).toBeInTheDocument()
+    const pegar = screen.getByLabelText(/pega las coordenadas/)
+    fireEvent.change(pegar, { target: { value: 'Medellín 6.25, -75.57' } })
+    expect(screen.getByText('No encontré coordenadas de Pereira en ese texto.')).toBeInTheDocument()
+    fireEvent.change(pegar, { target: { value: 'https://www.google.com/maps/place/x/@4.8051,-75.7381,19z' } })
+    expect(screen.getByText('4.80510, -75.73810')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Dirección'), { target: { value: 'Cl 70 # 25-48' } })
+    await screen.findByRole('option', { name: 'Álamos' })
+    fireEvent.change(screen.getByLabelText('Barrio'), { target: { value: 'alamos' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar ubicación' }))
+    await waitFor(() =>
+      expect(posts).toContainEqual({
+        ruta: '/admin/negocios/n9/ubicacion',
+        cuerpo: { ubicacion: { lat: 4.8051, lng: -75.7381 }, direccion_texto: 'Cl 70 # 25-48', barrio: 'alamos' },
+      }),
+    )
   })
 })
 

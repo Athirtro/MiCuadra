@@ -485,3 +485,43 @@ def test_lote_crea_solo_las_listas_si_se_pide(api: TestClient) -> None:
     assert r["creados"] == 1 and [e["fila"] for e in r["errores"]] == [3]
     nombres = [n["nombre"] for n in api.get(f"{V1}/admin/negocios?q=Real", headers=ADMIN).json()]
     assert "Real Lista" in nombres and "Real Sin Ubicar" not in nombres
+
+
+# ── Cambiar ubicación ──
+
+
+def test_admin_cambia_ubicacion_direccion_y_barrio(
+    api: TestClient, conn: psycopg.Connection
+) -> None:
+    nid = conn.execute(
+        "select id::text from negocios where estado = 'activo' order by slug limit 1"
+    ).fetchone()[0]
+    cambio = {
+        "ubicacion": {"lat": 4.8051, "lng": -75.7381},
+        "direccion_texto": "  Cl 70   # 25-48 ",
+        "barrio": "cuba",
+    }
+    r = api.patch(f"{V1}/admin/negocios/{nid}/ubicacion", json=cambio, headers=ADMIN)
+    assert r.status_code == 200, r.text
+    n = r.json()
+    assert n["direccion_texto"] == "Cl 70 # 25-48"
+    assert n["barrio"]["slug"] == "cuba"
+    assert n["ubicacion"] == {"lat": pytest.approx(4.8051), "lng": pytest.approx(-75.7381)}
+
+    sin_barrio = {**cambio, "barrio": None}
+    r = api.patch(f"{V1}/admin/negocios/{nid}/ubicacion", json=sin_barrio, headers=ADMIN)
+    assert r.json()["barrio"] is None
+
+
+def test_cambiar_ubicacion_valida_y_protege(api: TestClient, conn: psycopg.Connection) -> None:
+    nid = conn.execute("select id::text from negocios limit 1").fetchone()[0]
+    ruta = f"{V1}/admin/negocios/{nid}/ubicacion"
+    bien = {"ubicacion": {"lat": 4.81, "lng": -75.69}, "direccion_texto": "Cra 8 # 40-15"}
+
+    assert api.patch(ruta, json=bien, headers=_auth("vecino1")).status_code == 403
+    fuera = {**bien, "ubicacion": {"lat": 6.25, "lng": -75.57}}  # Medellín
+    assert api.patch(ruta, json=fuera, headers=ADMIN).status_code == 422
+    r = api.patch(ruta, json={**bien, "barrio": "no-existe"}, headers=ADMIN)
+    assert r.status_code == 422 and r.json()["error"]["codigo"] == "barrio_no_existe"
+    otro = f"{V1}/admin/negocios/00000000-0000-0000-0000-000000000000/ubicacion"
+    assert api.patch(otro, json=bien, headers=ADMIN).status_code == 404

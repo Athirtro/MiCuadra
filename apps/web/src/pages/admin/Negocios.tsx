@@ -1,9 +1,16 @@
-import { Plus } from 'lucide-react'
-import { useDeferredValue, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ExternalLink, MapPin, Plus } from 'lucide-react'
+import { lazy, Suspense, useDeferredValue, useState } from 'react'
 import { Link } from 'react-router'
-import type { CambioEstadoNegocio, NegocioAdmin } from '../../lib/api'
+import { apiGet, type Barrio, type CambioEstadoNegocio, type CambioUbicacion, type NegocioAdmin, type Punto } from '../../lib/api'
+import { Dialogo } from '../../components/Dialogo'
 import { IconoCategoria } from '../../components/Icono'
 import { Estado, fecha, Filtro, useAdminMutation, useAdminQuery } from './Admin'
+
+const SelectorUbicacion = lazy(() => import('../../components/MapaBarrio').then((m) => ({ default: m.SelectorUbicacion })))
+
+const CENTRO_PEREIRA: Punto = { lat: 4.8133, lng: -75.6961 }
+const ENTRADA = 'tap w-full rounded-caja border border-line bg-bg px-3 text-base font-normal'
 
 type FiltroEstado = NegocioAdmin['estado'] | 'todos'
 
@@ -66,6 +73,7 @@ export function Negocios() {
 
 function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
   const [rechazando, setRechazando] = useState(false)
+  const [ubicando, setUbicando] = useState(false)
   const [motivo, setMotivo] = useState('')
   const cambiar = useAdminMutation<CambioEstadoNegocio>('POST', () => `/negocios/${n.id}/estado`, (v) => v)
 
@@ -84,7 +92,19 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
       {n.descripcion && <p className="mt-1 text-sm">{n.descripcion}</p>}
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 text-sm">
         <dt className="text-muted">Dirección</dt>
-        <dd>{n.direccion_texto ?? '—'}</dd>
+        <dd>
+          {n.direccion_texto ?? '—'}
+          {n.ubicacion && (
+            <a
+              href={`https://www.google.com/maps?q=${n.ubicacion.lat},${n.ubicacion.lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-2 inline-flex items-center gap-0.5 font-bold text-green underline"
+            >
+              ver pin <ExternalLink className="size-3.5" aria-hidden="true" />
+            </a>
+          )}
+        </dd>
         <dt className="text-muted">WhatsApp</dt>
         <dd className="font-mono">{n.whatsapp ?? '—'}</dd>
         <dt className="text-muted">Dueño</dt>
@@ -140,6 +160,13 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
               {n.estado === 'pendiente' ? 'Aprobar' : 'Activar'}
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => setUbicando(true)}
+            className="tap inline-flex items-center rounded-caja border border-line px-4 font-bold"
+          >
+            <MapPin className="mr-1.5 size-4" aria-hidden="true" /> Cambiar ubicación
+          </button>
           {n.estado === 'pendiente' && (
             <button type="button" onClick={() => setRechazando(true)} className="tap rounded-caja border border-line px-4 font-bold">
               Rechazar
@@ -167,6 +194,98 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
           {cambiar.error.message}
         </p>
       )}
+      {ubicando && <DialogoUbicacion n={n} alCerrar={() => setUbicando(false)} />}
     </li>
+  )
+}
+
+/** Lee «4.8051, -75.7381» o un enlace de Google Maps (…@4.8051,-75.7381… o ?q=4.8051,-75.7381). */
+function puntoDeTexto(texto: string): Punto | null {
+  const m = texto.match(/(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/)
+  if (!m) return null
+  const p = { lat: Number(m[1]), lng: Number(m[2]) }
+  return p.lat >= 4.6 && p.lat <= 5 && p.lng >= -76 && p.lng <= -75.5 ? p : null
+}
+
+/** El admin mueve el pin del negocio y corrige su dirección y barrio. */
+function DialogoUbicacion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => void }) {
+  const barrios = useQuery({ queryKey: ['barrios'], queryFn: () => apiGet<Barrio[]>('/barrios'), staleTime: Infinity })
+  const [punto, setPunto] = useState<Punto>(n.ubicacion ?? CENTRO_PEREIRA)
+  const [direccion, setDireccion] = useState(n.direccion_texto ?? '')
+  const [barrio, setBarrio] = useState(n.barrio?.slug ?? '')
+  const [pegado, setPegado] = useState('')
+  const guardar = useAdminMutation<CambioUbicacion>('PATCH', () => `/negocios/${n.id}/ubicacion`, (v) => v)
+  const pegadoInvalido = pegado.trim() !== '' && puntoDeTexto(pegado) === null
+  const direccionValida = direccion.trim().length >= 3
+
+  return (
+    <Dialogo titulo={`Cambiar ubicación de ${n.nombre}`} alCerrar={alCerrar}>
+      <form
+        className="flex flex-col gap-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (!direccionValida) return
+          guardar.mutate(
+            { ubicacion: punto, direccion_texto: direccion.trim(), barrio: barrio || null },
+            { onSuccess: alCerrar },
+          )
+        }}
+      >
+        <h2 className="text-xl font-black">{n.nombre}</h2>
+        <p className="text-sm text-muted">Toca el mapa o arrastra el pin justo donde está la puerta.</p>
+        <Suspense fallback={<div className="esqueleto h-72 rounded-caja" />}>
+          <SelectorUbicacion punto={punto} alCambiar={setPunto} categoria={n.categoria.slug} />
+        </Suspense>
+        <p className="font-mono text-xs text-muted">
+          {punto.lat.toFixed(5)}, {punto.lng.toFixed(5)}
+        </p>
+        <label className="flex flex-col gap-1 text-sm font-bold">
+          O pega las coordenadas o el enlace de Google Maps
+          <input
+            value={pegado}
+            placeholder="4.8051, -75.7381"
+            onChange={(e) => {
+              setPegado(e.target.value)
+              const p = puntoDeTexto(e.target.value)
+              if (p) setPunto(p)
+            }}
+            className={ENTRADA}
+            autoComplete="off"
+          />
+        </label>
+        {pegadoInvalido && <p className="text-sm text-red">No encontré coordenadas de Pereira en ese texto.</p>}
+        <label className="flex flex-col gap-1 text-sm font-bold">
+          Dirección
+          <input required minLength={3} maxLength={120} value={direccion} onChange={(e) => setDireccion(e.target.value)} className={ENTRADA} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-bold">
+          Barrio
+          <select value={barrio} onChange={(e) => setBarrio(e.target.value)} className={ENTRADA}>
+            <option value="">Sin barrio piloto</option>
+            {n.barrio && !barrios.data?.some((b) => b.slug === n.barrio?.slug) && <option value={n.barrio.slug}>{n.barrio.nombre}</option>}
+            {barrios.data?.map((b) => (
+              <option key={b.slug} value={b.slug}>
+                {b.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        {guardar.isError && (
+          <p role="alert" className="text-sm font-bold text-red">
+            {guardar.error.message}
+          </p>
+        )}
+        <button
+          type="submit"
+          disabled={!direccionValida || guardar.isPending}
+          className="tap rounded-caja bg-green px-4 font-bold text-green-ink disabled:opacity-50"
+        >
+          {guardar.isPending ? 'Guardando…' : 'Guardar ubicación'}
+        </button>
+        <button type="button" onClick={alCerrar} className="tap font-bold text-muted">
+          Cancelar
+        </button>
+      </form>
+    </Dialogo>
   )
 }
