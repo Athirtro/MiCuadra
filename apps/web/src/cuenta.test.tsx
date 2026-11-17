@@ -280,8 +280,13 @@ describe('Panel de administración', () => {
     await waitFor(() => expect(posts).toContainEqual({ ruta: '/admin/negocios/n9/estado', cuerpo: { estado: 'activo' } }))
   })
 
-  it('edita el nombre y la ubicación con el pin, coordenadas pegadas, dirección y barrio', async () => {
-    const { posts } = apiFalsa({ '/yo': ADMIN, '/admin/negocios': [PENDIENTE], '/barrios': BARRIOS })
+  it('edita el nombre y la ubicación, y toma el barrio del mapa', async () => {
+    const { posts, fetchFalso } = apiFalsa({
+      '/yo': ADMIN,
+      '/admin/negocios': [PENDIENTE],
+      '/admin/barrio-en-mapa': { nombre: 'Los Corales' },
+      '/barrios': BARRIOS,
+    })
     renderEn('/admin/negocios')
     fireEvent.click(await screen.findByRole('button', { name: 'Editar nombre y ubicación' }))
     expect(await screen.findByRole('dialog', { name: 'Editar Arepas La Esquina' })).toBeInTheDocument()
@@ -296,15 +301,17 @@ describe('Panel de administración', () => {
     expect(screen.getByText('4.80510, -75.73810')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Dirección'), { target: { value: 'Cl 70 # 25-48' } })
-    await screen.findByRole('option', { name: 'Álamos' })
-    fireEvent.change(screen.getByLabelText('Barrio'), { target: { value: 'alamos' } })
+    expect(screen.getByLabelText('Barrio')).toHaveValue('Cuba')
+    fireEvent.click(screen.getByRole('button', { name: 'Tomar del mapa' }))
+    await waitFor(() => expect(screen.getByLabelText('Barrio')).toHaveValue('Los Corales'))
     fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
     await waitFor(() =>
       expect(posts).toContainEqual({
         ruta: '/admin/negocios/n9',
-        cuerpo: { nombre: 'Arepas Doña Rosa', ubicacion: { lat: 4.8051, lng: -75.7381 }, direccion_texto: 'Cl 70 # 25-48', barrio: 'alamos' },
+        cuerpo: { nombre: 'Arepas Doña Rosa', ubicacion: { lat: 4.8051, lng: -75.7381 }, direccion_texto: 'Cl 70 # 25-48', barrio: 'Los Corales' },
       }),
     )
+    expect(fetchFalso.mock.calls.some(([url]) => String(url).includes('/admin/barrio-en-mapa?lat=4.805100&lng=-75.738100'))).toBe(true)
   })
 })
 

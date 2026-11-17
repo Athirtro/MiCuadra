@@ -1,11 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, Pencil, Plus } from 'lucide-react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { ExternalLink, MapPinned, Pencil, Plus } from 'lucide-react'
 import { lazy, Suspense, useDeferredValue, useState } from 'react'
 import { Link } from 'react-router'
-import { apiGet, type Barrio, type CambioEstadoNegocio, type EdicionNegocio, type NegocioAdmin, type Punto } from '../../lib/api'
+import { apiGet, type Barrio, type BarrioEnMapa, type CambioEstadoNegocio, type EdicionNegocio, type NegocioAdmin, type Punto } from '../../lib/api'
 import { Dialogo } from '../../components/Dialogo'
 import { IconoCategoria } from '../../components/Icono'
-import { Estado, fecha, Filtro, useAdminMutation, useAdminQuery } from './Admin'
+import { Estado, fecha, Filtro, useAdminMutation, useAdminQuery, useToken } from './Admin'
 
 const SelectorUbicacion = lazy(() => import('../../components/MapaBarrio').then((m) => ({ default: m.SelectorUbicacion })))
 
@@ -83,7 +83,7 @@ function TarjetaNegocio({ n }: { n: NegocioAdmin }) {
         <div className="min-w-0">
           <p className="flex flex-wrap items-center gap-x-1.5 text-sm font-bold" style={{ color: n.categoria.color }}>
             <IconoCategoria slug={n.categoria.slug} className="size-4" /> {n.categoria.nombre}
-            <span className="font-normal text-muted"> · {n.barrio?.nombre ?? 'Sin barrio piloto'}</span>
+            <span className="font-normal text-muted"> · {n.barrio?.nombre ?? 'Sin barrio'}</span>
           </p>
           <h2 className="text-lg font-black">{n.nombre}</h2>
         </div>
@@ -213,7 +213,14 @@ function DialogoEdicion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => void
   const [nombre, setNombre] = useState(n.nombre)
   const [punto, setPunto] = useState<Punto>(n.ubicacion ?? CENTRO_PEREIRA)
   const [direccion, setDireccion] = useState(n.direccion_texto ?? '')
-  const [barrio, setBarrio] = useState(n.barrio?.slug ?? '')
+  const [barrio, setBarrio] = useState(n.barrio?.nombre ?? '')
+  const token = useToken()
+  const delMapa = useMutation({
+    mutationFn: (p: Punto) => apiGet<BarrioEnMapa>(`/admin/barrio-en-mapa?lat=${p.lat.toFixed(6)}&lng=${p.lng.toFixed(6)}`, undefined, token),
+    onSuccess: (r) => {
+      if (r.nombre) setBarrio(r.nombre)
+    },
+  })
   const [pegado, setPegado] = useState('')
   const guardar = useAdminMutation<EdicionNegocio>('PATCH', () => `/negocios/${n.id}`, (v) => v)
   const pegadoInvalido = pegado.trim() !== '' && puntoDeTexto(pegado) === null
@@ -227,7 +234,7 @@ function DialogoEdicion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => void
           e.preventDefault()
           if (!valido) return
           guardar.mutate(
-            { nombre: nombre.trim(), ubicacion: punto, direccion_texto: direccion.trim(), barrio: barrio || null },
+            { nombre: nombre.trim(), ubicacion: punto, direccion_texto: direccion.trim(), barrio: barrio.trim() || null },
             { onSuccess: alCerrar },
           )
         }}
@@ -263,18 +270,41 @@ function DialogoEdicion({ n, alCerrar }: { n: NegocioAdmin; alCerrar: () => void
           Dirección
           <input required minLength={3} maxLength={120} value={direccion} onChange={(e) => setDireccion(e.target.value)} className={ENTRADA} />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-bold">
-          Barrio
-          <select value={barrio} onChange={(e) => setBarrio(e.target.value)} className={ENTRADA}>
-            <option value="">Sin barrio piloto</option>
-            {n.barrio && !barrios.data?.some((b) => b.slug === n.barrio?.slug) && <option value={n.barrio.slug}>{n.barrio.nombre}</option>}
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`barrio-${n.id}`} className="text-sm font-bold">
+            Barrio
+          </label>
+          <div className="flex gap-2">
+            <input
+              id={`barrio-${n.id}`}
+              list={`barrios-${n.id}`}
+              maxLength={60}
+              value={barrio}
+              placeholder="Cualquier barrio de Pereira"
+              onChange={(e) => setBarrio(e.target.value)}
+              className={ENTRADA}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              disabled={delMapa.isPending}
+              onClick={() => delMapa.mutate(punto)}
+              className="tap inline-flex shrink-0 items-center rounded-caja border border-line px-3 text-sm font-bold disabled:opacity-50"
+            >
+              <MapPinned className="mr-1 size-4" aria-hidden="true" />
+              {delMapa.isPending ? 'Buscando…' : 'Tomar del mapa'}
+            </button>
+          </div>
+          <datalist id={`barrios-${n.id}`}>
             {barrios.data?.map((b) => (
-              <option key={b.slug} value={b.slug}>
-                {b.nombre}
-              </option>
+              <option key={b.slug} value={b.nombre} />
             ))}
-          </select>
-        </label>
+          </datalist>
+          {delMapa.isSuccess && !delMapa.data.nombre && (
+            <p className="text-sm text-muted">El mapa no sabe el barrio de ese punto: escríbelo.</p>
+          )}
+          {delMapa.isError && <p className="text-sm text-red">No pudimos consultar el mapa. Escribe el barrio.</p>}
+        </div>
         {guardar.isError && (
           <p role="alert" className="text-sm font-bold text-red">
             {guardar.error.message}

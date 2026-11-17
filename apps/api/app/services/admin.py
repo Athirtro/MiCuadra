@@ -23,6 +23,7 @@ from app.schemas.admin import (
 )
 from app.schemas.comunidad import RolEspera
 from app.schemas.directorio import BarrioCorto, CategoriaCorta, Punto
+from app.services.cuenta import barrio_por_nombre
 from app.services.notificaciones import NotificationService
 
 _NEGOCIOS = (
@@ -134,13 +135,9 @@ def cambiar_estado_negocio(
 
 
 def editar_negocio(db: Session, negocio_id: UUID, cambio: EdicionNegocio) -> NegocioAdmin:
-    barrio_id = None
-    if cambio.barrio:
-        barrio_id = db.execute(
-            text("select id from barrios where slug = :slug"), {"slug": cambio.barrio}
-        ).scalar_one_or_none()
-        if barrio_id is None:
-            raise ApiError(422, "barrio_no_existe", "Ese barrio no está en MiCuadra.")
+    punto = {"lat": cambio.ubicacion.lat, "lng": cambio.ubicacion.lng}
+    barrio = barrio_por_nombre(db, cambio.barrio, punto) if cambio.barrio else None
+    barrio_id = barrio["id"] if barrio else None
     actualizado = db.execute(
         text(
             "update negocios set nombre = :nombre, ubicacion = st_point(:lng, :lat, 4326)::geography,"

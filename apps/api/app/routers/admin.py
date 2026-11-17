@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.auth import UsuarioActual, requiere_rol
 from app.db import get_db
 from app.schemas.admin import (
+    BarrioEnMapa,
     CambioEstadoNegocio,
     CambioInscrito,
     CambioReporte,
@@ -28,6 +29,7 @@ from app.schemas.admin import (
 )
 from app.schemas.comunidad import RolEspera
 from app.services import admin, carga, get_notification_service, metricas
+from app.services.barrio_del_mapa import BarrioDelMapa, get_barrio_del_mapa
 from app.services.geocodificar import Geocodificador, get_geocodificador
 from app.services.horarios import ahora_utc
 from app.services.notificaciones import NotificationService
@@ -87,6 +89,17 @@ def cambiar_estado_negocio(
 def editar_negocio(negocio_id: UUID, cambio: EdicionNegocio, _: Admin, db: Db) -> NegocioAdmin:
     """Corregir el nombre, mover el pin y ajustar la dirección y el barrio (el slug no cambia)."""
     return admin.editar_negocio(db, negocio_id, cambio)
+
+
+@router.get("/barrio-en-mapa", response_model=BarrioEnMapa)
+def barrio_en_mapa(
+    _: Admin,
+    buscar: Annotated[BarrioDelMapa | None, Depends(get_barrio_del_mapa)],
+    lat: Annotated[float, Query(ge=4.6, le=5.0)],
+    lng: Annotated[float, Query(ge=-76.0, le=-75.5)],
+) -> BarrioEnMapa:
+    """Barrio de un punto según OpenStreetMap, para el botón «Tomar del mapa» del panel."""
+    return BarrioEnMapa(nombre=buscar(lat, lng) if buscar else None)
 
 
 @router.get("/lista-espera", response_model=list[InscritoEspera])

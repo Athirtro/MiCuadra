@@ -48,7 +48,19 @@ class EdicionNegocio(BaseModel):
     nombre: str = Field(min_length=2, max_length=80)
     ubicacion: Punto
     direccion_texto: str = Field(min_length=3, max_length=120)
-    barrio: str | None = Field(default=None, max_length=40, description="Slug del barrio")
+    barrio: str | None = Field(
+        default=None,
+        max_length=60,
+        description="Nombre del barrio; si no existe se crea (sin importar tildes ni mayúsculas)",
+    )
+
+    @field_validator("barrio")
+    @classmethod
+    def barrio_limpio(cls, v: str | None) -> str | None:
+        v = " ".join((v or "").split())
+        if v and len(v) < 2:
+            raise ValueError("El barrio debe tener al menos 2 letras")
+        return v or None
 
     @field_validator("nombre", "direccion_texto")
     @classmethod
@@ -64,6 +76,10 @@ class EdicionNegocio(BaseModel):
         if not (4.6 <= v.lat <= 5.0 and -76.0 <= v.lng <= -75.5):
             raise ValueError("La ubicación debe estar en Pereira")
         return v
+
+
+class BarrioEnMapa(BaseModel):
+    nombre: str | None = Field(description="Barrio según OpenStreetMap; null si no se supo")
 
 
 class CambioEstadoNegocio(BaseModel):

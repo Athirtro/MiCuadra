@@ -609,6 +609,26 @@ export interface paths {
         patch: operations["editar_negocio_api_v1_admin_negocios__negocio_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/barrio-en-mapa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Barrio En Mapa
+         * @description Barrio de un punto según OpenStreetMap, para el botón «Tomar del mapa» del panel.
+         */
+        get: operations["barrio_en_mapa_api_v1_admin_barrio_en_mapa_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/lista-espera": {
         parameters: {
             query?: never;
@@ -910,6 +930,14 @@ export interface components {
             /** Nombre */
             nombre: string;
         };
+        /** BarrioEnMapa */
+        BarrioEnMapa: {
+            /**
+             * Nombre
+             * @description Barrio según OpenStreetMap; null si no se supo
+             */
+            nombre: string | null;
+        };
         /** CambioEstadoApartado */
         CambioEstadoApartado: {
             /**
@@ -1071,7 +1099,7 @@ export interface components {
             direccion_texto: string;
             /**
              * Barrio
-             * @description Slug del barrio
+             * @description Nombre del barrio; si no existe se crea (sin importar tildes ni mayúsculas)
              */
             barrio?: string | null;
         };
@@ -3123,6 +3151,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NegocioAdmin"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    barrio_en_mapa_api_v1_admin_barrio_en_mapa_get: {
+        parameters: {
+            query: {
+                lat: number;
+                lng: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BarrioEnMapa"];
                 };
             };
             /** @description Validation Error */

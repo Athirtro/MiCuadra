@@ -537,8 +537,45 @@ def test_editar_negocio_valida_y_protege(api: TestClient) -> None:
     assert api.patch(ruta, json=bien, headers=_auth("vecino1")).status_code == 403
     fuera = {**bien, "ubicacion": {"lat": 6.25, "lng": -75.57}}  # Medellín
     assert api.patch(ruta, json=fuera, headers=ADMIN).status_code == 422
-    r = api.patch(ruta, json={**bien, "barrio": "no-existe"}, headers=ADMIN)
-    assert r.status_code == 422 and r.json()["error"]["codigo"] == "barrio_no_existe"
+    assert api.patch(ruta, json={**bien, "barrio": "x"}, headers=ADMIN).status_code == 422
     assert api.patch(ruta, json={**bien, "nombre": "  a  "}, headers=ADMIN).status_code == 422
     otro = f"{V1}/admin/negocios/00000000-0000-0000-0000-000000000000"
     assert api.patch(otro, json=bien, headers=ADMIN).status_code == 404
+
+
+def test_barrio_nuevo_se_crea_y_uno_existente_se_reutiliza(
+    api: TestClient, conn: psycopg.Connection
+) -> None:
+    nid, _ = _negocio_de_prueba(api)
+    ruta = f"{V1}/admin/negocios/{nid}"
+    base = {
+        "nombre": "Real Tienda",
+        "ubicacion": {"lat": 4.80, "lng": -75.74},
+        "direccion_texto": "Cl 1",
+    }
+    try:
+        r = api.patch(ruta, json={**base, "barrio": "  Los Corales Prueba "}, headers=ADMIN)
+        assert r.status_code == 200, r.text
+        assert r.json()["barrio"] == {"slug": "los-corales-prueba", "nombre": "Los Corales Prueba"}
+        # Sin tildes ni mayúsculas es el mismo barrio: no se duplica.
+        r = api.patch(ruta, json={**base, "barrio": "CUBA"}, headers=ADMIN)
+        assert r.json()["barrio"]["slug"] == "cuba"
+        assert conn.execute("select count(*) from barrios where slug = 'cuba'").fetchone()[0] == 1
+    finally:
+        conn.execute("delete from negocios where nombre like 'Real %'")
+        conn.execute("delete from barrios where slug = 'los-corales-prueba'")
+
+
+def test_barrio_en_mapa_usa_openstreetmap(api: TestClient) -> None:
+    from app.services.barrio_del_mapa import get_barrio_del_mapa
+
+    ruta = f"{V1}/admin/barrio-en-mapa?lat=4.7905&lng=-75.7342"
+    assert api.get(ruta, headers=ADMIN).json() == {"nombre": None}  # apagado en pruebas
+    api.app.dependency_overrides[get_barrio_del_mapa] = lambda: lambda lat, lng: "Los Corales"  # type: ignore[attr-defined]
+    try:
+        assert api.get(ruta, headers=ADMIN).json() == {"nombre": "Los Corales"}
+        assert api.get(ruta, headers=_auth("vecino1")).status_code == 403
+        lejos = f"{V1}/admin/barrio-en-mapa?lat=6.25&lng=-75.57"
+        assert api.get(lejos, headers=ADMIN).status_code == 422
+    finally:
+        api.app.dependency_overrides.pop(get_barrio_del_mapa, None)  # type: ignore[attr-defined]

@@ -1979,6 +1979,67 @@
         }
       }
     },
+    "/api/v1/admin/barrio-en-mapa": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Barrio En Mapa",
+        "description": "Barrio de un punto según OpenStreetMap, para el botón «Tomar del mapa» del panel.",
+        "operationId": "barrio_en_mapa_api_v1_admin_barrio_en_mapa_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": 5.0,
+              "minimum": 4.6,
+              "title": "Lat"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "maximum": -75.5,
+              "minimum": -76.0,
+              "title": "Lng"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BarrioEnMapa"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/lista-espera": {
       "get": {
         "tags": [
@@ -2798,6 +2859,27 @@
         ],
         "title": "BarrioCorto"
       },
+      "BarrioEnMapa": {
+        "properties": {
+          "nombre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nombre",
+            "description": "Barrio según OpenStreetMap; null si no se supo"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nombre"
+        ],
+        "title": "BarrioEnMapa"
+      },
       "CambioEstadoApartado": {
         "properties": {
           "estado": {
@@ -3229,14 +3311,14 @@
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 40
+                "maxLength": 60
               },
               {
                 "type": "null"
               }
             ],
             "title": "Barrio",
-            "description": "Slug del barrio"
+            "description": "Nombre del barrio; si no existe se crea (sin importar tildes ni mayúsculas)"
           }
         },
         "type": "object",

@@ -89,3 +89,17 @@ def test_database_url_valida_no_falla() -> None:
 )
 def test_database_url_tolera_espacios_y_comillas_al_pegar(pegada: str) -> None:
     assert Settings(database_url=pegada).database_url == "postgresql+psycopg://u:p@h:5432/db"
+
+
+def test_nombre_de_barrio_desde_openstreetmap() -> None:
+    from app.services.barrio_del_mapa import nombre_de_barrio
+
+    assert nombre_de_barrio({"neighbourhood": "Cuba", "suburb": "Cuba"}) == "Cuba"
+    assert (
+        nombre_de_barrio({"suburb": "Comuna Olímpica", "residential": "Los Corales"})
+        == "Los Corales"
+    )
+    assert nombre_de_barrio({"suburb": "Montelibano", "city_district": "El Oso"}) == "Montelíbano"
+    assert nombre_de_barrio({"suburb": "Central", "city_district": "Bostón"}) == "Centro"
+    assert nombre_de_barrio({"suburb": "Comuna Oriente"}) is None
+    assert nombre_de_barrio({}) is None

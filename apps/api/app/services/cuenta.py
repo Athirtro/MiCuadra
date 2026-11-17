@@ -10,8 +10,10 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.schemas.cuenta import Foto, MiNegocio, NegocioBase, NegocioEntrada, Perfil, PerfilEntrada
 from app.schemas.directorio import BarrioCorto
+from app.services.barrio_del_mapa import get_barrio_del_mapa
 
-# Un negocio nuevo queda en el barrio piloto más cercano si está a menos de esta distancia.
+# Sin barrio escrito ni respuesta de OpenStreetMap, el negocio queda en el barrio conocido más
+# cercano si está a menos de esta distancia.
 RADIO_BARRIO_M = 2000
 MAX_NEGOCIOS_POR_DUENO = 5
 MAX_FOTOS = 5
@@ -23,7 +25,7 @@ def slugificar(texto: str) -> str:
     return "-".join("".join(c if c.isalnum() else " " for c in sin_tildes.lower()).split())[:60]
 
 
-def _barrio_por_nombre(db: Session, nombre: str, punto: dict[str, float]) -> RowMapping | None:
+def barrio_por_nombre(db: Session, nombre: str, punto: dict[str, float]) -> RowMapping | None:
     """Barrio escrito por el dueño: si ya existe (sin importar tildes ni mayúsculas) se reutiliza;
     si no, se crea con el negocio como primer punto. Así la lista de barrios crece con el mapa."""
     slug = slugificar(nombre)
@@ -134,6 +136,12 @@ def _slug_libre(db: Session, base: str) -> str:
     return slug
 
 
+def barrio_en_el_mapa(lat: float, lng: float) -> str | None:
+    """Nombre del barrio según OpenStreetMap; None si está apagado o no responde."""
+    buscar = get_barrio_del_mapa()
+    return buscar(lat, lng) if buscar else None
+
+
 def insertar_negocio(
     db: Session,
     datos: NegocioBase,
@@ -151,9 +159,10 @@ def insertar_negocio(
         raise ApiError(422, "categoria_invalida", "Elige una categoría de la lista.")
 
     punto = {"lat": datos.ubicacion.lat, "lng": datos.ubicacion.lng}
+    nombre_barrio = datos.barrio or barrio_en_el_mapa(datos.ubicacion.lat, datos.ubicacion.lng)
     barrio = (
-        _barrio_por_nombre(db, datos.barrio, punto)
-        if datos.barrio
+        barrio_por_nombre(db, nombre_barrio, punto)
+        if nombre_barrio
         else db.execute(
             text(
                 "select id, slug from barrios"
