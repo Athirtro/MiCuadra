@@ -308,6 +308,9 @@ describe('Otras rutas', () => {
 
     expect(await screen.findByRole('progressbar', { name: 'Negocios en el mapa' })).toHaveAttribute('aria-valuenow', '12')
     expect(screen.getByText('3 / 15')).toBeInTheDocument()
+    expect(screen.getByText('2 barrios de Pereira con 10 negocios en el mapa, y contando')).toBeInTheDocument()
+    expect(screen.getByRole('list', { name: 'Barrios con negocios en el mapa' })).toHaveTextContent('Álamos')
+    expect(screen.getByRole('link', { name: 'Tu barrio' })).toHaveAttribute('href', '/mi-negocio/nuevo')
 
     const inscribirme = screen.getByRole('button', { name: 'Inscribirme' })
     fireEvent.click(screen.getByRole('button', { name: /Tengo un negocio/ }))
